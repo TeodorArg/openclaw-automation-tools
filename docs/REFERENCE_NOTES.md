@@ -39,3 +39,9 @@ It should not be treated as the implementation base for the new repo.
 - host-helper/autoload patterns
 - any design that requires an always-on macOS helper app/node installed in autoload/bin style
 - any assumption that container `gh` auth is already solved
+
+## Workspace context hygiene for this track
+
+- When recording durable assistant context during this implementation track, keep `MEMORY.md` compact and high-signal.
+- Put long investigations, verification logs, and chronology into `memory/*.md` rather than growing bootstrap-injected files.
+- Prefer `agents.defaults.contextInjection = "continuation-skip"` in the live OpenClaw config to reduce repeated bootstrap injection on safe continuation turns.
