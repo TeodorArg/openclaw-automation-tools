@@ -94,9 +94,9 @@ export function createGitWorkflowTool() {
 			"Bounded git workflow tool for planning handoff and confirmed branch/commit execution.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
-			if (params.skillName !== "openclaw_git_workflow") {
+			if (params.skillName !== "openclaw-git-workflow") {
 				throw new Error(
-					"git_workflow_action only accepts requests from skill openclaw_git_workflow.",
+					"git_workflow_action only accepts requests from skill openclaw-git-workflow.",
 				);
 			}
 

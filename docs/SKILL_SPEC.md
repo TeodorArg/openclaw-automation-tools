@@ -118,12 +118,14 @@ The implementation should stay aligned with:
 - execute must not be reconstructed from free-form user text alone
 - prefer several narrow scripts over one large dispatcher script
 
-## First scaffold now in repo
+## Current implementation layer now in repo
 
-The first scaffold for implementation now includes:
+The current implementation layer now includes:
 - `skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
+- the standalone plugin package under `plugin/`
+- bounded branch/commit helper scripts under `scripts/`
 
-These files define the first bounded UX and runtime contract before the actual helper scripts and tool wiring land.
-The next step is to add the real execute implementation behind this contract.
+These files and package contents define the first bounded UX and runtime contract together with a working standalone plugin package scaffold.
+The next step is to improve the repo-aware planning and execution behavior behind this contract.
