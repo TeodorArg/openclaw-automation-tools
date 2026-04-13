@@ -4,6 +4,9 @@ This file defines what the new repo should contain and what each area is respons
 
 ## Design basis
 
+For implementation work inside the current container-backed assistant session, the canonical repo path is `/home/node/repos/openclaw-git-workflow`.
+Do not confuse it with the host path `/Users/svarnoy85/teodorArg/openclaw-git-workflow` when reading or editing files from inside the container.
+
 This repo structure should stay aligned with:
 - OpenClaw Skills docs (`/app/docs/tools/skills.md`)
 - OpenClaw Slash Commands docs (`/app/docs/tools/slash-commands.md`)
@@ -65,9 +68,17 @@ Purpose:
 
 Expected content for the first slice:
 - `plugin/EXECUTE_SURFACE.md`
-- next: tool definitions
-- next: minimal runtime wiring
-- next: plugin manifest/config
+- `plugin/openclaw.plugin.json`
+- `plugin/package.json`
+- `plugin/index.ts`
+- `plugin/api.ts`
+- `plugin/tsconfig.json`
+- `plugin/tsconfig.build.json`
+- `plugin/.gitignore`
+- `plugin/src/index.ts`
+- `plugin/src/git-workflow-tool.ts`
+- `plugin/src/runtime/validate-confirmed-plan.ts`
+- `plugin/src/types/openclaw-plugin-sdk.d.ts`
 
 ### `scripts/`
 Purpose:
@@ -76,8 +87,8 @@ Purpose:
 - scripts should correspond to explicit allowlisted actions
 
 Expected content for the first slice:
-- create-branch helper
-- commit helper
+- `scripts/git-create-branch.sh`
+- `scripts/git-create-commit.sh`
 - prefer several narrow scripts over one large dispatcher
 - later: push-current-branch helper
 

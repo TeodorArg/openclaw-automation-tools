@@ -46,14 +46,36 @@ Responsibility:
 - define one bounded tool contract for the git workflow
 - translate tool actions into bounded runtime helpers
 
-Likely future files:
+Required first-slice package shape:
 - `plugin/package.json`
 - `plugin/openclaw.plugin.json`
+- `plugin/index.ts`
+- `plugin/api.ts`
+- `plugin/tsconfig.json`
+- `plugin/tsconfig.build.json`
+- `plugin/.gitignore`
 - `plugin/src/index.ts`
 - `plugin/src/git-workflow-tool.ts`
-- `plugin/src/runtime/validate-input.ts`
-- `plugin/src/runtime/repo-state.ts`
-- `plugin/src/runtime/run-action.ts`
+- `plugin/src/runtime/validate-confirmed-plan.ts`
+- `plugin/src/types/openclaw-plugin-sdk.d.ts`
+
+Required package scripts in `plugin/package.json`:
+- `build`: `tsc -p tsconfig.build.json`
+- `format`: `biome format --write .`
+- `format:check`: `biome format --check .`
+- `lint`: `biome check .`
+- `lint:fix`: `biome check --write .`
+- `check`: `pnpm lint && pnpm test && pnpm build`
+- `typecheck`: `tsc --noEmit -p tsconfig.json`
+- `test`: `vitest run --config ./vitest.config.ts`
+
+Required devDependencies for the first plugin scaffold:
+- `@biomejs/biome`
+- `@types/node`
+- `typescript`
+- `vitest`
+
+Do not treat plugin scaffolding as complete until the package is shaped like a real TS package rather than a source-only sketch.
 
 ### `scripts/`
 Responsibility:
@@ -163,6 +185,17 @@ The first real implementation should deliver:
 - the minimal supporting plugin package for execute
 - the bounded branch and commit scripts
 - enough docs to explain trust boundaries and execution rules
+- immediate verification of the plugin package through install plus build/test gates
+
+For the plugin package, the expected first verification flow is:
+1. `pnpm install`
+2. `pnpm lint`
+3. `pnpm typecheck`
+4. `pnpm build`
+5. `pnpm test`
+
+This verification flow has already been exercised successfully for the current standalone plugin package scaffold.
+Do not leave a new plugin scaffold unverified when these commands are part of the package contract.
 
 It should not yet try to solve:
 - push in the execute workflow
@@ -186,6 +219,7 @@ It should not yet try to solve:
 - plan-only workflow may work without a plugin
 - execute flow requires a minimal plugin/tool layer
 - the plugin should exist only as a tool/runtime carrier, not as a command-entry surface
+- for this standalone repo shape, the plugin package should remain standalone-compatible rather than assuming OpenClaw monorepo `workspace:*` dependency resolution
 
 ### Confirmed plan requirement
 - execute must require a confirmed internal plan format

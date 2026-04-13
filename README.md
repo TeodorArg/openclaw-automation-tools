@@ -4,7 +4,7 @@ Skill-first git workflow repo for OpenClaw.
 
 ## Status
 
-Early implementation scaffold repo, not implementation-complete yet.
+Early implementation repo with a working standalone plugin package scaffold, but not implementation-complete yet.
 
 ## Goal
 
@@ -12,7 +12,8 @@ Create a new repo that defines and then implements a skill-first workflow for th
 
 ## Fixed decisions
 
-- Repo path: `/Users/svarnoy85/teodorArg/openclaw-git-workflow`
+- In the current container session, the canonical implementation path for this repo is `/home/node/repos/openclaw-git-workflow`
+- Do not confuse that container path with the host path `/Users/svarnoy85/teodorArg/openclaw-git-workflow` when operating inside the container-backed assistant session
 - Old repo `/Users/svarnoy85/teodorArg/openclaw-host-git-push` is reference-only for proven ideas and prior runtime experiments
 - The target design should prefer skill slash commands and skill-to-tool dispatch
 - The target design must not depend on an always-on macOS helper app/node in autoload/bin style
@@ -40,11 +41,20 @@ See `docs/SKILL_SPEC.md`, `docs/CONFIRMED_PLAN_FORMAT.md`, `docs/IMPLEMENTATION_
 - push is a later step
 - PR is a later separate track
 
-## Current scaffold
+## Current implementation state
 
-The repo now has the first implementation scaffold for:
+The repo now has the first working implementation layer for:
 - `skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
+- standalone plugin package scaffold under `plugin/`
+- bounded branch/commit helpers under `scripts/`
 
-The next implementation step is to turn this scaffold into a real bounded execute path with plugin runtime wiring, confirmed-plan validation, and narrow branch/commit helpers.
+The plugin package has been brought to a real standalone TypeScript package shape and verified through:
+- `pnpm install`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm test`
+
+The next implementation step is to improve the execute path from a bounded working scaffold into fuller repo-aware planning/execution behavior.

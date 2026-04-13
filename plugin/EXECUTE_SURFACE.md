@@ -58,6 +58,29 @@ Anything else is out of scope.
 - plugin runtime validates request and confirmed plan
 - plugin runtime maps one bounded phase to one narrow script
 - scripts receive structured args, not free-form prose
+- the plugin package itself must be scaffolded as a real TypeScript package, not just loose source files
+
+## Required package baseline
+
+For this repo's plugin slice, `plugin/package.json` should exist immediately with at least these scripts:
+- `build`: `tsc -p tsconfig.build.json`
+- `format`: `biome format --write .`
+- `format:check`: `biome format --check .`
+- `lint`: `biome check .`
+- `lint:fix`: `biome check --write .`
+- `check`: `pnpm lint && pnpm test && pnpm build`
+- `typecheck`: `tsc --noEmit -p tsconfig.json`
+- `test`: `vitest run --config ./vitest.config.ts`
+
+Expected devDependencies baseline:
+- `@biomejs/biome`
+- `@types/node`
+- `typescript`
+- `vitest`
+
+If this repo is developed as a standalone repo rather than the main OpenClaw monorepo, do not assume workspace-only package references like `@openclaw/plugin-sdk: workspace:*` will resolve locally. Keep the standalone verification path honest and compatible with the actual repo shape.
+
+After scaffolding, immediately run install plus verification rather than leaving the package unbuilt.
 
 ## Suggested narrow helpers
 

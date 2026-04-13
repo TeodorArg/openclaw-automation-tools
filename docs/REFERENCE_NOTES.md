@@ -1,5 +1,12 @@
 # Reference Notes
 
+## Canonical repo path in this session
+
+For work inside the current container-backed assistant session, use:
+- `/home/node/repos/openclaw-git-workflow`
+
+Do not treat the host path `/Users/svarnoy85/teodorArg/openclaw-git-workflow` as the operational path from inside this session unless the distinction is being documented explicitly.
+
 ## Reference-only repo
 
 Use `/Users/svarnoy85/teodorArg/openclaw-host-git-push` as a reference source only.
