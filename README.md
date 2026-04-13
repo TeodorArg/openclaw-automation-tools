@@ -4,7 +4,7 @@ Skill-first git workflow repo for OpenClaw.
 
 ## Status
 
-Early implementation repo with a working standalone plugin package scaffold, but not implementation-complete yet.
+Early implementation repo with a working standalone plugin package, bounded branch/commit execution, and repo-aware planning on `main`, but not implementation-complete yet.
 
 ## Goal
 
@@ -49,7 +49,7 @@ The repo now has the first working implementation layer for:
 - `skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
-- standalone plugin package scaffold under `plugin/`
+- standalone plugin package under `plugin/`
 - bounded branch/commit helpers under `scripts/`
 
 The plugin package has been brought to a real standalone TypeScript package shape and verified through:
@@ -59,4 +59,4 @@ The plugin package has been brought to a real standalone TypeScript package shap
 - `pnpm build`
 - `pnpm test`
 
-The next implementation step is to improve the execute path from a bounded working scaffold into fuller repo-aware planning/execution behavior.
+The next implementation step is to validate merged `main` end-to-end through the actual skill/tool flow, then decide whether the current area-based grouping is enough or should become more granular.

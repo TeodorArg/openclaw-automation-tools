@@ -194,8 +194,8 @@ For the plugin package, the expected first verification flow is:
 4. `pnpm build`
 5. `pnpm test`
 
-This verification flow has already been exercised successfully for the current standalone plugin package scaffold.
-Do not leave a new plugin scaffold unverified when these commands are part of the package contract.
+This verification flow has already been exercised successfully for the current standalone plugin package.
+Do not leave a new plugin package unverified when these commands are part of the package contract.
 
 It should not yet try to solve:
 - push in the execute workflow

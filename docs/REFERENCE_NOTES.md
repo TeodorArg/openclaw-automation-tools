@@ -40,6 +40,12 @@ It should not be treated as the implementation base for the new repo.
 - any design that requires an always-on macOS helper app/node installed in autoload/bin style
 - any assumption that container `gh` auth is already solved
 
+## Runtime install notes learned from this track
+
+- For live OpenClaw plugin install, `plugin/openclaw.plugin.json` must include `configSchema`, even when the plugin has no config.
+- In the current OpenClaw runtime, plugin dependency installation is still npm-based during `openclaw plugins install`, even if `pnpm` is available in the container.
+- Making `pnpm` available by default in Docker is still useful for operator and repo workflows, but it should not be confused with changing OpenClaw's internal plugin installer behavior.
+
 ## Workspace context hygiene for this track
 
 - When recording durable assistant context during this implementation track, keep `MEMORY.md` compact and high-signal.

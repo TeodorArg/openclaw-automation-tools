@@ -65,6 +65,7 @@ Expected content for the first slice:
 Purpose:
 - home for the small supporting plugin that carries the execute-mode tool surface
 - should stay minimal and exist only as bounded runtime support for execute
+- plugin manifest must include `configSchema`, even when empty, so live OpenClaw install/load succeeds
 
 Expected content for the first slice:
 - `plugin/EXECUTE_SURFACE.md`
