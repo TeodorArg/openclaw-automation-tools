@@ -104,8 +104,9 @@ The implementation should stay aligned with:
 ## Fixed v1 execution decisions
 
 - `выполни git-группы с ветками` does not include push
-- canonical execution backend for v1 is `openclaw-git` only
 - execution model for v1 is `plan -> confirm -> execute`
+- the current first slice uses bounded local branch + commit helpers inside the target repo
+- integration with the validated operator-side `openclaw-git` path remains a later step
 - one-shot execute is out of scope for v1
 - push is a separate later step
 - PR creation is an even later separate step
