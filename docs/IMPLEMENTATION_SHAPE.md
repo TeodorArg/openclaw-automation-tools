@@ -59,13 +59,13 @@ Likely future files:
 Responsibility:
 - implement explicit bounded actions only
 - never expose generic shell passthrough
-- keep branch/commit/push operations narrow and validated
+- keep branch and commit operations narrow and validated in the first slice
 
 Likely future files:
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
-- `scripts/git-push-current-branch.sh`
-- or one `scripts/git-workflow-action.sh` dispatcher with explicit allowlisted actions
+- later: `scripts/git-push-current-branch.sh`
+- avoid a large catch-all dispatcher; prefer several narrow scripts
 
 ## Recommended minimal tool contract
 
@@ -109,11 +109,13 @@ Contract shape:
 
 ### `action = execute-groups-with-branches`
 - validate explicit execution intent
+- run only after the planning step has already established the intended groups
+- require a confirmed internal plan format
 - validate inputs derived from the planning step
 - create branches
 - stage grouped files
 - create commits in canonical format
-- optionally push only if the workflow spec for this command allows it
+- not push in v1
 - never create PRs implicitly
 
 ## Input parsing rule
@@ -156,11 +158,12 @@ Do not design around any always-on helper app, LaunchAgent, autoloaded node wrap
 
 The first real implementation should deliver:
 - the skill directory and `SKILL.md`
-- the minimal supporting plugin package only if required for the tool
-- the bounded action script(s)
+- the minimal supporting plugin package only if required for execute
+- the bounded branch and commit scripts
 - enough docs to explain trust boundaries and execution rules
 
 It should not yet try to solve:
+- push in the execute workflow
 - PR creation
 - generic git command execution
 - always-on host services
@@ -174,3 +177,20 @@ It should not yet try to solve:
 - do not implement one-shot execute in the first slice
 - push stays a separate future step
 - PR stays a later separate track
+
+## Fixed product decisions after specification review
+
+### Plugin need
+- plan-only workflow may work without a plugin
+- execute flow is expected to require a minimal plugin/tool layer
+- the plugin should exist only as a tool/runtime carrier, not as a command-entry surface
+
+### Confirmed plan requirement
+- execute must require a confirmed internal plan format
+- do not run execute directly from free-form user text
+- the planning step must produce enough structured data for later bounded execution
+
+### Script shape
+- prefer several narrow scripts over one large dispatcher script
+- keep each script aligned with one bounded operation or one tightly-scoped phase
+- do not recreate a broad command router inside shell scripts

@@ -43,10 +43,12 @@ Execution mode.
 
 The skill should:
 - use the already-prepared git grouping logic
+- run only after an explicit confirmation step
+- execute against a confirmed internal plan format
 - create the planned branches
 - stage the intended file groups
 - create commits using the canonical commit format
-- optionally push only when the repo workflow explicitly allows it for this command
+- not push in v1
 - never treat PR creation into `main` as implicit
 
 ## What the skill must know
@@ -73,6 +75,7 @@ This follows OpenClaw docs that allow skills to be user-invocable slash commands
 The first version should not include:
 - arbitrary `git <anything>` execution
 - arbitrary shell execution
+- push inside `выполни git-группы с ветками`
 - force push
 - rebase flows
 - reset or destructive recovery flows
@@ -106,3 +109,11 @@ The implementation should stay aligned with:
 - one-shot execute is out of scope for v1
 - push is a separate later step
 - PR creation is an even later separate step
+
+## Fixed product decisions after specification review
+
+- plan-only workflow may work without a plugin
+- execute is expected to use a minimal plugin/tool layer
+- execute must depend on a confirmed internal plan format
+- execute must not be reconstructed from free-form user text alone
+- prefer several narrow scripts over one large dispatcher script
