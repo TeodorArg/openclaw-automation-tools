@@ -158,6 +158,8 @@ Do not design around any always-on helper app, LaunchAgent, autoloaded node wrap
 
 The first real implementation should deliver:
 - the skill directory and `SKILL.md`
+- the canonical confirmed plan format document
+- the minimal execute-surface document for bounded runtime wiring
 - the minimal supporting plugin package only if required for execute
 - the bounded branch and commit scripts
 - enough docs to explain trust boundaries and execution rules
