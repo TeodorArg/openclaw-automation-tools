@@ -13,6 +13,7 @@ type ChangedFile = {
 };
 
 type RepoArea = "docs" | "skills" | "runtime" | "repo";
+type RuntimeSubtype = "planning" | "execute" | "install" | "mixed";
 
 type PlannedCommit = {
 	title: string;
@@ -92,7 +93,7 @@ export function buildPlanResult(
 						repoState.repoPath,
 						options.sourceCommand,
 						groups,
-					)
+				  )
 				: null,
 	};
 }
@@ -165,39 +166,46 @@ function buildPlannedGroups(
 		}
 
 		const sortedFiles = [...new Set(files)].sort();
-		const group = buildGroupForArea(area, sortedFiles);
-		groups.push({
-			id: `group-${groups.length + 1}`,
-			area,
-			label: group.label,
-			files: sortedFiles,
-			commit: group.commit,
-			...(includeBranches
-				? {
-						branch: group.branch,
-						commands: buildExecutionCommands(
-							group.branch,
-							baseRef,
-							sortedFiles,
-							group.commit,
-						),
-					}
-				: {}),
-		});
+		const areaGroups =
+			area === "runtime"
+				? buildRuntimeGroups(sortedFiles)
+				: [buildGroupForArea(area, sortedFiles)];
+
+		for (const group of areaGroups) {
+			groups.push({
+				id: `group-${groups.length + 1}`,
+				area,
+				label: group.label,
+				files: group.files,
+				commit: group.commit,
+				...(includeBranches
+					? {
+							branch: group.branch,
+							commands: buildExecutionCommands(
+								group.branch,
+								baseRef,
+								group.files,
+								group.commit,
+							),
+					  }
+					: {}),
+			});
+		}
 	}
 
 	return groups;
 }
 
 function buildGroupForArea(
-	area: RepoArea,
+	area: Exclude<RepoArea, "runtime">,
 	files: string[],
-): { label: string; branch: string; commit: PlannedCommit } {
+): { label: string; branch: string; commit: PlannedCommit; files: string[] } {
 	switch (area) {
 		case "docs":
 			return {
 				label: "Docs and repo guidance",
 				branch: "docs/update-workflow-docs",
+				files,
 				commit: {
 					title: "docs(workflow): update planning and usage docs",
 					body: createCommitBody(
@@ -215,6 +223,7 @@ function buildGroupForArea(
 			return {
 				label: "Skill UX and command contract",
 				branch: "feat/skills-refine-workflow-planning",
+				files,
 				commit: {
 					title: "feat(skills): refine git workflow planning behavior",
 					body: createCommitBody(
@@ -228,12 +237,175 @@ function buildGroupForArea(
 					),
 				},
 			};
-		case "runtime":
+		case "repo":
+			return {
+				label: "Repo metadata and support files",
+				branch: "chore/repo-sync-workflow-metadata",
+				files,
+				commit: {
+					title: "chore(repo): sync workflow repo metadata",
+					body: createCommitBody(
+						"Sync repo-level metadata for the current workflow slice.",
+						[
+							"Keep repo support files aligned with the implementation state.",
+							"Avoid widening the workflow contract beyond v1 boundaries.",
+							`Cover the changed repo files: ${summarizeFiles(files)}.`,
+							"Leave push and PR layers as separate later steps.",
+						],
+					),
+				},
+			};
+	}
+}
+
+function buildRuntimeGroups(
+	files: string[],
+): Array<{ label: string; branch: string; commit: PlannedCommit; files: string[] }> {
+	const buckets = splitRuntimeFilesIntoBuckets(files);
+
+	if (buckets.mixed.length > 0) {
+		return [buildRuntimeGroupForSubtype("mixed", files)];
+	}
+
+	const orderedSubtypes: Array<Exclude<RuntimeSubtype, "mixed">> = [
+		"planning",
+		"execute",
+		"install",
+	];
+	const groups = orderedSubtypes
+		.map((subtype) => {
+			const subtypeFiles = buckets[subtype];
+			if (subtypeFiles.length === 0) {
+				return null;
+			}
+
+			return buildRuntimeGroupForSubtype(subtype, subtypeFiles);
+		})
+		.filter((group): group is NonNullable<typeof group> => group !== null);
+
+	return groups.length > 0 ? groups : [buildRuntimeGroupForSubtype("mixed", files)];
+}
+
+function splitRuntimeFilesIntoBuckets(files: string[]): Record<RuntimeSubtype, string[]> {
+	const buckets: Record<RuntimeSubtype, string[]> = {
+		planning: [],
+		execute: [],
+		install: [],
+		mixed: [],
+	};
+
+	for (const file of files) {
+		const subtype = classifyRuntimeSubtype(file);
+		buckets[subtype].push(file);
+	}
+
+	return Object.fromEntries(
+		Object.entries(buckets).map(([subtype, subtypeFiles]) => [
+			subtype,
+			[...new Set(subtypeFiles)].sort(),
+		]),
+	) as Record<RuntimeSubtype, string[]>;
+}
+
+function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
+	if (
+		filePath === "plugin/src/runtime/plan-groups.ts" ||
+		filePath === "plugin/src/runtime/plan-groups.test.ts"
+	) {
+		return "planning";
+	}
+
+	if (
+		filePath.startsWith("scripts/") ||
+		filePath === "plugin/src/runtime/validate-confirmed-plan.ts" ||
+		filePath === "plugin/src/runtime/validate-confirmed-plan.test.ts" ||
+		filePath === "plugin/src/git-workflow-tool.ts"
+	) {
+		return "execute";
+	}
+
+	if (
+		filePath === "plugin/openclaw.plugin.json" ||
+		filePath === "plugin/package.json" ||
+		filePath === "plugin/package-lock.json" ||
+		filePath === "plugin/pnpm-lock.yaml" ||
+		filePath === "plugin/tsconfig.json" ||
+		filePath === "plugin/tsconfig.build.json" ||
+		filePath === "plugin/index.ts" ||
+		filePath === "plugin/api.ts"
+	) {
+		return "install";
+	}
+
+	return "mixed";
+}
+
+function buildRuntimeGroupForSubtype(
+	subtype: RuntimeSubtype,
+	files: string[],
+): { label: string; branch: string; commit: PlannedCommit; files: string[] } {
+	switch (subtype) {
+		case "planning":
+			return {
+				label: "Runtime planning logic",
+				branch: "feat/workflow-refine-planning",
+				files,
+				commit: {
+					title: "feat(workflow): refine repo-aware planning",
+					body: createCommitBody(
+						"Refine deterministic repo-aware planning in the workflow runtime.",
+						[
+							"Keep planning groups deterministic and path-based.",
+							"Preserve confirmed-plan handoff for later execute mode.",
+							`Cover the changed planning files: ${summarizeFiles(files)}.`,
+							"Avoid widening the v1 workflow surface beyond bounded planning.",
+						],
+					),
+				},
+			};
+		case "execute":
+			return {
+				label: "Plugin and bounded execute runtime",
+				branch: "feat/workflow-refine-planning-and-execute",
+				files,
+				commit: {
+					title: "feat(workflow): refine planning and bounded execute",
+					body: createCommitBody(
+						"Refine the runtime path for planning and bounded execution.",
+						[
+							"Keep execute bounded to validated branch plus commit actions.",
+							"Preserve deterministic branch base and commit identity behavior.",
+							`Cover the changed runtime files: ${summarizeFiles(files)}.`,
+							"Leave push and PR behavior outside the v1 execute path.",
+						],
+					),
+				},
+			};
+		case "install":
+			return {
+				label: "Plugin install and package shape",
+				branch: "fix/plugin-install-shape",
+				files,
+				commit: {
+					title: "fix(plugin): refine install and package shape",
+					body: createCommitBody(
+						"Refine the plugin install and package shape for the workflow runtime.",
+						[
+							"Keep package metadata aligned with the standalone plugin contract.",
+							"Preserve deterministic install expectations for the active runtime.",
+							`Cover the changed install files: ${summarizeFiles(files)}.`,
+							"Avoid widening the workflow behavior beyond packaging concerns.",
+						],
+					),
+				},
+			};
+		case "mixed":
 			return {
 				label: "Plugin and bounded runtime",
 				branch: files.some((file) => file.startsWith("scripts/"))
 					? "feat/workflow-refine-planning-and-execute"
 					: "feat/workflow-repo-aware-planning",
+				files,
 				commit: {
 					title: files.some((file) => file.startsWith("scripts/"))
 						? "feat(workflow): refine planning and bounded execute"
@@ -247,23 +419,6 @@ function buildGroupForArea(
 							"Generate stable groups, commit metadata, and branch suggestions.",
 							`Cover the changed runtime files: ${summarizeFiles(files)}.`,
 							"Keep execute bounded to branch plus commit, with no push.",
-						],
-					),
-				},
-			};
-		case "repo":
-			return {
-				label: "Repo metadata and support files",
-				branch: "chore/repo-sync-workflow-metadata",
-				commit: {
-					title: "chore(repo): sync workflow repo metadata",
-					body: createCommitBody(
-						"Sync repo-level metadata for the current workflow slice.",
-						[
-							"Keep repo support files aligned with the implementation state.",
-							"Avoid widening the workflow contract beyond v1 boundaries.",
-							`Cover the changed repo files: ${summarizeFiles(files)}.`,
-							"Leave push and PR layers as separate later steps.",
 						],
 					),
 				},
