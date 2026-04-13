@@ -64,5 +64,6 @@ That pass exposed and confirmed fixes for three runtime details: checkout of exi
 Those followup fixes were then pushed and merged into `main` as PRs #13, #14, and #15.
 
 The planner now keeps area-based grouping as the default, but adds deterministic runtime-only sub-grouping when the changed files cleanly fit `planning`, `execute`, or `install` buckets. Mixed runtime diffs still fall back to one runtime group.
+That runtime sub-grouping v2 layer was then documented and merged into `main` as PRs #16 and #17.
 
 Current execute validation also checks bounded branch creation semantics and deterministic commit identity fallback.
