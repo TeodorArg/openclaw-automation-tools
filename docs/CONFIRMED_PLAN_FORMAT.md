@@ -65,7 +65,10 @@ Before execute, runtime must validate:
 - `status === "confirmed"`
 - `repoPath` matches the active target repo
 - `groups.length >= 1`
+- every group id is unique inside the plan
+- every branch name is unique inside the plan
 - every file path is repo-relative and stays inside repo root
+- group file lists do not contain duplicates
 - branch names contain only allowlisted characters and match the repo branch convention
 - commit title matches allowed commit format
 - commit body is present and follows the canonical short-body shape
@@ -85,6 +88,9 @@ Execution must fail closed when:
 
 v1 does not require long-term persistence format beyond a structured JSON payload.
 The planning step may render the plan for the user in a readable way, but execute must consume the structured payload, not the human prose rendering.
+
+For `разложи по git-группам с ветками`, the planning output should already include a ready-to-confirm payload in this exact shape.
+That lets the user review a readable plan and then confirm the same structured payload for `выполни git-группы с ветками` without reconstructing it from prose.
 
 ## First-slice boundary
 
