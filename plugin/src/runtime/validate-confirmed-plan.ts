@@ -107,6 +107,9 @@ export function validateConfirmedPlan(
 		throw new Error("confirmedPlan.groups must be a non-empty array.");
 	}
 
+	const seenGroupIds = new Set<string>();
+	const seenBranches = new Set<string>();
+
 	for (const [index, group] of plan.groups.entries()) {
 		const prefix = `confirmedPlan.groups[${index}]`;
 		if (!group || typeof group !== "object" || Array.isArray(group)) {
@@ -114,7 +117,16 @@ export function validateConfirmedPlan(
 		}
 
 		assertNonEmptyString(group.id, `${prefix}.id`);
+		if (seenGroupIds.has(group.id)) {
+			throw new Error(`${prefix}.id must be unique.`);
+		}
+		seenGroupIds.add(group.id);
+
 		assertNonEmptyString(group.branch, `${prefix}.branch`);
+		if (seenBranches.has(group.branch)) {
+			throw new Error(`${prefix}.branch must be unique.`);
+		}
+		seenBranches.add(group.branch);
 		if (!BRANCH_RE.test(group.branch)) {
 			throw new Error(`${prefix}.branch is malformed or unsafe.`);
 		}
@@ -123,9 +135,14 @@ export function validateConfirmedPlan(
 			throw new Error(`${prefix}.files must be a non-empty array.`);
 		}
 
+		const seenFiles = new Set<string>();
 		for (const file of group.files) {
 			assertNonEmptyString(file, `${prefix}.files[]`);
 			validateRepoRelativeFile(normalizedExpectedRepoPath, file);
+			if (seenFiles.has(file)) {
+				throw new Error(`${prefix}.files must not contain duplicates.`);
+			}
+			seenFiles.add(file);
 		}
 
 		if (

@@ -34,11 +34,14 @@
 ### `plan-groups-with-branches`
 - same as planning
 - also produce branch names and exact later commands
+- also emit a ready-to-confirm structured payload in canonical confirmed-plan shape
 - no writes
 
 ### `execute-groups-with-branches`
 - require `confirmedPlan`
+- accept either a structured object or a JSON string containing the confirmed plan
 - reject free-form execution without structured plan
+- return structured success or rejection/failure payloads
 - create branches and commits only
 - no push
 - no PR
