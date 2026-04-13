@@ -1,0 +1,13 @@
+{
+	"id": "openclaw-host-git-push",
+	"name": "OpenClaw Host Git Push",
+	"description": "Bounded bridge for /git-push current-branch using host capability preflight and host-jobs spool.",
+	"version": "0.1.0",
+	"skills": ["./skills"],
+	"entry": "./dist/index.js",
+	"configSchema": {
+		"type": "object",
+		"additionalProperties": false,
+		"properties": {}
+	}
+}
