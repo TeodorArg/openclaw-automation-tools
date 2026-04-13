@@ -128,5 +128,5 @@ The current implementation layer now includes:
 - the standalone plugin package under `plugin/`
 - bounded branch/commit helper scripts under `scripts/`
 
-These files and package contents define the first bounded UX and runtime contract together with a working standalone plugin package scaffold.
-The next step is to improve the repo-aware planning and execution behavior behind this contract.
+These files and package contents define the first bounded UX and runtime contract together with a working standalone plugin package, repo-aware planning, and bounded execute behavior on `main`.
+The next step is to validate the merged `main` behavior end-to-end through the actual skill/tool flow, then decide whether the current area-based grouping should stay or become more granular.

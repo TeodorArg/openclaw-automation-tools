@@ -61,7 +61,7 @@ Anything else is out of scope.
 - plugin runtime validates request and confirmed plan
 - plugin runtime maps one bounded phase to one narrow script
 - scripts receive structured args, not free-form prose
-- the plugin package itself must be scaffolded as a real TypeScript package, not just loose source files
+- the plugin package itself must exist as a real TypeScript package, not just loose source files
 
 ## Required package baseline
 
@@ -83,7 +83,7 @@ Expected devDependencies baseline:
 
 If this repo is developed as a standalone repo rather than the main OpenClaw monorepo, do not assume workspace-only package references like `@openclaw/plugin-sdk: workspace:*` will resolve locally. Keep the standalone verification path honest and compatible with the actual repo shape.
 
-After scaffolding, immediately run install plus verification rather than leaving the package unbuilt.
+After package setup, immediately run install plus verification rather than leaving the package unbuilt.
 
 ## Suggested narrow helpers
 
