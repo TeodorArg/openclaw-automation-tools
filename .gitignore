@@ -1,0 +1,57 @@
+# =========================================================
+# macOS filesystem noise
+# =========================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# =========================================================
+# Editor and local tooling state
+# Keep per-machine/editor state out of the repo.
+# =========================================================
+.vscode/
+.history/
+
+# Vim / generic temp editor files
+*.swp
+*.swo
+*~
+
+# =========================================================
+# Logs and local diagnostics
+# Generated during local runs or debugging.
+# =========================================================
+*.log
+logs/
+
+# =========================================================
+# Node.js and package manager caches
+# Dependency trees and local package-manager state.
+# =========================================================
+node_modules/
+.npm/
+.pnpm-store/
+.pnp.*
+
+# =========================================================
+# Build and test output
+# Generated artifacts should be reproducible.
+# =========================================================
+dist/
+build/
+coverage/
+.turbo/
+
+# =========================================================
+# Environment files and secrets
+# Commit only explicit examples, never live local env files.
+# =========================================================
+.env
+.env.*
+!.env.example
+
+# =========================================================
+# OpenClaw local runtime state
+# Ignore repo-local runtime noise if this repo is ever used as a mounted project.
+# =========================================================
+.openclaw/
