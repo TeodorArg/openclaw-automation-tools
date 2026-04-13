@@ -18,7 +18,7 @@
   "action": "plan-groups" | "plan-groups-with-branches" | "execute-groups-with-branches",
   "command": "<raw skill args>",
   "commandName": "<slash command>",
-  "skillName": "openclaw_git_workflow",
+  "skillName": "openclaw-git-workflow",
   "confirmedPlan": { "version": 1, "status": "confirmed", "groups": [] }
 }
 ```
