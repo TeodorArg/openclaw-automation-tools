@@ -36,6 +36,12 @@ Purpose:
 - define the file responsibilities for the repo
 - reduce future drift when implementation begins
 
+### `docs/IMPLEMENTATION_SHAPE.md`
+Purpose:
+- define how skill, plugin, and scripts fit together
+- record the minimal tool contract
+- keep the fixed v1 execution model explicit
+
 ### `skills/`
 Purpose:
 - hold the actual OpenClaw skill directory or directories
@@ -49,7 +55,7 @@ Expected future content:
 ### `plugin/`
 Purpose:
 - optional home for a small supporting plugin if a dedicated tool surface is needed
-- should exist only if the skill needs custom tools or bounded runtime helpers
+- should exist only if the skill needs custom tools or bounded runtime helpers for execute
 
 Expected future content if needed:
 - tool definitions
@@ -65,8 +71,8 @@ Purpose:
 Expected future content:
 - create-branch helper
 - commit helper
-- push-current-branch helper
-- or one bounded dispatcher with explicit action validation
+- later: push-current-branch helper
+- prefer several narrow scripts over one large dispatcher
 
 ## Rules for implementation
 
