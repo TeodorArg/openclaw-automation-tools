@@ -45,6 +45,7 @@ command-arg-mode: raw
 - не реконструируй execution из свободного текста пользователя
 - требуй confirmed plan format, полученный на planning step
 - выполняй только bounded действия branch + commit
+- execution должен оставаться детерминированным по identity и branch base
 - не push в v1
 - не открывай PR
 
