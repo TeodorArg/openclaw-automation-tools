@@ -6,7 +6,7 @@ This implementation shape is based on:
 - OpenClaw local docs for skills and slash commands
 - Context7 OpenClaw docs confirming `command-dispatch: tool`, `command-tool`, `command-arg-mode: raw`, and deterministic skill-to-tool routing
 - current Docker split-layer and SSH-agent constraints already validated in the main repo
-- current evidence that container `gh` auth is not ready for PR flows
+- current evidence that container `gh` auth is not ready for PR flows, even though operator-side macOS GitHub auth is now working for host-side push/PR work
 
 ## Core design
 
@@ -45,6 +45,7 @@ Responsibility:
 - hold the minimal supporting plugin package for execute-mode tool logic
 - define one bounded tool contract for the git workflow
 - translate tool actions into bounded runtime helpers
+- keep planning groups deterministic, with area-based grouping by default and a narrow runtime-only sub-grouping layer when file paths make that split obvious
 
 Required first-slice package shape:
 - `plugin/package.json`
@@ -171,7 +172,7 @@ The validated container-side push path in the current environment depends on:
 
 ### GitHub CLI
 Do not make PR creation part of the first slice.
-Current evidence shows container runtime lacks working `gh` auth state.
+Current evidence shows the container runtime still lacks working `gh` auth state, even though host-side macOS GitHub auth is now validated and sufficient for explicit push/PR work outside the container.
 
 ### macOS helper constraint
 Do not design around any always-on helper app, LaunchAgent, autoloaded node wrapper, or similar background Mac resident process.

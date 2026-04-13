@@ -129,4 +129,5 @@ The current implementation layer now includes:
 - bounded branch/commit helper scripts under `scripts/`
 
 These files and package contents define the first bounded UX and runtime contract together with a working standalone plugin package, repo-aware planning, and bounded execute behavior on `main`.
-The next step is to validate the merged `main` behavior end-to-end through the actual skill/tool flow, then decide whether the current area-based grouping should stay or become more granular.
+Merged `main` has now been validated end-to-end through the actual skill/tool flow, and the resulting followup fixes were merged as PRs #13, #14, and #15.
+The next step is to decide whether the current area-based grouping should stay or become more granular.

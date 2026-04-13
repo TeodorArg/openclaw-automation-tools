@@ -59,6 +59,10 @@ The plugin package has been brought to a real standalone TypeScript package shap
 - `pnpm build`
 - `pnpm test`
 
-The next implementation step is to validate merged `main` end-to-end through the actual skill/tool flow, then decide whether the current area-based grouping is enough or should become more granular.
+Merged `main` has now been validated end-to-end through the actual skill/tool flow.
+That pass exposed and confirmed fixes for three runtime details: checkout of existing branches, deterministic commit identity fallback, and non-stacked branch creation from a fixed base commit.
+Those followup fixes were then pushed and merged into `main` as PRs #13, #14, and #15.
+
+The planner now keeps area-based grouping as the default, but adds deterministic runtime-only sub-grouping when the changed files cleanly fit `planning`, `execute`, or `install` buckets. Mixed runtime diffs still fall back to one runtime group.
 
 Current execute validation also checks bounded branch creation semantics and deterministic commit identity fallback.
