@@ -1,5 +1,5 @@
 ---
-name: openclaw_git_workflow
+name: openclaw-git-workflow
 description: Планирует git-группы для изменений и, после подтверждённого плана, выполняет только branch + commit через bounded workflow.
 user-invocable: true
 command-dispatch: tool
