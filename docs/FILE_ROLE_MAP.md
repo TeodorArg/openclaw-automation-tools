@@ -113,3 +113,6 @@ The current environment already has a validated operator-side git push path thro
 
 ### GitHub CLI
 The container runtime currently lacks working `gh` auth state, so PR-related flows should not be assumed to work in the first implementation slice.
+
+### Workspace bootstrap memory hygiene
+For the surrounding assistant workspace used to build this repo, `MEMORY.md` should stay a compact durable index, while long logs and detailed history belong in `memory/*.md`. This reduces bootstrap truncation and keeps continuation turns more stable.

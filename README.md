@@ -18,6 +18,7 @@ Create a new repo that defines and then implements a skill-first workflow for th
 - The target design should prefer skill slash commands and skill-to-tool dispatch
 - The target design must not depend on an always-on macOS helper app/node in autoload/bin style
 - PR creation is a separate later track and is not part of the first implementation slice
+- Workspace bootstrap hygiene matters for this implementation track: keep `MEMORY.md` compact and move long logs, audits, and chronology into `memory/*.md`
 
 ## Initial scope
 
@@ -35,8 +36,9 @@ See `docs/SKILL_SPEC.md`, `docs/CONFIRMED_PLAN_FORMAT.md`, `docs/IMPLEMENTATION_
 ## Fixed v1 execution rules
 
 - `выполни git-группы с ветками` does not include push
-- execution backend for v1 is only `openclaw-git`
 - execution model for v1 is `plan -> confirm -> execute`
+- the current first slice executes bounded local branch + commit helpers inside the target repo
+- integration with the validated operator-side `openclaw-git` path is a later step, not current first-slice reality
 - one-shot execute is not part of v1
 - push is a later step
 - PR is a later separate track
