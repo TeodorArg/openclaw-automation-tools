@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Type } from "@sinclair/typebox";
+import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
 import {
 	type ConfirmedPlan,
 	validateConfirmedPlan,
@@ -69,32 +70,95 @@ async function runScript(
 async function executeConfirmedPlan(plan: ConfirmedPlan) {
 	const executedGroups: Array<Record<string, unknown>> = [];
 	const repoPath = resolveRepoPath();
+	const initialRepoState = await collectRepoState(repoPath);
 
 	for (const group of plan.groups) {
-		const branchResult = await runScript(repoPath, "git-create-branch.sh", [
-			group.branch,
-		]);
-		const commitResult = await runScript(repoPath, "git-create-commit.sh", [
-			group.branch,
-			JSON.stringify(group.files),
-			group.commit.title,
-			group.commit.body,
-		]);
+		try {
+			const branchResult = await runScript(repoPath, "git-create-branch.sh", [
+				group.branch,
+			]);
+			const commitResult = await runScript(repoPath, "git-create-commit.sh", [
+				group.branch,
+				JSON.stringify(group.files),
+				group.commit.title,
+				group.commit.body,
+			]);
 
-		executedGroups.push({
-			id: group.id,
-			branch: group.branch,
-			files: group.files,
-			branchResult,
-			commitResult,
-		});
+			executedGroups.push({
+				id: group.id,
+				branch: group.branch,
+				files: group.files,
+				status: "executed",
+				branchResult,
+				commitResult,
+			});
+		} catch (error) {
+			return {
+				ok: false,
+				action: "execute-groups-with-branches",
+				repoPath: plan.repoPath,
+				status: "failed",
+				initialBranch: initialRepoState.currentBranch,
+				executedGroups,
+				failedGroup: {
+					id: group.id,
+					branch: group.branch,
+					files: group.files,
+				},
+				error: formatExecutionError(error),
+			};
+		}
 	}
 
 	return {
 		ok: true,
 		action: "execute-groups-with-branches",
 		repoPath: plan.repoPath,
+		status: "executed",
+		initialBranch: initialRepoState.currentBranch,
 		executedGroups,
+	};
+}
+
+function normalizeConfirmedPlanInput(raw: unknown): unknown {
+	if (typeof raw !== "string") {
+		return raw;
+	}
+
+	const trimmed = raw.trim();
+	if (trimmed === "") {
+		return raw;
+	}
+
+	try {
+		return JSON.parse(trimmed);
+	} catch {
+		throw new Error("confirmedPlan string must contain valid JSON.");
+	}
+}
+
+function formatExecutionError(error: unknown) {
+	if (error && typeof error === "object") {
+		const execError = error as {
+			message?: string;
+			stdout?: string;
+			stderr?: string;
+			code?: number | string;
+		};
+
+		return {
+			message: execError.message ?? "Unknown execution error.",
+			stdout: execError.stdout?.trim() ?? "",
+			stderr: execError.stderr?.trim() ?? "",
+			code: execError.code ?? null,
+		};
+	}
+
+	return {
+		message: String(error),
+		stdout: "",
+		stderr: "",
+		code: null,
 	};
 }
 
@@ -117,6 +181,12 @@ export function createGitWorkflowTool() {
 				params.action === "plan-groups" ||
 				params.action === "plan-groups-with-branches"
 			) {
+				const repoState = await collectRepoState(repoPath);
+				const planResult = buildPlanResult(repoState, {
+					includeBranches: params.action === "plan-groups-with-branches",
+					sourceCommand: params.commandName,
+				});
+
 				return {
 					content: [
 						{
@@ -129,7 +199,14 @@ export function createGitWorkflowTool() {
 									mode: "plan-only",
 									commandName: params.commandName,
 									command: params.command,
-									note: "Planning path scaffold only. Execute path is bounded separately and requires confirmedPlan.",
+									currentBranch: planResult.currentBranch,
+									changedFiles: planResult.changedFiles,
+									groups: planResult.groups,
+									confirmedPlanCandidate: planResult.confirmedPlanCandidate,
+									note:
+										planResult.groups.length > 0
+											? "Planning output is repo-aware and derived from current changed files. Execute remains bounded and still requires an explicit confirmed plan handoff."
+											: "No changed files detected in the target repo, so there is nothing to group yet.",
 								},
 								null,
 								2,
@@ -143,20 +220,42 @@ export function createGitWorkflowTool() {
 				throw new Error("Unsupported git_workflow_action action.");
 			}
 
-			const confirmedPlan = validateConfirmedPlan(
-				params.confirmedPlan,
-				repoPath,
-			);
-			const result = await executeConfirmedPlan(confirmedPlan);
+			try {
+				const confirmedPlan = validateConfirmedPlan(
+					normalizeConfirmedPlanInput(params.confirmedPlan),
+					repoPath,
+				);
+				const result = await executeConfirmedPlan(confirmedPlan);
 
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(result, null, 2),
-					},
-				],
-			};
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(result, null, 2),
+						},
+					],
+				};
+			} catch (error) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: false,
+									action: "execute-groups-with-branches",
+									repoPath,
+									status: "rejected",
+									error: formatExecutionError(error),
+									note: "Execute accepts only a valid confirmed plan payload and remains bounded to branch plus commit actions.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
 		},
 	};
 }
