@@ -60,3 +60,5 @@ The plugin package has been brought to a real standalone TypeScript package shap
 - `pnpm test`
 
 The next implementation step is to validate merged `main` end-to-end through the actual skill/tool flow, then decide whether the current area-based grouping is enough or should become more granular.
+
+Current execute validation also checks bounded branch creation semantics and deterministic commit identity fallback.
