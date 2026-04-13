@@ -47,16 +47,20 @@ type ToolParams = {
 	confirmedPlan?: unknown;
 };
 
+type ScriptEnv = Record<string, string>;
+
 async function runScript(
 	repoPath: string,
 	scriptName: string,
 	args: string[],
+	extraEnv: ScriptEnv = {},
 ): Promise<{ stdout: string; stderr: string }> {
 	const scriptPath = path.join(resolveScriptsDir(repoPath), scriptName);
 	const result = await execFileAsync(scriptPath, args, {
 		cwd: repoPath,
 		env: {
 			...process.env,
+			...extraEnv,
 			OPENCLAW_GIT_WORKFLOW_REPO: repoPath,
 		},
 	});
@@ -67,22 +71,71 @@ async function runScript(
 	};
 }
 
+async function readGitConfig(repoPath: string, key: string): Promise<string> {
+	try {
+		const result = await execFileAsync("git", ["config", "--get", key], {
+			cwd: repoPath,
+		});
+		return result.stdout.trim();
+	} catch {
+		return "";
+	}
+}
+
+export async function resolveCommitIdentityEnv(
+	repoPath: string,
+): Promise<ScriptEnv> {
+	const authorName =
+		process.env.GIT_AUTHOR_NAME ||
+		process.env.OPENCLAW_GIT_WORKFLOW_AUTHOR_NAME ||
+		(await readGitConfig(repoPath, "user.name")) ||
+		"OpenClaw Agent";
+	const authorEmail =
+		process.env.GIT_AUTHOR_EMAIL ||
+		process.env.OPENCLAW_GIT_WORKFLOW_AUTHOR_EMAIL ||
+		(await readGitConfig(repoPath, "user.email")) ||
+		"openclaw@example.test";
+	const committerName =
+		process.env.GIT_COMMITTER_NAME ||
+		process.env.OPENCLAW_GIT_WORKFLOW_COMMITTER_NAME ||
+		authorName;
+	const committerEmail =
+		process.env.GIT_COMMITTER_EMAIL ||
+		process.env.OPENCLAW_GIT_WORKFLOW_COMMITTER_EMAIL ||
+		authorEmail;
+
+	return {
+		GIT_AUTHOR_NAME: authorName,
+		GIT_AUTHOR_EMAIL: authorEmail,
+		GIT_COMMITTER_NAME: committerName,
+		GIT_COMMITTER_EMAIL: committerEmail,
+	};
+}
+
 async function executeConfirmedPlan(plan: ConfirmedPlan) {
 	const executedGroups: Array<Record<string, unknown>> = [];
 	const repoPath = resolveRepoPath();
 	const initialRepoState = await collectRepoState(repoPath);
+	const initialHead = initialRepoState.headCommit;
+	const commitIdentityEnv = await resolveCommitIdentityEnv(repoPath);
 
 	for (const group of plan.groups) {
 		try {
 			const branchResult = await runScript(repoPath, "git-create-branch.sh", [
 				group.branch,
+				initialHead,
 			]);
-			const commitResult = await runScript(repoPath, "git-create-commit.sh", [
-				group.branch,
-				JSON.stringify(group.files),
-				group.commit.title,
-				group.commit.body,
-			]);
+			const commitResult = await runScript(
+				repoPath,
+				"git-create-commit.sh",
+				[
+					group.branch,
+					JSON.stringify(group.files),
+					group.commit.title,
+					group.commit.body,
+				],
+				commitIdentityEnv,
+			);
 
 			executedGroups.push({
 				id: group.id,
