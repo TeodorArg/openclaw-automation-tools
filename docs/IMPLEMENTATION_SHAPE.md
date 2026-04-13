@@ -42,7 +42,7 @@ Possible future companion files under the skill:
 
 ### `plugin/`
 Responsibility:
-- hold the minimal supporting plugin package if custom tool logic is needed
+- hold the minimal supporting plugin package for execute-mode tool logic
 - define one bounded tool contract for the git workflow
 - translate tool actions into bounded runtime helpers
 
@@ -160,7 +160,7 @@ The first real implementation should deliver:
 - the skill directory and `SKILL.md`
 - the canonical confirmed plan format document
 - the minimal execute-surface document for bounded runtime wiring
-- the minimal supporting plugin package only if required for execute
+- the minimal supporting plugin package for execute
 - the bounded branch and commit scripts
 - enough docs to explain trust boundaries and execution rules
 
@@ -184,7 +184,7 @@ It should not yet try to solve:
 
 ### Plugin need
 - plan-only workflow may work without a plugin
-- execute flow is expected to require a minimal plugin/tool layer
+- execute flow requires a minimal plugin/tool layer
 - the plugin should exist only as a tool/runtime carrier, not as a command-entry surface
 
 ### Confirmed plan requirement

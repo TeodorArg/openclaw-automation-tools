@@ -118,11 +118,12 @@ The implementation should stay aligned with:
 - execute must not be reconstructed from free-form user text alone
 - prefer several narrow scripts over one large dispatcher script
 
-## First scaffold now expected in-repo
+## First scaffold now in repo
 
-The first scaffold for implementation should include:
+The first scaffold for implementation now includes:
 - `skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
 
 These files define the first bounded UX and runtime contract before the actual helper scripts and tool wiring land.
+The next step is to add the real execute implementation behind this contract.

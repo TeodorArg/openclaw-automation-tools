@@ -60,14 +60,14 @@ Expected content for the first slice:
 
 ### `plugin/`
 Purpose:
-- optional home for a small supporting plugin if a dedicated tool surface is needed
-- should exist only if the skill needs custom tools or bounded runtime helpers for execute
+- home for the small supporting plugin that carries the execute-mode tool surface
+- should stay minimal and exist only as bounded runtime support for execute
 
 Expected content for the first slice:
 - `plugin/EXECUTE_SURFACE.md`
-- later, if needed: tool definitions
-- later, if needed: minimal runtime wiring
-- later, if needed: plugin manifest/config
+- next: tool definitions
+- next: minimal runtime wiring
+- next: plugin manifest/config
 
 ### `scripts/`
 Purpose:

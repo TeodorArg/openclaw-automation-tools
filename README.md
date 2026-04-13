@@ -4,7 +4,7 @@ Skill-first git workflow repo for OpenClaw.
 
 ## Status
 
-Specification repo, not implementation-complete yet.
+Early implementation scaffold repo, not implementation-complete yet.
 
 ## Goal
 
@@ -46,3 +46,5 @@ The repo now has the first implementation scaffold for:
 - `skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
+
+The next implementation step is to turn this scaffold into a real bounded execute path with plugin runtime wiring, confirmed-plan validation, and narrow branch/commit helpers.

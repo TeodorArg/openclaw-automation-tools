@@ -24,6 +24,7 @@ It should not be treated as the implementation base for the new repo.
 - repo-state inspection logic
 - remote-selection logic if still valid
 - Plan A push concepts that do not rely on the blocked command-path bridge
+- narrow runtime validation patterns that fit the new confirmed-plan execute gate
 
 ## What should not be carried forward blindly
 
