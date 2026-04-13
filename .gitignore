@@ -11,6 +11,8 @@
 # =========================================================
 .vscode/
 .history/
+.codex/
+memory.jsonl
 
 # Vim / generic temp editor files
 *.swp
