@@ -1,0 +1,32 @@
+{
+	"name": "@openclaw/openclaw-git-workflow",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Minimal bounded execute plugin scaffold for openclaw-git-workflow.",
+	"type": "module",
+	"main": "./index.ts",
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"format": "biome format --write . --files-ignore-unknown=true",
+		"format:check": "biome format --check . --files-ignore-unknown=true",
+		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src --files-ignore-unknown=true",
+		"lint:fix": "biome check --write index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src --files-ignore-unknown=true",
+		"check": "pnpm lint && pnpm test && pnpm build",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "vitest run --passWithNoTests"
+	},
+	"dependencies": {
+		"@sinclair/typebox": "0.34.49"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.11",
+		"@types/node": "^24.0.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.1.2"
+	},
+	"openclaw": {
+		"extensions": [
+			"./index.ts"
+		]
+	}
+}
