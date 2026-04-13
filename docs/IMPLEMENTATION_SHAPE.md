@@ -1,0 +1,176 @@
+# Implementation Shape
+
+## Doc-backed basis
+
+This implementation shape is based on:
+- OpenClaw local docs for skills and slash commands
+- Context7 OpenClaw docs confirming `command-dispatch: tool`, `command-tool`, `command-arg-mode: raw`, and deterministic skill-to-tool routing
+- current Docker split-layer and SSH-agent constraints already validated in the main repo
+- current evidence that container `gh` auth is not ready for PR flows
+
+## Core design
+
+The repo should be built around three layers:
+
+1. `skills/` — user-facing workflow commands
+2. `plugin/` — custom tool surface and bounded runtime wiring
+3. `scripts/` — bounded helper actions only
+
+The skill is the UX layer.
+The plugin is the tool/runtime layer.
+The scripts are narrow execution helpers.
+
+## Why this split
+
+- Skills are the cleanest official way to expose user-invocable workflow commands.
+- Skill `command-dispatch: tool` can bypass the model and route directly into the tool pipeline.
+- The current blocked surface is the plugin command path, so the new design should avoid depending on plugin `registerCommand()` as the primary entrypoint.
+- A small supporting plugin may still be needed because the skill needs a deterministic custom tool with a bounded contract.
+
+## Proposed repo structure
+
+### `skills/openclaw-git-workflow/SKILL.md`
+Responsibility:
+- define the workflow-level slash command behavior
+- document the three operator intents
+- declare deterministic tool dispatch if the final chosen command shape uses direct dispatch
+- teach the agent the difference between planning and execution modes
+
+Possible future companion files under the skill:
+- `skills/openclaw-git-workflow/references/workflow-rules.md`
+- `skills/openclaw-git-workflow/references/git-guidance-summary.md`
+
+### `plugin/`
+Responsibility:
+- hold the minimal supporting plugin package if custom tool logic is needed
+- define one bounded tool contract for the git workflow
+- translate tool actions into bounded runtime helpers
+
+Likely future files:
+- `plugin/package.json`
+- `plugin/openclaw.plugin.json`
+- `plugin/src/index.ts`
+- `plugin/src/git-workflow-tool.ts`
+- `plugin/src/runtime/validate-input.ts`
+- `plugin/src/runtime/repo-state.ts`
+- `plugin/src/runtime/run-action.ts`
+
+### `scripts/`
+Responsibility:
+- implement explicit bounded actions only
+- never expose generic shell passthrough
+- keep branch/commit/push operations narrow and validated
+
+Likely future files:
+- `scripts/git-create-branch.sh`
+- `scripts/git-create-commit.sh`
+- `scripts/git-push-current-branch.sh`
+- or one `scripts/git-workflow-action.sh` dispatcher with explicit allowlisted actions
+
+## Recommended minimal tool contract
+
+Prefer one tool with explicit actions over multiple loosely-shaped tools.
+
+Tool name:
+- `git_workflow_action`
+
+Contract shape:
+
+```json
+{
+  "action": "plan-groups" | "plan-groups-with-branches" | "execute-groups-with-branches",
+  "command": "<raw skill args>",
+  "commandName": "<slash command>",
+  "skillName": "openclaw-git-workflow"
+}
+```
+
+## Why this contract
+
+- It matches OpenClaw skill docs for `command-dispatch: tool` with raw argument forwarding.
+- It keeps the skill-facing side simple.
+- It allows the plugin tool to parse workflow intent deterministically.
+- It avoids pretending that user input is safe shell input.
+
+## Expected tool behavior
+
+### `action = plan-groups`
+- inspect repo state
+- classify changed files into candidate git groups
+- produce branch-name suggestions only if useful for explanation
+- produce canonical commit title/body suggestions
+- execute nothing
+
+### `action = plan-groups-with-branches`
+- do all plan work
+- require branch-name proposals
+- output exact commands or exact planned actions
+- execute nothing
+
+### `action = execute-groups-with-branches`
+- validate explicit execution intent
+- validate inputs derived from the planning step
+- create branches
+- stage grouped files
+- create commits in canonical format
+- optionally push only if the workflow spec for this command allows it
+- never create PRs implicitly
+
+## Input parsing rule
+
+The skill raw command string should be parsed into a structured internal request by plugin code, not by shell scripts.
+
+That parser should:
+- detect which operator intent is being used
+- validate optional arguments
+- reject ambiguous or unsafe execution requests
+
+## Script boundary rule
+
+Scripts should receive already-validated structured inputs from the plugin runtime layer.
+Scripts should not be responsible for understanding free-form user text.
+
+## Security and platform notes
+
+### Skills
+OpenClaw docs confirm:
+- skills can be user-invocable slash commands
+- skills can dispatch directly to tools with `command-dispatch: tool`
+- raw args can be forwarded to the tool using `command-arg-mode: raw`
+
+### Docker and SSH-agent
+The validated container-side push path in the current environment depends on:
+- optional git layer only, not baseline gateway
+- Docker Desktop socket `/run/host-services/ssh-auth.sock`
+- explicit host-side ssh-agent readiness
+- bounded container-side execution, not arbitrary shell
+
+### GitHub CLI
+Do not make PR creation part of the first slice.
+Current evidence shows container runtime lacks working `gh` auth state.
+
+### macOS helper constraint
+Do not design around any always-on helper app, LaunchAgent, autoloaded node wrapper, or similar background Mac resident process.
+
+## First implementation slice
+
+The first real implementation should deliver:
+- the skill directory and `SKILL.md`
+- the minimal supporting plugin package only if required for the tool
+- the bounded action script(s)
+- enough docs to explain trust boundaries and execution rules
+
+It should not yet try to solve:
+- PR creation
+- generic git command execution
+- always-on host services
+
+## Fixed v1 execution decisions
+
+- `выполни git-группы с ветками` must not push
+- execution backend for v1 is only the validated `openclaw-git` path
+- do not support multiple execution backends in the first slice
+- execution model for v1 is `plan -> confirm -> execute`
+- do not implement one-shot execute in the first slice
+- push stays a separate future step
+- PR stays a later separate track
