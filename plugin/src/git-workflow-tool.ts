@@ -8,8 +8,17 @@ import {
 } from "./runtime/validate-confirmed-plan.js";
 
 const execFileAsync = promisify(execFile);
-const REPO_PATH = "/home/node/repos/openclaw-git-workflow";
-const SCRIPTS_DIR = path.resolve(REPO_PATH, "scripts");
+
+function resolveRepoPath(): string {
+	return path.resolve(
+		process.env.OPENCLAW_GIT_WORKFLOW_REPO ??
+			"/home/node/repos/openclaw-git-workflow",
+	);
+}
+
+function resolveScriptsDir(repoPath: string): string {
+	return path.resolve(repoPath, "scripts");
+}
 
 const ToolSchema = Type.Object(
 	{
@@ -38,15 +47,16 @@ type ToolParams = {
 };
 
 async function runScript(
+	repoPath: string,
 	scriptName: string,
 	args: string[],
 ): Promise<{ stdout: string; stderr: string }> {
-	const scriptPath = path.join(SCRIPTS_DIR, scriptName);
+	const scriptPath = path.join(resolveScriptsDir(repoPath), scriptName);
 	const result = await execFileAsync(scriptPath, args, {
-		cwd: REPO_PATH,
+		cwd: repoPath,
 		env: {
 			...process.env,
-			OPENCLAW_GIT_WORKFLOW_REPO: REPO_PATH,
+			OPENCLAW_GIT_WORKFLOW_REPO: repoPath,
 		},
 	});
 
@@ -58,12 +68,13 @@ async function runScript(
 
 async function executeConfirmedPlan(plan: ConfirmedPlan) {
 	const executedGroups: Array<Record<string, unknown>> = [];
+	const repoPath = resolveRepoPath();
 
 	for (const group of plan.groups) {
-		const branchResult = await runScript("git-create-branch.sh", [
+		const branchResult = await runScript(repoPath, "git-create-branch.sh", [
 			group.branch,
 		]);
-		const commitResult = await runScript("git-create-commit.sh", [
+		const commitResult = await runScript(repoPath, "git-create-commit.sh", [
 			group.branch,
 			JSON.stringify(group.files),
 			group.commit.title,
@@ -94,6 +105,8 @@ export function createGitWorkflowTool() {
 			"Bounded git workflow tool for planning handoff and confirmed branch/commit execution.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
+			const repoPath = resolveRepoPath();
+
 			if (params.skillName !== "openclaw-git-workflow") {
 				throw new Error(
 					"git_workflow_action only accepts requests from skill openclaw-git-workflow.",
@@ -112,7 +125,7 @@ export function createGitWorkflowTool() {
 								{
 									ok: true,
 									action: params.action,
-									repoPath: REPO_PATH,
+									repoPath,
 									mode: "plan-only",
 									commandName: params.commandName,
 									command: params.command,
@@ -132,7 +145,7 @@ export function createGitWorkflowTool() {
 
 			const confirmedPlan = validateConfirmedPlan(
 				params.confirmedPlan,
-				REPO_PATH,
+				repoPath,
 			);
 			const result = await executeConfirmedPlan(confirmedPlan);
 

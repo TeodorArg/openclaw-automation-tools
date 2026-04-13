@@ -206,9 +206,9 @@ It should not yet try to solve:
 ## Fixed v1 execution decisions
 
 - `выполни git-группы с ветками` must not push
-- execution backend for v1 is only the validated `openclaw-git` path
-- do not support multiple execution backends in the first slice
 - execution model for v1 is `plan -> confirm -> execute`
+- the current first slice executes through bounded local branch + commit helpers in the target repo
+- integration with the validated operator-side `openclaw-git` path is intentionally deferred to a later step
 - do not implement one-shot execute in the first slice
 - push stays a separate future step
 - PR stays a later separate track

@@ -89,5 +89,5 @@ The planning step may render the plan for the user in a readable way, but execut
 ## First-slice boundary
 
 This format is intentionally minimal.
-It exists only to support bounded branch + commit execution through `openclaw-git`.
+It exists only to support bounded branch + commit execution from a confirmed plan.
 Push and PR handoff are future separate layers.
