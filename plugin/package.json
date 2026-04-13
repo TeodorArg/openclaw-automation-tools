@@ -2,7 +2,7 @@
 	"name": "@openclaw/openclaw-git-workflow",
 	"version": "0.1.0",
 	"private": true,
-	"description": "Minimal bounded execute plugin scaffold for openclaw-git-workflow.",
+	"description": "Bounded execute plugin for openclaw-git-workflow.",
 	"type": "module",
 	"main": "./index.ts",
 	"scripts": {
