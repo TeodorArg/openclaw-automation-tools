@@ -1,0 +1,6 @@
+{
+	"id": "openclaw-git-workflow",
+	"name": "OpenClaw Git Workflow",
+	"description": "Minimal bounded tool carrier for git workflow branch and commit execution.",
+	"entry": "./src/index.ts"
+}
