@@ -7,6 +7,7 @@ describe("buildPlanResult", () => {
 			{
 				repoPath: "/home/node/repos/openclaw-git-workflow",
 				currentBranch: "main",
+				headCommit: "abc123",
 				changedFiles: [
 					{ path: "docs/SKILL_SPEC.md", status: "M" },
 					{ path: "plugin/src/git-workflow-tool.ts", status: "M" },
@@ -51,6 +52,7 @@ describe("buildPlanResult", () => {
 			{
 				repoPath: "/home/node/repos/openclaw-git-workflow",
 				currentBranch: "main",
+				headCommit: "abc123",
 				changedFiles: [
 					{ path: "skills/openclaw-git-workflow/SKILL.md", status: "M" },
 				],
@@ -67,6 +69,7 @@ describe("buildPlanResult", () => {
 			{
 				repoPath: "/home/node/repos/openclaw-git-workflow",
 				currentBranch: "main",
+				headCommit: "abc123",
 				changedFiles: [],
 			},
 			{

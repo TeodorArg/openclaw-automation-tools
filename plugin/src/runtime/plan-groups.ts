@@ -32,6 +32,7 @@ export type PlannedGroup = {
 export type RepoState = {
 	repoPath: string;
 	currentBranch: string;
+	headCommit: string;
 	changedFiles: ChangedFile[];
 };
 
@@ -49,6 +50,9 @@ export async function collectRepoState(repoPath: string): Promise<RepoState> {
 		["rev-parse", "--abbrev-ref", "HEAD"],
 		{ cwd: repoPath },
 	);
+	const headResult = await execFileAsync("git", ["rev-parse", "HEAD"], {
+		cwd: repoPath,
+	});
 	const statusResult = await execFileAsync(
 		"git",
 		["status", "--porcelain=v1", "-z"],
@@ -58,6 +62,7 @@ export async function collectRepoState(repoPath: string): Promise<RepoState> {
 	return {
 		repoPath,
 		currentBranch: branchResult.stdout.trim(),
+		headCommit: headResult.stdout.trim(),
 		changedFiles: parsePorcelainZ(statusResult.stdout),
 	};
 }
@@ -70,7 +75,11 @@ export function buildPlanResult(
 		...file,
 		area: classifyRepoArea(file.path),
 	}));
-	const groups = buildPlannedGroups(changedFiles, options.includeBranches);
+	const groups = buildPlannedGroups(
+		changedFiles,
+		options.includeBranches,
+		repoState.currentBranch,
+	);
 
 	return {
 		repoPath: repoState.repoPath,
@@ -137,6 +146,7 @@ function classifyRepoArea(filePath: string): RepoArea {
 function buildPlannedGroups(
 	changedFiles: Array<ChangedFile & { area: RepoArea }>,
 	includeBranches: boolean,
+	baseRef: string,
 ): PlannedGroup[] {
 	const areaOrder: RepoArea[] = ["docs", "skills", "runtime", "repo"];
 	const groupedFiles = new Map<RepoArea, string[]>();
@@ -167,6 +177,7 @@ function buildPlannedGroups(
 						branch: group.branch,
 						commands: buildExecutionCommands(
 							group.branch,
+							baseRef,
 							sortedFiles,
 							group.commit,
 						),
@@ -282,11 +293,12 @@ function summarizeFiles(files: string[]): string {
 
 function buildExecutionCommands(
 	branch: string,
+	baseRef: string,
 	files: string[],
 	commit: PlannedCommit,
 ): string[] {
 	return [
-		`git checkout -b ${branch}`,
+		`git checkout -b ${branch} ${shellQuote(baseRef)}`,
 		`git add -- ${files.map(shellQuote).join(" ")}`,
 		`git commit -m ${shellQuote(commit.title)} -m ${shellQuote(commit.body)}`,
 	];
