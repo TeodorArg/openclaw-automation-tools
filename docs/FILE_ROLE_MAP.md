@@ -42,13 +42,19 @@ Purpose:
 - record the minimal tool contract
 - keep the fixed v1 execution model explicit
 
+### `docs/CONFIRMED_PLAN_FORMAT.md`
+Purpose:
+- define the canonical structured plan payload for execute
+- keep the `plan -> confirm -> execute` contract explicit
+- prevent execution from being reconstructed from free-form user text
+
 ### `skills/`
 Purpose:
 - hold the actual OpenClaw skill directory or directories
 - include `SKILL.md` files with valid frontmatter
 - expose user-invocable skill commands
 
-Expected future content:
+Expected content for the first slice:
 - `skills/openclaw-git-workflow/SKILL.md`
 - optional `references/` under that skill for repo-specific workflow details
 
@@ -57,10 +63,11 @@ Purpose:
 - optional home for a small supporting plugin if a dedicated tool surface is needed
 - should exist only if the skill needs custom tools or bounded runtime helpers for execute
 
-Expected future content if needed:
-- tool definitions
-- minimal runtime wiring
-- plugin manifest/config
+Expected content for the first slice:
+- `plugin/EXECUTE_SURFACE.md`
+- later, if needed: tool definitions
+- later, if needed: minimal runtime wiring
+- later, if needed: plugin manifest/config
 
 ### `scripts/`
 Purpose:
@@ -68,11 +75,11 @@ Purpose:
 - no generic shell trampoline
 - scripts should correspond to explicit allowlisted actions
 
-Expected future content:
+Expected content for the first slice:
 - create-branch helper
 - commit helper
-- later: push-current-branch helper
 - prefer several narrow scripts over one large dispatcher
+- later: push-current-branch helper
 
 ## Rules for implementation
 

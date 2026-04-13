@@ -29,7 +29,7 @@ These are workflow-level commands, not raw git shell passthrough.
 
 ## Reference docs
 
-See `docs/SKILL_SPEC.md`, `docs/FILE_ROLE_MAP.md`, and `docs/REFERENCE_NOTES.md`.
+See `docs/SKILL_SPEC.md`, `docs/CONFIRMED_PLAN_FORMAT.md`, `docs/IMPLEMENTATION_SHAPE.md`, `docs/FILE_ROLE_MAP.md`, and `docs/REFERENCE_NOTES.md`.
 
 ## Fixed v1 execution rules
 
@@ -39,3 +39,10 @@ See `docs/SKILL_SPEC.md`, `docs/FILE_ROLE_MAP.md`, and `docs/REFERENCE_NOTES.md`
 - one-shot execute is not part of v1
 - push is a later step
 - PR is a later separate track
+
+## Current scaffold
+
+The repo now has the first implementation scaffold for:
+- `skills/openclaw-git-workflow/SKILL.md`
+- `docs/CONFIRMED_PLAN_FORMAT.md`
+- `plugin/EXECUTE_SURFACE.md`
