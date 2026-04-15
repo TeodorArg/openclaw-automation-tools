@@ -211,8 +211,8 @@ It should not yet try to solve:
 - the current first slice executes through bounded local branch + commit helpers in the target repo
 - integration with the validated operator-side `openclaw-git` path is intentionally deferred to a later step
 - do not implement one-shot execute in the first slice
-- push stays a separate future step
-- PR stays a later separate track
+- push stays a separate future step for the main public v1 workflow surface
+- PR stays outside the main public v1 workflow surface; any working push/PR seam belongs to the separate optional internal host-backed bridge track
 
 ## Fixed product decisions after specification review
 

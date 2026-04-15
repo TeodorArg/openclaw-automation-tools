@@ -109,7 +109,7 @@ The implementation should stay aligned with:
 - integration with the validated operator-side `openclaw-git` path remains a later step
 - one-shot execute is out of scope for v1
 - push is a separate later step
-- PR creation is an even later separate step
+- PR creation is a separate step outside the main public v1 workflow surface; any bounded host-backed PR action belongs to the optional internal bridge track
 
 ## Fixed product decisions after specification review
 
@@ -130,4 +130,4 @@ The current implementation layer now includes:
 
 These files and package contents define the first bounded UX and runtime contract together with a working standalone plugin package, repo-aware planning, and bounded execute behavior on `main`.
 Merged `main` has now been validated end-to-end through the actual skill/tool flow, the resulting followup fixes were merged as PRs #13, #14, and #15, and the deterministic runtime sub-grouping v2 layer was then merged as PRs #16 and #17.
-The next step is to decide whether OpenClaw should keep the current npm-based plugin install path or grow a separate pnpm-aware installer track.
+Current next work is to keep the public v1 surface explicit around branch+commit execution, keep the optional internal host-backed push/PR bridge clearly separate from that baseline, and only treat runtime/plugin finish-path wiring as later bridge work rather than as a change to the main public v1 contract.

@@ -8,7 +8,8 @@ Early implementation repo with a working standalone plugin package, bounded bran
 
 ## Goal
 
-Create a new repo that defines and then implements a skill-first workflow for this operator's git process, instead of continuing through the currently blocked plugin-command path.
+Define and maintain the skill-first git workflow package for this operator's real git process.
+Public baseline stays the plugin-first `@openclaw/openclaw-git-workflow` workflow on `main`, while bounded host-backed push/PR remains a separate optional/internal bridge rather than the default public install shape.
 
 ## Fixed decisions
 
@@ -19,7 +20,7 @@ Create a new repo that defines and then implements a skill-first workflow for th
 - The target design should prefer skill slash commands and skill-to-tool dispatch
 - The target design must not depend on an always-on macOS helper app/node in autoload/bin style
 - PR creation was originally a separate later track from the first implementation slice, and the bounded host-backed PR seam now lives only in the separate internal bridge package
-- That bounded PR seam has now progressed past scaffold-only state on the real macOS helper path: host-side `gh auth` is green, host-path targeting is fixed, `assert-pr-ready` is green, and the helper reaches real `gh pr create`; the current remaining blocker is target branch state, not auth/path/helper wiring
+- That bounded PR seam has now progressed past scaffold-only state on the real macOS node-backed path: host-side `gh auth` is green, host-path targeting is fixed, `assert-pr-ready` is green, the helper reaches real `gh pr create`, and PR #19 is now open from `feat/host-git-bridge-package`
 - Workspace bootstrap hygiene matters for this implementation track: keep `MEMORY.md` compact and move long logs, audits, and chronology into `memory/*.md`
 
 ## Initial scope
@@ -44,7 +45,7 @@ See `docs/SKILL_SPEC.md`, `docs/CONFIRMED_PLAN_FORMAT.md`, `docs/IMPLEMENTATION_
 - one-shot execute is not part of v1
 - push is a later step
 - PR is a later separate track for the main public v1 workflow surface
-- but the separate internal bridge package now already carries a bounded host-backed PR seam whose current live blocker is branch push/divergence state for `feat/host-git-push-bridge-package`
+- but the separate internal bridge package now already carries a bounded host-backed PR seam that has been validated end-to-end through the official node-backed host path; it remains optional/internal and outside the main public v1 workflow surface
 
 ## Current implementation state
 
