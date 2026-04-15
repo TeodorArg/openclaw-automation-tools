@@ -13,7 +13,7 @@ Use this skill only for the bounded `push current branch` workflow.
 
 ## Supported intents
 
-1. `git-push current-branch`
+1. `/git-push current-branch`
 2. `push current branch`
 3. `пушни текущую ветку`
 

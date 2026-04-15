@@ -6,7 +6,7 @@ The repo is built around three layers:
 
 1. `plugin/skills/` — user-facing workflow contract
 2. `plugin/` — bounded runtime tool surface
-3. `scripts/` — bounded write helpers
+3. `plugin/scripts/` — bounded write helpers
 
 The separate `plugin-host-git-push/` subtree is retained as a distinct finish-path bridge for push and PR.
 It is not part of the main branch+commit package contract.
@@ -61,8 +61,8 @@ Main responsibility:
 - never widen into generic shell passthrough
 
 Current bounded helpers:
-- `scripts/git-create-branch.sh`
-- `scripts/git-create-commit.sh`
+- `plugin/scripts/git-create-branch.sh`
+- `plugin/scripts/git-create-commit.sh`
 
 ## Minimal internal tool contract
 

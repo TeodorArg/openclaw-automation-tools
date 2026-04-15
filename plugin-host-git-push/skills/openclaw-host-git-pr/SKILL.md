@@ -13,8 +13,8 @@ Use this skill only for the bounded PR workflow.
 
 ## Supported intents
 
-1. `git-pr ready`
-2. `git-pr create`
+1. `/git-pr ready`
+2. `/git-pr create`
 3. `открой pr из текущей ветки в main`
 
 ## Required behavior
