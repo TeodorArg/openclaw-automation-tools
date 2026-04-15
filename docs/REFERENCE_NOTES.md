@@ -1,29 +1,26 @@
 # Reference Notes
 
-## Canonical repo path in this session
+## Active repo path model
 
-For work inside the current container-backed assistant session, use:
-- `/home/node/repos/openclaw-git-workflow`
+For runtime work in the container-backed assistant session, use the active container-visible repo path.
+If host-backed actions are being documented explicitly, keep host paths as examples or operator-side inputs rather than treating them as the main repo canon.
 
-Do not treat the host path `/Users/svarnoy85/teodorArg/openclaw-git-workflow` as the operational path from inside this session unless the distinction is being documented explicitly.
+## Current bridge location
 
-## Reference-only repo
+The active bounded host push/PR bridge work lives in this repo under `plugin-host-git-push/`.
 
-Use `/Users/svarnoy85/teodorArg/openclaw-host-git-push` as a reference source only.
+Active plugin and skill implementation for this track should be treated as in-repo work under `plugin/`, `skills/`, and `plugin-host-git-push/`, not as work in a separate external plugin repo.
 
-It is useful for:
-- prior bounded runtime ideas
-- existing adapter flow patterns
-- repo state checks
-- historical experiments around tool path vs command path
+## Historical reference
 
-It should not be treated as the implementation base for the new repo.
+Older external repo material may still be useful as historical reference for prior bounded runtime ideas or experiments, but it is not the implementation base for the current repo.
 
-## Why it is reference-only
+## Why current implementation stays in-repo
 
 - the user chose to stop building on the blocked plugin-command path
 - the new repo is intended to be skill-first
 - old code may still contain transitional assumptions from the older runtime/plugin direction
+- current canon for bridge packaging, skills, and docs is the in-repo `plugin-host-git-push/` subtree
 
 ## What may be reused conceptually
 
@@ -38,7 +35,7 @@ It should not be treated as the implementation base for the new repo.
 - plugin command-path assumptions
 - host-helper/autoload patterns
 - any design that requires an always-on macOS helper app/node installed in autoload/bin style
-- any assumption that container `gh` auth is already solved
+- any assumption that container `gh` auth is already solved for the main public v1 path
 
 ## Runtime install notes learned from this track
 

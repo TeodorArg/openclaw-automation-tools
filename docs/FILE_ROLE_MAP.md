@@ -4,8 +4,8 @@ This file defines what the new repo should contain and what each area is respons
 
 ## Design basis
 
-For implementation work inside the current container-backed assistant session, the canonical repo path is `/home/node/repos/openclaw-git-workflow`.
-Do not confuse it with the host path `/Users/svarnoy85/teodorArg/openclaw-git-workflow` when reading or editing files from inside the container.
+This repo canon should describe the active container-visible repo and runtime shape without depending on one operator-specific absolute path example.
+When host-backed actions matter, keep host paths as explicit examples or operator inputs rather than as the main repo identity.
 
 This repo structure should stay aligned with:
 - OpenClaw Skills docs (`/app/docs/tools/skills.md`)
@@ -113,7 +113,7 @@ User-invocable skills are exposed as slash commands and may also be used via `/s
 The current environment already has a validated operator-side git push path through the optional git layer and SSH-agent forwarding. That should be treated as a factual constraint when designing future bounded actions.
 
 ### GitHub CLI
-The container runtime currently lacks working `gh` auth state, so PR-related flows should not be assumed to work in the first implementation slice.
+The container runtime should still not be treated as the baseline place for PR creation in the first implementation slice. Any working `gh`-backed push/PR flow belongs to the optional internal `plugin-host-git-push/` bridge track, not to the main public v1 workflow surface.
 
 ### Workspace bootstrap memory hygiene
 For the surrounding assistant workspace used to build this repo, `MEMORY.md` should stay a compact durable index, while long logs and detailed history belong in `memory/*.md`. This reduces bootstrap truncation and keeps continuation turns more stable.
