@@ -93,7 +93,7 @@ export function buildPlanResult(
 						repoState.repoPath,
 						options.sourceCommand,
 						groups,
-				  )
+					)
 				: null,
 	};
 }
@@ -187,7 +187,7 @@ function buildPlannedGroups(
 								group.files,
 								group.commit,
 							),
-					  }
+						}
 					: {}),
 			});
 		}
@@ -258,9 +258,12 @@ function buildGroupForArea(
 	}
 }
 
-function buildRuntimeGroups(
-	files: string[],
-): Array<{ label: string; branch: string; commit: PlannedCommit; files: string[] }> {
+function buildRuntimeGroups(files: string[]): Array<{
+	label: string;
+	branch: string;
+	commit: PlannedCommit;
+	files: string[];
+}> {
 	const buckets = splitRuntimeFilesIntoBuckets(files);
 
 	if (buckets.mixed.length > 0) {
@@ -283,10 +286,14 @@ function buildRuntimeGroups(
 		})
 		.filter((group): group is NonNullable<typeof group> => group !== null);
 
-	return groups.length > 0 ? groups : [buildRuntimeGroupForSubtype("mixed", files)];
+	return groups.length > 0
+		? groups
+		: [buildRuntimeGroupForSubtype("mixed", files)];
 }
 
-function splitRuntimeFilesIntoBuckets(files: string[]): Record<RuntimeSubtype, string[]> {
+function splitRuntimeFilesIntoBuckets(
+	files: string[],
+): Record<RuntimeSubtype, string[]> {
 	const buckets: Record<RuntimeSubtype, string[]> = {
 		planning: [],
 		execute: [],
