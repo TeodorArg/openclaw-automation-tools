@@ -12,9 +12,9 @@ This package is intentionally separate from the main public `@openclaw/openclaw-
 It exists to support bounded host-side push/PR actions with explicit capability preflight.
 
 Latest live status:
-- the real macOS helper path now reaches bounded `gh pr create`
+- the official macOS node-backed host path now reaches bounded `gh pr create`
 - host-path targeting drift is fixed in the core helper scripts, so operator-side checks can use real `/Users/...` repo paths while typed jobs still keep canonical container-visible repo cwd
-- the current remaining PR blocker is downstream branch state for `feat/host-git-push-bridge-package`, not helper/auth/path wiring
+- branch `feat/host-git-bridge-package` was pushed successfully and PR #19 into `main` is open, so the remaining work is finish-path wiring and canon clarity rather than basic helper/auth/path wiring
 
 ## Local verify
 

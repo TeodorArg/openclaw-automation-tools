@@ -91,7 +91,7 @@ Expected content for the first slice:
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
 - prefer several narrow scripts over one large dispatcher
-- later: push-current-branch helper
+- do not treat any later push helper as part of the main public v1 branch+commit execute surface; if retained, it belongs to the separate bounded bridge track
 
 ## Rules for implementation
 
