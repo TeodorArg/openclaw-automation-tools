@@ -1,0 +1,35 @@
+---
+name: openclaw-host-git-pr
+description: Bounded skill for host-backed PR readiness checks and opening the current branch into `main`. Use when the user wants a chat/runtime PR path that stays separate from push readiness and does not widen into arbitrary gh passthrough.
+user-invocable: true
+command-dispatch: tool
+command-tool: git_pr_bridge_action
+command-arg-mode: raw
+---
+
+# OpenClaw Host Git PR
+
+Use this skill only for the bounded PR workflow.
+
+## Supported intents
+
+1. `git-pr ready`
+2. `git-pr create`
+3. `открой pr из текущей ветки в main`
+
+## Required behavior
+
+- Run PR capability preflight before writing any PR job.
+- If PR readiness is blocked, return the blocked reason and stop without writing any job.
+- Keep PR readiness separate from push readiness.
+- Never accept arbitrary shell, arbitrary `gh` flags, or arbitrary base/head overrides.
+- Treat this skill as opening the current branch into `main`, not as a generic PR wrapper.
+
+## Runtime contract
+
+This skill routes into `git_pr_bridge_action`.
+The tool surface is intentionally narrow:
+- assert PR readiness
+- create a PR from the current branch into `main`
+
+The runtime path must stay bounded to capability preflight plus typed host-jobs spool payloads.
