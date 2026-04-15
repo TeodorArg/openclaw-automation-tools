@@ -1,20 +1,26 @@
 # @openclaw/openclaw-host-git-push
 
-Private/internal plugin package for the bounded host push/PR bridge.
+Private/internal plugin package for the bounded host-backed push/PR bridge.
 
 This package bundles:
 - the `git_push_bridge_action` runtime tool
 - the `git_pr_bridge_action` runtime tool
-- the `openclaw-host-git-push` skill under `plugin-host-git-push/skills/openclaw-host-git-push/`
-- the `openclaw-host-git-pr` skill under `plugin-host-git-push/skills/openclaw-host-git-pr/`
+- the skill source under `plugin-host-git-push/skills/openclaw-host-git-push/`
+- the skill source under `plugin-host-git-push/skills/openclaw-host-git-pr/`
+- packaged skill outputs at `skills/openclaw-host-git-push/SKILL.md` and `skills/openclaw-host-git-pr/SKILL.md`
 
-This package is an internal subtree/package in the same repo and is intentionally separate from the main public `@openclaw/openclaw-git-workflow` release surface.
+This package stays separate from `@openclaw/openclaw-git-workflow`.
 It exists to support bounded host-side push/PR actions with explicit capability preflight.
 
-Latest live status:
-- the official macOS node-backed host path now reaches bounded `gh pr create`
-- host-path targeting drift is fixed in the core helper scripts, so operator-side checks can use real `/Users/...` repo paths while typed jobs still keep canonical container-visible repo cwd
-- bridge wiring is past scaffold-only state, so the remaining work is finish-path wiring and canon clarity rather than basic helper/auth/path wiring
+Stable contract:
+- inspect push/PR capabilities
+- push current branch
+- assert PR readiness
+- create a PR from the current branch to `main`
+
+Note:
+- `BRIDGE_SURFACE.md` is a repo-local contract doc for this package source tree
+- it is not currently shipped as part of the packaged file list
 
 ## Local verify
 

@@ -1,119 +1,95 @@
 # File Role Map
 
-This file defines what the new repo should contain and what each area is responsible for.
+This document records what each major area of the repo is responsible for.
 
-## Design basis
+## Main package baseline in this repo
 
-This repo canon should describe the active container-visible repo and runtime shape without depending on one operator-specific absolute path example.
-When host-backed actions matter, keep host paths as explicit examples or operator inputs rather than as the main repo identity.
+The main package baseline in this repo is the plugin-first workflow package:
+- `plugin/`
+- bundled `openclaw-git-workflow` skill under `plugin/skills/`
+- bounded branch/commit helpers in `scripts/`
 
-This repo structure should stay aligned with:
-- OpenClaw Skills docs (`/app/docs/tools/skills.md`)
-- OpenClaw Slash Commands docs (`/app/docs/tools/slash-commands.md`)
-- GitHub CLI reality in this environment
-- Docker split-layer reality from the current OpenClaw setup
-- SSH-agent forwarding constraints already validated for operator-side push
+This package is the intended main release surface for the repo, but it is currently kept private in-repo.
 
-## Top-level layout
+The separate `plugin-host-git-push/` subtree is retained in the repo, but it is not part of that main package baseline.
+
+## Top-level areas
 
 ### `README.md`
 Purpose:
-- short project overview
-- current status
-- fixed decisions
-- links to the deeper spec docs
+- explain what the repo is
+- explain the main package shape
+- explain the retained bridge boundary
+- give a short verify path
+
+### `docs/CONFIRMED_PLAN_FORMAT.md`
+Purpose:
+- define the confirmed JSON payload accepted by execute
+- keep the `plan -> confirm -> execute` contract explicit
 
 ### `docs/SKILL_SPEC.md`
 Purpose:
-- canonical description of what the skill must do
-- plan-only vs execute behavior
-- non-goals and security constraints
-
-### `docs/REFERENCE_NOTES.md`
-Purpose:
-- record which old repos/docs are reference-only
-- explain what can be reused conceptually and what should not be copied blindly
-
-### `docs/FILE_ROLE_MAP.md`
-Purpose:
-- define the file responsibilities for the repo
-- reduce future drift when implementation begins
+- define the supported user-facing workflow intents
+- define what the main workflow does and does not do
 
 ### `docs/IMPLEMENTATION_SHAPE.md`
 Purpose:
 - define how skill, plugin, and scripts fit together
-- record the minimal tool contract
-- keep the fixed v1 execution model explicit
+- record the bounded runtime/tool split
+- keep the bridge boundary explicit
 
-### `docs/CONFIRMED_PLAN_FORMAT.md`
+### `docs/FILE_ROLE_MAP.md`
 Purpose:
-- define the canonical structured plan payload for execute
-- keep the `plan -> confirm -> execute` contract explicit
-- prevent execution from being reconstructed from free-form user text
+- define file responsibilities
+- reduce drift when repo structure changes
 
-### `skills/`
+### `docs/REFERENCE_NOTES.md`
 Purpose:
-- hold the actual OpenClaw skill directory or directories
-- include `SKILL.md` files with valid frontmatter
-- expose user-invocable skill commands
-
-Expected content for the first slice:
-- `skills/openclaw-git-workflow/SKILL.md`
-- optional `references/` under that skill for repo-specific workflow details
+- keep only narrow reference notes that still matter
+- record why `plugin-host-git-push/` stays retained but separate
 
 ### `plugin/`
 Purpose:
-- home for the small supporting plugin that carries the execute-mode tool surface
-- should stay minimal and exist only as bounded runtime support for execute
-- plugin manifest must include `configSchema`, even when empty, so live OpenClaw install/load succeeds
+- main package source in this repo
+- bounded runtime tool for plan/execute workflow
+- bundled workflow skill under `plugin/skills/`
+- repo-local contract doc under `plugin/EXECUTE_SURFACE.md`
 
-Expected content for the first slice:
-- `plugin/EXECUTE_SURFACE.md`
-- `plugin/openclaw.plugin.json`
+Key files:
 - `plugin/package.json`
-- `plugin/index.ts`
-- `plugin/api.ts`
-- `plugin/tsconfig.json`
-- `plugin/tsconfig.build.json`
-- `plugin/.gitignore`
-- `plugin/src/index.ts`
-- `plugin/src/git-workflow-tool.ts`
-- `plugin/src/runtime/validate-confirmed-plan.ts`
-- `plugin/src/types/openclaw-plugin-sdk.d.ts`
+- `plugin/openclaw.plugin.json`
+- `plugin/README.md`
+- `plugin/EXECUTE_SURFACE.md`
+- `plugin/skills/openclaw-git-workflow/SKILL.md`
+- `plugin/src/*`
 
 ### `scripts/`
 Purpose:
-- bounded helper scripts only
-- no generic shell trampoline
-- scripts should correspond to explicit allowlisted actions
+- bounded write helpers for the main workflow
 
-Expected content for the first slice:
+Current scripts:
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
-- prefer several narrow scripts over one large dispatcher
-- do not treat any later push helper as part of the main public v1 branch+commit execute surface; if retained, it belongs to the separate bounded bridge track
 
-## Rules for implementation
+### `plugin-host-git-push/`
+Purpose:
+- separate bounded host-backed push/PR bridge
+- retained in-repo finish path for push and PR
+- not part of the main package contract above
 
-- Prefer workflow-level commands over raw git passthrough
-- Keep skill UX separate from runtime implementation details
-- Keep PR creation separate from the first slice
-- Keep Docker, SSH-agent, and auth boundaries explicit in docs and code
-- Do not introduce always-on macOS helper binaries, launch agents, or autoloaded node wrappers as part of the target architecture
+Key files:
+- `plugin-host-git-push/package.json`
+- `plugin-host-git-push/openclaw.plugin.json`
+- `plugin-host-git-push/README.md`
+- `plugin-host-git-push/BRIDGE_SURFACE.md`
+- `plugin-host-git-push/skills/*`
+- `plugin-host-git-push/src/*`
 
-## Notes on external realities
+## Rules
 
-### OpenClaw skills
-OpenClaw skills can be user-invocable and can declare `command-dispatch: tool`, which routes the slash command directly into the tool pipeline.
-
-### OpenClaw skill commands
-User-invocable skills are exposed as slash commands and may also be used via `/skill <name> [input]`.
-
-### Docker and git execution
-The current environment already has a validated operator-side git push path through the optional git layer and SSH-agent forwarding. That should be treated as a factual constraint when designing future bounded actions.
-
-### GitHub CLI
-The container runtime should still not be treated as the baseline place for PR creation in the first implementation slice. Any working `gh`-backed push/PR flow belongs to the optional internal `plugin-host-git-push/` bridge track, not to the main public v1 workflow surface.
-
-### Workspace bootstrap memory hygiene
-For the surrounding assistant workspace used to build this repo, `MEMORY.md` should stay a compact durable index, while long logs and detailed history belong in `memory/*.md`. This reduces bootstrap truncation and keeps continuation turns more stable.
+- Keep the main package narrow.
+- Keep push and PR outside the main branch+commit contract.
+- Keep `plugin-host-git-push/` separate when it remains in the repo.
+- Keep `plugin/EXECUTE_SURFACE.md` and `plugin-host-git-push/BRIDGE_SURFACE.md` aligned with the real package and runtime surface.
+- Do not widen any user-facing surface into arbitrary git or shell passthrough.
+- If a bug is first found in generated output, fix the canonical source rather than normalizing the artifact patch.

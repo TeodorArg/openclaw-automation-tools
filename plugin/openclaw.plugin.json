@@ -3,6 +3,7 @@
 	"name": "OpenClaw Git Workflow",
 	"description": "Minimal bounded tool carrier for git workflow branch and commit execution.",
 	"entry": "./src/index.ts",
+	"skills": ["./skills"],
 	"configSchema": {
 		"type": "object",
 		"additionalProperties": false,

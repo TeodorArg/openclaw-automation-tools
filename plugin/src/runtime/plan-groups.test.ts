@@ -155,7 +155,7 @@ describe("buildPlanResult", () => {
 				currentBranch: "main",
 				headCommit: "abc123",
 				changedFiles: [
-					{ path: "skills/openclaw-git-workflow/SKILL.md", status: "M" },
+					{ path: "plugin/skills/openclaw-git-workflow/SKILL.md", status: "M" },
 				],
 			},
 			{
