@@ -250,7 +250,7 @@ function buildGroupForArea(
 							"Keep repo support files aligned with the implementation state.",
 							"Avoid widening the workflow contract beyond v1 boundaries.",
 							`Cover the changed repo files: ${summarizeFiles(files)}.`,
-							"Leave push and PR layers as separate later steps.",
+							"Keep push and PR outside the main public v1 workflow while the separate bounded host-backed lane remains available.",
 						],
 					),
 				},

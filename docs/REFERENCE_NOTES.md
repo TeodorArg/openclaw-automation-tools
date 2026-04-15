@@ -1,56 +1,33 @@
 # Reference Notes
 
-## Active repo path model
+This file should stay narrow.
+Keep only notes that still matter to the current repo shape.
 
-For runtime work in the container-backed assistant session, use the active container-visible repo path.
-If host-backed actions are being documented explicitly, keep host paths as examples or operator-side inputs rather than treating them as the main repo canon.
+## Retained bridge decision
 
-## Current bridge location
+Keep `plugin-host-git-push/` in the repo.
 
-The active bounded host push/PR bridge work lives in this repo under `plugin-host-git-push/`.
+Do not treat it as part of the main branch+commit package baseline.
+Treat it as a separate internal-explicit subtree because it carries the bounded host-backed finish path for:
+- push current branch
+- PR readiness checks
+- create PR to `main`
 
-Active plugin and skill implementation for this track should be treated as in-repo work under `plugin/`, `skills/`, and `plugin-host-git-push/`, not as work in a separate external plugin repo.
+## Main package reminder
 
-## Historical reference
+The main package in this repo remains:
+- `@openclaw/openclaw-git-workflow`
+- bundled workflow skill under `plugin/skills/` and packaged `skills/`
+- bounded branch + commit workflow only
 
-Older external repo material may still be useful as historical reference for prior bounded runtime ideas or experiments, but it is not the implementation base for the current repo.
+This is the intended main release surface for the repo, while the package is still kept private in-repo.
 
-## Why current implementation stays in-repo
+## Generated-output rule
 
-- the main public workflow is skill-first rather than centered on plugin command-path entrypoints
-- the current repo is the canonical implementation base for the public branch+commit workflow package
-- old code may still contain transitional assumptions from the older runtime/plugin direction
-- current canon for bridge packaging, skills, and docs is the in-repo `plugin-host-git-push/` subtree for the optional internal host-backed push/PR seam
+If a bug is first observed in generated, bundled, packed, copied, or rebuild-overwritten output, do not treat that artifact as the canonical fix target.
+Trace back to the real source and fix that instead.
 
-## What may be reused conceptually
+## Install/runtime reminder
 
-- bounded action patterns
-- repo-state inspection logic
-- remote-selection logic if still valid
-- Plan A push concepts that do not rely on the blocked command-path bridge
-- narrow runtime validation patterns that fit the new confirmed-plan execute gate
-
-## What should not be carried forward blindly
-
-- plugin command-path assumptions
-- host-helper/autoload patterns
-- any design that requires an always-on macOS helper app/node installed in autoload/bin style
-- any assumption that container `gh` auth is already solved for the main public v1 path
-
-## Generated-output fix rule
-
-If a bug is first observed in generated, bundled, packed, copied, or rebuild-overwritten output, do not normalize that artifact as the real fix target.
-Record the user-visible problem first, then trace back to the canonical source and fix that durable source path.
-Temporary artifact-only patches may still be useful for diagnosis, but they should be labeled as disposable.
-
-## Runtime install notes learned from this track
-
-- For live OpenClaw plugin install, `plugin/openclaw.plugin.json` must include `configSchema`, even when the plugin has no config.
-- In the current OpenClaw runtime, plugin dependency installation is still npm-based during `openclaw plugins install`, even if `pnpm` is available in the container.
-- Making `pnpm` available by default in Docker is still useful for operator and repo workflows, but it should not be confused with changing OpenClaw's internal plugin installer behavior.
-
-## Workspace context hygiene for this track
-
-- When recording durable assistant context during this implementation track, keep `MEMORY.md` compact and high-signal.
-- Put long investigations, verification logs, and chronology into `memory/*.md` rather than growing bootstrap-injected files.
-- Prefer `agents.defaults.contextInjection = "continuation-skip"` in the live OpenClaw config to reduce repeated bootstrap injection on safe continuation turns.
+For live OpenClaw plugin install, `plugin/openclaw.plugin.json` must include `configSchema`, even when empty.
+The current runtime still uses npm-based dependency installation during `openclaw plugins install`.

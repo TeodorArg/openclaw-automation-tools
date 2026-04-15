@@ -1,10 +1,12 @@
 # Push Bridge Surface
 
-Minimal bounded surface for the host git push/PR bridge.
+Repo-local contract doc for the retained host-backed push/PR bridge source tree.
+This file documents the current bounded runtime surface used by `plugin-host-git-push/`.
+It is not currently shipped in the packaged file list.
 
 ## Tool entry
 
-Preferred tool name:
+Preferred tool names:
 - `git_push_bridge_action`
 - `git_pr_bridge_action`
 
@@ -31,7 +33,7 @@ Canonical request shape:
 Accepted intent mapping:
 - `/git-push current-branch` -> `action=push-current-branch`
 - push capability/preflight check -> `action=inspect-capabilities`
-- `/git-pr create-to-main` -> `action=create-pr-to-main`
+- `/git-pr create` -> `action=create-pr-to-main`
 - PR readiness/preflight check -> `action=assert-pr-ready`
 
 Anything outside that contract should be treated as out of scope for this bridge rather than silently widening behavior.

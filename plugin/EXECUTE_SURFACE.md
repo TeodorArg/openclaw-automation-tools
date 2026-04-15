@@ -1,14 +1,16 @@
-# Minimal Execute Surface
+# Execute Surface
 
-Этот документ фиксирует минимальную execute-поверхность для первого implementation slice.
+Repo-local contract doc for the main workflow package source tree.
+This file documents the current bounded runtime surface used by `plugin/`.
+It is not currently shipped in the packaged file list.
 
 ## Goal
 
-Дать skill детерминированный bounded runtime surface для execution mode без generic shell passthrough.
+Give the workflow skill a deterministic bounded runtime surface for execution mode without generic shell passthrough.
 
 ## Tool entry
 
-Предпочтительный tool name:
+Preferred tool name:
 - `git_workflow_action`
 
 ## Minimal contract
@@ -32,7 +34,7 @@
 - no writes
 
 ### `plan-groups-with-branches`
-- same as planning
+- do planning work
 - also produce branch names and exact later commands
 - also emit a ready-to-confirm structured payload in canonical confirmed-plan shape
 - no writes
@@ -48,9 +50,9 @@
 
 ## Bounded runtime operations
 
-The first slice should allow only these write-side operations:
+The main workflow allows only these write-side operations:
 
-1. create a branch from current HEAD
+1. create each planned branch from the initial HEAD captured at execute start
 2. stage an explicit allowlisted file set for one group
 3. create a commit with validated title/body
 
@@ -61,41 +63,29 @@ Anything else is out of scope.
 - plugin runtime validates request and confirmed plan
 - plugin runtime maps one bounded phase to one narrow script
 - scripts receive structured args, not free-form prose
-- the plugin package itself must exist as a real TypeScript package, not just loose source files
+- the plugin package itself remains a real TypeScript package
 
-## Required package baseline
+## Current package scripts
 
-For this repo's plugin slice, `plugin/package.json` should exist immediately with at least these scripts:
+Current scripts in `plugin/package.json`:
 - `build`: `tsc -p tsconfig.build.json`
-- `format`: `biome format --write .`
-- `format:check`: `biome format --check .`
-- `lint`: `biome check .`
-- `lint:fix`: `biome check --write .`
+- `format`: `biome format --write . --files-ignore-unknown=true`
+- `format:check`: `biome format --check . --files-ignore-unknown=true`
+- `lint`: `biome check index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true`
+- `lint:fix`: `biome check --write index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true`
 - `check`: `pnpm lint && pnpm test && pnpm build`
 - `typecheck`: `tsc --noEmit -p tsconfig.json`
-- `test`: `vitest run --config ./vitest.config.ts`
+- `test`: `vitest run --passWithNoTests`
+- `pack:smoke`: package smoke-check for the shipped file list
 
-Expected devDependencies baseline:
-- `@biomejs/biome`
-- `@types/node`
-- `typescript`
-- `vitest`
-
-If this repo is developed as a standalone repo rather than the main OpenClaw monorepo, do not assume workspace-only package references like `@openclaw/plugin-sdk: workspace:*` will resolve locally. Keep the standalone verification path honest and compatible with the actual repo shape.
-
-After package setup, immediately run install plus verification rather than leaving the package unbuilt.
-
-## Current narrow helpers
+## Current bounded helpers
 
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
 
-Optional non-baseline helper if the implementation ever needs a separate bounded staging step:
-- `scripts/git-stage-files.sh`
-
 ## Explicit non-goals
 
-This minimal execute surface must not include:
+This execute surface must not include:
 - arbitrary shell
 - arbitrary git subcommands
 - push

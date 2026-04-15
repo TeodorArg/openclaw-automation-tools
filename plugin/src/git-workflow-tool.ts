@@ -237,7 +237,7 @@ export function createGitWorkflowTool() {
 				const repoState = await collectRepoState(repoPath);
 				const planResult = buildPlanResult(repoState, {
 					includeBranches: params.action === "plan-groups-with-branches",
-					sourceCommand: params.commandName,
+					sourceCommand: params.command,
 				});
 
 				return {
