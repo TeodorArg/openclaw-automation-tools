@@ -11,7 +11,7 @@ describe("buildPlanResult", () => {
 				changedFiles: [
 					{ path: "docs/SKILL_SPEC.md", status: "M" },
 					{ path: "plugin/src/git-workflow-tool.ts", status: "M" },
-					{ path: "scripts/git-create-commit.sh", status: "M" },
+					{ path: "plugin/scripts/git-create-commit.sh", status: "M" },
 				],
 			},
 			{
@@ -56,7 +56,7 @@ describe("buildPlanResult", () => {
 				changedFiles: [
 					{ path: "plugin/src/runtime/plan-groups.ts", status: "M" },
 					{ path: "plugin/src/runtime/plan-groups.test.ts", status: "M" },
-					{ path: "scripts/git-create-commit.sh", status: "M" },
+					{ path: "plugin/scripts/git-create-commit.sh", status: "M" },
 				],
 			},
 			{
@@ -84,7 +84,7 @@ describe("buildPlanResult", () => {
 			area: "runtime",
 			label: "Plugin and bounded execute runtime",
 			branch: "feat/workflow-refine-planning-and-execute",
-			files: ["scripts/git-create-commit.sh"],
+			files: ["plugin/scripts/git-create-commit.sh"],
 			commit: {
 				title: "feat(workflow): refine planning and bounded execute",
 			},

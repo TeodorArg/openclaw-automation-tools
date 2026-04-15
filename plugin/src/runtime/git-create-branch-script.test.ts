@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 const execFileAsync = promisify(execFile);
 const scriptPath = path.resolve(
 	import.meta.dirname,
-	"../../../scripts/git-create-branch.sh",
+	"../../scripts/git-create-branch.sh",
 );
 
 const tempDirs: string[] = [];

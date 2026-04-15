@@ -137,7 +137,7 @@ function classifyRepoArea(filePath: string): RepoArea {
 		return "skills";
 	}
 
-	if (filePath.startsWith("plugin/") || filePath.startsWith("scripts/")) {
+	if (filePath.startsWith("plugin/")) {
 		return "runtime";
 	}
 
@@ -323,7 +323,7 @@ function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 	}
 
 	if (
-		filePath.startsWith("scripts/") ||
+		filePath.startsWith("plugin/scripts/") ||
 		filePath === "plugin/src/runtime/validate-confirmed-plan.ts" ||
 		filePath === "plugin/src/runtime/validate-confirmed-plan.test.ts" ||
 		filePath === "plugin/src/git-workflow-tool.ts"
@@ -409,16 +409,16 @@ function buildRuntimeGroupForSubtype(
 		case "mixed":
 			return {
 				label: "Plugin and bounded runtime",
-				branch: files.some((file) => file.startsWith("scripts/"))
+				branch: files.some((file) => file.startsWith("plugin/scripts/"))
 					? "feat/workflow-refine-planning-and-execute"
 					: "feat/workflow-repo-aware-planning",
 				files,
 				commit: {
-					title: files.some((file) => file.startsWith("scripts/"))
+					title: files.some((file) => file.startsWith("plugin/scripts/"))
 						? "feat(workflow): refine planning and bounded execute"
 						: "feat(workflow): add repo-aware planning output",
 					body: createCommitBody(
-						files.some((file) => file.startsWith("scripts/"))
+						files.some((file) => file.startsWith("plugin/scripts/"))
 							? "Refine the runtime path for planning and bounded execution."
 							: "Add deterministic repo-aware planning output to the workflow runtime.",
 						[
