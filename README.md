@@ -1,6 +1,6 @@
 # openclaw-git-workflow
 
-Skill-first git workflow repo for OpenClaw.
+Plugin-first bounded git workflow repo for OpenClaw.
 
 ## What this repo is
 
@@ -15,13 +15,15 @@ Main package in this repo:
 - `@openclaw/openclaw-git-workflow`
 
 Current status:
-- it is the intended main release surface for this repo
+- it is the main package surface for this repo
 - it is currently kept private in-repo via `plugin/package.json`
 
 Source tree:
 - package source lives under `plugin/`
 - bundled skill source lives under `plugin/skills/openclaw-git-workflow/`
+- repo-source helper scripts live under `plugin/scripts/`
 - packaged skill path is `skills/openclaw-git-workflow/SKILL.md`
+- packaged helper path is `scripts/`
 
 Main workflow contract:
 - `разложи по git-группам`
@@ -53,13 +55,17 @@ That subtree is retained because it carries the bounded host-backed finish path 
 - PR readiness checks
 - creating PRs to `main`
 
+Simple boundary:
+- `plugin/` owns planning plus branch/commit execution
+- `plugin-host-git-push/` owns the separate host-backed push/PR finish path
+
 Keep it in the repo.
 Do not treat it as part of the main package contract above.
 
 ## Repo layout
 
 - `plugin/` — main package source and bundled workflow skill
-- `scripts/` — bounded branch/commit helpers
+- `plugin/scripts/` — bounded branch/commit helpers for the main package
 - `docs/CONFIRMED_PLAN_FORMAT.md` — confirmed execute payload contract
 - `docs/SKILL_SPEC.md` — user-facing workflow contract
 - `docs/IMPLEMENTATION_SHAPE.md` — current architecture and boundaries

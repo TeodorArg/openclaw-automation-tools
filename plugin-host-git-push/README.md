@@ -1,6 +1,6 @@
 # @openclaw/openclaw-host-git-push
 
-Private/internal plugin package for the bounded host-backed push/PR bridge.
+Separate in-repo plugin package for the bounded host-backed push/PR bridge.
 
 This package bundles:
 - the `git_push_bridge_action` runtime tool
@@ -10,7 +10,7 @@ This package bundles:
 - packaged skill outputs at `skills/openclaw-host-git-push/SKILL.md` and `skills/openclaw-host-git-pr/SKILL.md`
 
 This package stays separate from `@openclaw/openclaw-git-workflow`.
-It exists to support bounded host-side push/PR actions with explicit capability preflight.
+It remains an internal-explicit bridge package for bounded host-side push/PR actions with explicit capability preflight.
 
 Stable contract:
 - inspect push/PR capabilities

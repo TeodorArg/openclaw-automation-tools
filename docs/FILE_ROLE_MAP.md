@@ -7,11 +7,12 @@ This document records what each major area of the repo is responsible for.
 The main package baseline in this repo is the plugin-first workflow package:
 - `plugin/`
 - bundled `openclaw-git-workflow` skill under `plugin/skills/`
-- bounded branch/commit helpers in `scripts/`
+- bounded branch/commit helpers in `plugin/scripts/`
 
-This package is the intended main release surface for the repo, but it is currently kept private in-repo.
+This package is the main package surface for the repo, but it is currently kept private in-repo.
 
 The separate `plugin-host-git-push/` subtree is retained in the repo, but it is not part of that main package baseline.
+Simple boundary: `plugin/` owns planning plus branch/commit execution, while `plugin-host-git-push/` owns the separate host-backed push/PR finish path.
 
 ## Top-level areas
 
@@ -53,6 +54,7 @@ Purpose:
 - main package source in this repo
 - bounded runtime tool for plan/execute workflow
 - bundled workflow skill under `plugin/skills/`
+- bounded helper scripts under `plugin/scripts/`
 - repo-local contract doc under `plugin/EXECUTE_SURFACE.md`
 
 Key files:
@@ -63,13 +65,13 @@ Key files:
 - `plugin/skills/openclaw-git-workflow/SKILL.md`
 - `plugin/src/*`
 
-### `scripts/`
+### `plugin/scripts/`
 Purpose:
 - bounded write helpers for the main workflow
 
 Current scripts:
-- `scripts/git-create-branch.sh`
-- `scripts/git-create-commit.sh`
+- `plugin/scripts/git-create-branch.sh`
+- `plugin/scripts/git-create-commit.sh`
 
 ### `plugin-host-git-push/`
 Purpose:

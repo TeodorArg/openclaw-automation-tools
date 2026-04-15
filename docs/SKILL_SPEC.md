@@ -27,7 +27,7 @@ Plan only:
 Plan only, branch-aware:
 - do all planning work
 - propose branch names
-- emit exact later commands or actions
+- emit the exact next confirmation step
 - emit a ready-to-confirm structured plan
 - do not execute writes
 

@@ -9,71 +9,72 @@ command-arg-mode: raw
 
 # OpenClaw Git Workflow
 
-Используй этот skill для операторского git workflow, а не для произвольных git-команд.
+Use this skill for the bounded operator-facing git workflow, not for arbitrary git commands.
 
-## Поддерживаемые пользовательские интенты
+## Supported intents
 
-Этот skill должен обрабатывать только три канонических интента:
+This skill supports exactly these user-facing workflow intents:
 
 1. `разложи по git-группам`
 2. `разложи по git-группам с ветками`
 3. `выполни git-группы с ветками`
 
-## Поведение по интентам
+## Intent behavior
 
 ### `разложи по git-группам`
 
-Сделай только план:
-- посмотри состояние репозитория и изменённые файлы
-- предложи логические git-группы
-- предложи commit title и commit body по каноническим правилам репозитория
-- не создавай ветки
-- не создавай commit
-- не push
+Plan only:
+- inspect repo state and changed files
+- propose logical git groups
+- propose canonical commit title and commit body text
+- do not create branches
+- do not create commits
+- do not push
 
 ### `разложи по git-группам с ветками`
 
-Сделай plan-only branch-aware режим:
-- выполни всё из обычного planning mode
-- предложи branch names
-- выдай точные команды для дальнейшего исполнения
-- ничего не выполняй
+Plan only, branch-aware:
+- do the normal planning work
+- propose branch names
+- emit the exact next confirmation step
+- emit a ready-to-confirm structured plan
+- do not execute writes
 
 ### `выполни git-группы с ветками`
 
-Это execution mode, но только при наличии confirmed internal plan:
-- не реконструируй execution из свободного текста пользователя
-- требуй confirmed plan format, полученный на planning step
-- выполняй только bounded действия branch + commit
-- execution должен оставаться детерминированным по identity и branch base
-- не push в v1
-- не открывай PR
+Execute only from a confirmed plan:
+- do not reconstruct execution from free-form user text
+- require the confirmed plan format from the planning step
+- perform only bounded branch + commit actions
+- keep execution deterministic around branch base and commit identity
+- do not push in v1
+- do not open PRs
 
-## Жёсткие правила
+## Hard rules
 
-- Не принимай произвольный `git <anything>` как supported input.
-- Не прокидывай пользовательский текст в shell.
-- Отделяй planning output от execution input.
-- Если confirmed plan отсутствует или невалиден, execution нужно остановить и вернуть понятную ошибку.
-- Branch naming и commit format должны соответствовать каноническому `GIT_GUIDANCE.md` целевого репозитория.
+- Do not accept arbitrary `git <anything>` input.
+- Do not pass user text through to shell.
+- Keep planning output separate from execution input.
+- If confirmed plan input is missing or invalid, stop execute and return a clear error.
+- Keep branch naming and commit format aligned with the target repo conventions.
 
 ## Runtime shape
 
-Этот skill должен использовать детерминированный tool dispatch.
-Tool получает raw command args и сам переводит их в структурированный internal request.
-Shell scripts не должны парсить свободный пользовательский текст.
+This skill uses deterministic tool dispatch.
+The tool receives raw command args and translates them into a structured request.
+Scripts under `plugin/scripts/` must not parse free-form user text.
 
-## Первая реализация
+## Boundary
 
-Первая реализация покрывает только:
-- skill entrypoint
-- confirmed plan format
-- minimal execute surface
+This skill covers only:
+- the skill entrypoint
+- confirmed plan handoff
+- the bounded execute surface
 - bounded branch/commit execution
 
-Не покрывает:
+It does not cover:
 - push
 - PR creation
 - generic shell passthrough
 - destructive recovery flows
-- always-on macOS helper process
+- always-on helper processes
