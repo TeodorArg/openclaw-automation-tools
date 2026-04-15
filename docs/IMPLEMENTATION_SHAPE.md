@@ -6,7 +6,7 @@ This implementation shape is based on:
 - OpenClaw local docs for skills and slash commands
 - Context7 OpenClaw docs confirming `command-dispatch: tool`, `command-tool`, `command-arg-mode: raw`, and deterministic skill-to-tool routing
 - current Docker split-layer and SSH-agent constraints already validated in the main repo
-- current evidence that container `gh` auth is not ready for PR flows, even though operator-side macOS GitHub auth is now working for host-side push/PR work
+- current evidence that the baseline container path is still not the place to treat PR flows as part of the public v1 workflow, even though operator-side macOS GitHub auth is now working for the optional internal host-backed push/PR bridge
 
 ## Core design
 
@@ -171,15 +171,15 @@ The validated container-side push path in the current environment depends on:
 - bounded container-side execution, not arbitrary shell
 
 ### GitHub CLI
-Do not make PR creation part of the first slice.
-Current evidence shows the container runtime still lacks working `gh` auth state, even though host-side macOS GitHub auth is now validated and sufficient for explicit push/PR work outside the container.
+Do not make PR creation part of the main public v1 workflow surface.
+Host-side macOS GitHub auth is now validated for the optional internal push/PR bridge, but that does not change the main public v1 contract or make container-side PR creation part of the baseline workflow.
 
 ### macOS helper constraint
 Do not design around any always-on helper app, LaunchAgent, autoloaded node wrapper, or similar background Mac resident process.
 
-## First implementation slice
+## Main public v1 slice
 
-The first real implementation should deliver:
+The main public v1 slice should deliver:
 - the skill directory and `SKILL.md`
 - the canonical confirmed plan format document
 - the minimal execute-surface document for bounded runtime wiring
@@ -208,17 +208,18 @@ It should not yet try to solve:
 
 - `выполни git-группы с ветками` must not push
 - execution model for v1 is `plan -> confirm -> execute`
-- the current first slice executes through bounded local branch + commit helpers in the target repo
-- integration with the validated operator-side `openclaw-git` path is intentionally deferred to a later step
-- do not implement one-shot execute in the first slice
-- push stays a separate future step for the main public v1 workflow surface
-- PR stays outside the main public v1 workflow surface; any working push/PR seam belongs to the separate optional internal host-backed bridge track
+- the public v1 baseline executes through bounded local branch + commit helpers in the target repo
+- do not implement one-shot execute in the main public v1 slice
+- push stays outside the main public v1 workflow surface
+- PR stays outside the main public v1 workflow surface
+- any working push/PR seam belongs to the separate optional internal host-backed bridge track, which already exists as a bounded package/skill/tool path and is validated on the host-backed path
 
 ## Fixed product decisions after specification review
 
 ### Plugin need
 - plan-only workflow may work without a plugin
 - execute flow requires a minimal plugin/tool layer
+- the current engineering next step for the separate internal bridge is to decide whether any honest current-surface exposure/install step remains, or whether the remaining gap should be frozen as an upstream/runtime limitation, not to change the public v1 branch+commit contract
 - the plugin should exist only as a tool/runtime carrier, not as a command-entry surface
 - for this standalone repo shape, the plugin package should remain standalone-compatible rather than assuming OpenClaw monorepo `workspace:*` dependency resolution
 

@@ -34,5 +34,5 @@
 ## Следующий проход
 
 - Проверить, не дублируют ли `docs/SKILL_SPEC.md`, `docs/IMPLEMENTATION_SHAPE.md` и `docs/FILE_ROLE_MAP.md` друг друга сильнее, чем нужно.
-- Проверить, нужны ли все исторические PR/merge упоминания в `README.md` и package README, или их лучше вынести в changelog/history.
+- Проверить, не осталось ли ещё единичных historical/merge-updates в repo-facing docs; если да, вынести их в workspace memory, а repo canon держать в present-tense состоянии.
 - Проверить, нужен ли отдельный `docs/REFERENCE_NOTES.md`, или его можно ужать в README после стабилизации repo shape.
