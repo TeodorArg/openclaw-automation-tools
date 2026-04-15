@@ -2,6 +2,7 @@
 
 Repo-local contract doc for the main workflow package source tree.
 This file documents the current bounded runtime surface used by `plugin/`.
+Repo paths in this file use the source-tree frame, while packaged plugin paths use package-root paths like `scripts/` and `skills/`.
 It is not currently shipped in the packaged file list.
 
 ## Goal
@@ -35,7 +36,7 @@ Preferred tool name:
 
 ### `plan-groups-with-branches`
 - do planning work
-- also produce branch names and exact later commands
+- also produce branch names and the exact next confirmation step
 - also emit a ready-to-confirm structured payload in canonical confirmed-plan shape
 - no writes
 
@@ -62,7 +63,7 @@ Anything else is out of scope.
 
 - plugin runtime validates request and confirmed plan
 - plugin runtime maps one bounded phase to one narrow script
-- scripts receive structured args, not free-form prose
+- scripts under `plugin/scripts/` receive structured args, not free-form prose
 - the plugin package itself remains a real TypeScript package
 
 ## Current package scripts
@@ -80,8 +81,8 @@ Current scripts in `plugin/package.json`:
 
 ## Current bounded helpers
 
-- `scripts/git-create-branch.sh`
-- `scripts/git-create-commit.sh`
+- `plugin/scripts/git-create-branch.sh`
+- `plugin/scripts/git-create-commit.sh`
 
 ## Explicit non-goals
 
@@ -98,5 +99,5 @@ This execute surface must not include:
 
 The skill is user-facing.
 The tool contract is internal and structured.
-The scripts are bounded helpers.
+The scripts under `plugin/scripts/` are bounded helpers.
 No layer should silently widen into a generic command runner.

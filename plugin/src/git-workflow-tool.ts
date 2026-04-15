@@ -18,7 +18,7 @@ function resolveRepoPath(): string {
 }
 
 function resolveScriptsDir(repoPath: string): string {
-	return path.resolve(repoPath, "scripts");
+	return path.resolve(repoPath, "plugin/scripts");
 }
 
 const ToolSchema = Type.Object(
