@@ -10,7 +10,7 @@ This implementation shape is based on:
 
 ## Core design
 
-The repo should be built around three layers:
+The repo is built around three layers:
 
 1. `skills/` — user-facing workflow commands
 2. `plugin/` — custom tool surface and bounded runtime wiring
@@ -27,7 +27,7 @@ The scripts are narrow execution helpers.
 - The current blocked surface is the plugin command path, so the new design should avoid depending on plugin `registerCommand()` as the primary entrypoint.
 - A small supporting plugin may still be needed because the skill needs a deterministic custom tool with a bounded contract.
 
-## Proposed repo structure
+## Current repo structure
 
 ### `skills/openclaw-git-workflow/SKILL.md`
 Responsibility:
@@ -36,7 +36,7 @@ Responsibility:
 - declare deterministic tool dispatch if the final chosen command shape uses direct dispatch
 - teach the agent the difference between planning and execution modes
 
-Possible future companion files under the skill:
+Optional companion files under the skill when a narrow reference note is worth keeping:
 - `skills/openclaw-git-workflow/references/workflow-rules.md`
 - `skills/openclaw-git-workflow/references/git-guidance-summary.md`
 
@@ -47,7 +47,7 @@ Responsibility:
 - translate tool actions into bounded runtime helpers
 - keep planning groups deterministic, with area-based grouping by default and a narrow runtime-only sub-grouping layer when file paths make that split obvious
 
-Required first-slice package shape:
+Current implemented package shape:
 - `plugin/package.json`
 - `plugin/openclaw.plugin.json`
 - `plugin/index.ts`
@@ -70,7 +70,7 @@ Required package scripts in `plugin/package.json`:
 - `typecheck`: `tsc --noEmit -p tsconfig.json`
 - `test`: `vitest run --config ./vitest.config.ts`
 
-Required devDependencies for the first plugin scaffold:
+Current devDependencies baseline for the plugin package:
 - `@biomejs/biome`
 - `@types/node`
 - `typescript`
@@ -82,13 +82,15 @@ Do not treat plugin scaffolding as complete until the package is shaped like a r
 Responsibility:
 - implement explicit bounded actions only
 - never expose generic shell passthrough
-- keep branch and commit operations narrow and validated in the first slice
+- keep branch and commit operations narrow and validated in the main public v1 slice
 
-Likely future files:
+Current baseline files:
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
-- later: `scripts/git-push-current-branch.sh`
 - avoid a large catch-all dispatcher; prefer several narrow scripts
+
+Optional bridge-only/internal additions:
+- any push helper belongs only to the separate optional host-backed bridge track, not to the main public v1 slice
 
 ## Recommended minimal tool contract
 
@@ -170,9 +172,11 @@ The validated container-side push path in the current environment depends on:
 - explicit host-side ssh-agent readiness
 - bounded container-side execution, not arbitrary shell
 
+For the separate host-backed seam, accept host-side env/path inputs first, including values like `OPENCLAW_GIT_WORKFLOW_REPO_DIR=/Users/...` and `OPENCLAW_PROJECT_DIR=/Users/...`, and then normalize them back into the canonical container-visible repo cwd before writing typed jobs or runtime-facing repo identifiers.
+
 ### GitHub CLI
 Do not make PR creation part of the main public v1 workflow surface.
-Host-side macOS GitHub auth is now validated for the optional internal push/PR bridge, but that does not change the main public v1 contract or make container-side PR creation part of the baseline workflow.
+Host-side macOS GitHub auth is now validated for the optional internal push/PR bridge, and that bridge is proven on a real grouped example for branch split, push, and PR creation into `main`, but that still does not change the main public v1 contract or make container-side PR creation part of the baseline workflow.
 
 ### macOS helper constraint
 Do not design around any always-on helper app, LaunchAgent, autoloaded node wrapper, or similar background Mac resident process.
@@ -198,7 +202,7 @@ For the plugin package, the expected first verification flow is:
 This verification flow has already been exercised successfully for the current standalone plugin package.
 Do not leave a new plugin package unverified when these commands are part of the package contract.
 
-It should not yet try to solve:
+The main public v1 slice still should not try to solve:
 - push in the execute workflow
 - PR creation
 - generic git command execution
@@ -206,6 +210,7 @@ It should not yet try to solve:
 
 ## Fixed v1 execution decisions
 
+- the branch+commit baseline is ready on `main`
 - `выполни git-группы с ветками` must not push
 - execution model for v1 is `plan -> confirm -> execute`
 - the public v1 baseline executes through bounded local branch + commit helpers in the target repo
@@ -213,13 +218,16 @@ It should not yet try to solve:
 - push stays outside the main public v1 workflow surface
 - PR stays outside the main public v1 workflow surface
 - any working push/PR seam belongs to the separate optional internal host-backed bridge track, which already exists as a bounded package/skill/tool path and is validated on the host-backed path
+- that host-backed track is already strong enough to support grouping -> branches -> push -> PR into `main`
+- the remaining manual piece on that track is PR approval/review confirmation on GitHub itself
 
 ## Fixed product decisions after specification review
 
 ### Plugin need
 - plan-only workflow may work without a plugin
 - execute flow requires a minimal plugin/tool layer
-- the current engineering next step for the separate internal bridge is to decide whether any honest current-surface exposure/install step remains, or whether the remaining gap should be frozen as an upstream/runtime limitation, not to change the public v1 branch+commit contract
+- the current engineering next step for the separate internal bridge is to decide how honestly to describe or expose that already-proven branch/push/PR path on the current runtime surface, not to change the public v1 branch+commit contract
+- the only remaining manual GitHub step on that path is PR approval/review confirmation
 - the plugin should exist only as a tool/runtime carrier, not as a command-entry surface
 - for this standalone repo shape, the plugin package should remain standalone-compatible rather than assuming OpenClaw monorepo `workspace:*` dependency resolution
 

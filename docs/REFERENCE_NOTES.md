@@ -17,10 +17,10 @@ Older external repo material may still be useful as historical reference for pri
 
 ## Why current implementation stays in-repo
 
-- the user chose to stop building on the blocked plugin-command path
-- the new repo is intended to be skill-first
+- the main public workflow is skill-first rather than centered on plugin command-path entrypoints
+- the current repo is the canonical implementation base for the public branch+commit workflow package
 - old code may still contain transitional assumptions from the older runtime/plugin direction
-- current canon for bridge packaging, skills, and docs is the in-repo `plugin-host-git-push/` subtree
+- current canon for bridge packaging, skills, and docs is the in-repo `plugin-host-git-push/` subtree for the optional internal host-backed push/PR seam
 
 ## What may be reused conceptually
 
@@ -36,6 +36,12 @@ Older external repo material may still be useful as historical reference for pri
 - host-helper/autoload patterns
 - any design that requires an always-on macOS helper app/node installed in autoload/bin style
 - any assumption that container `gh` auth is already solved for the main public v1 path
+
+## Generated-output fix rule
+
+If a bug is first observed in generated, bundled, packed, copied, or rebuild-overwritten output, do not normalize that artifact as the real fix target.
+Record the user-visible problem first, then trace back to the canonical source and fix that durable source path.
+Temporary artifact-only patches may still be useful for diagnosis, but they should be labeled as disposable.
 
 ## Runtime install notes learned from this track
 

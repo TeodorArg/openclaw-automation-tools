@@ -14,7 +14,8 @@ It exists to support bounded host-side push/PR actions with explicit capability 
 Latest live status:
 - the official macOS node-backed host path now reaches bounded `gh pr create`
 - host-path targeting drift is fixed in the core helper scripts, so operator-side checks can use real `/Users/...` repo paths while typed jobs still keep canonical container-visible repo cwd
-- bridge wiring is past scaffold-only state, so the remaining work is finish-path wiring and canon clarity rather than basic helper/auth/path wiring
+- the bounded bridge path is already proven end-to-end for grouping -> branches -> push -> PR into `main`
+- the remaining manual GitHub step on that path is PR approval/review confirmation, while the remaining product/docs work is only honest runtime-surface exposure and canon clarity
 
 ## Local verify
 

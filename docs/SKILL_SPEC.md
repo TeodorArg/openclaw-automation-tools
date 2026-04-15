@@ -68,6 +68,8 @@ The preferred architecture is:
 - tool execution routes into bounded git runtime actions
 - no arbitrary shell proxy exposed to user input
 
+For the separate host-backed seam, host-side env/path inputs such as `OPENCLAW_GIT_WORKFLOW_REPO_DIR=/Users/...` and `OPENCLAW_PROJECT_DIR=/Users/...` may be accepted at the edge, but runtime-facing repo identity should still be normalized back to the canonical container-visible cwd before typed job execution.
+
 This follows OpenClaw docs that allow skills to be user-invocable slash commands and optionally declare `command-dispatch: tool`, which routes the slash command directly into the tool pipeline.
 
 ## Non-goals for v1
@@ -103,12 +105,15 @@ The implementation should stay aligned with:
 
 ## Fixed v1 execution decisions
 
+- the branch+commit baseline is ready on `main`
 - `выполни git-группы с ветками` does not include push
 - execution model for v1 is `plan -> confirm -> execute`
 - the public v1 baseline uses bounded local branch + commit helpers inside the target repo
 - one-shot execute is out of scope for v1
 - push and PR are outside the main public v1 workflow surface
-- any bounded host-backed push/PR action belongs to the separate optional internal bridge track, which is already validated on the host-backed path but not yet wired into the main workflow entrypoints
+- any bounded host-backed push/PR action belongs to the separate optional internal bridge track
+- that internal track is already proven for real grouped work: it already supports grouping -> branches -> push -> PR into `main`
+- the remaining manual piece on that path is PR approval/review confirmation on GitHub itself
 
 ## Fixed product decisions after specification review
 
@@ -129,4 +134,4 @@ The current implementation layer now includes:
 
 These files and package contents define the first bounded UX and runtime contract together with a working standalone plugin package, repo-aware planning, and bounded execute behavior on `main`.
 Merged `main` has now been validated end-to-end through the actual skill/tool flow, including the followup fixes for bounded execute behavior and deterministic runtime sub-grouping.
-Current next work is narrower than bridge wiring. The optional internal bounded host-backed push/PR bridge already exists as its own package, skills, tools, and typed host-jobs path. Keep that bridge clearly separate from the public v1 branch+commit baseline, and focus next on deciding whether any honest current-surface exposure/install step still remains, or whether the remaining gap should be frozen as an upstream/runtime limitation. Any later release-candidate or publish decision for the main package is separate from this engineering step.
+Current next work is narrower than bridge wiring. The optional internal bounded host-backed push/PR bridge already exists as its own package, skills, tools, and typed host-jobs path, and it is already proven for real grouped work through branch split, push, and PR creation into `main`. Keep that bridge clearly separate from the public v1 branch+commit baseline. The only remaining manual GitHub step on that path is PR approval/review confirmation, and the only remaining product question is how honestly to describe or expose that already-proven path on the current runtime surface. Any later release-candidate or publish decision for the main package is separate from this engineering step.

@@ -85,12 +85,12 @@ If this repo is developed as a standalone repo rather than the main OpenClaw mon
 
 After package setup, immediately run install plus verification rather than leaving the package unbuilt.
 
-## Suggested narrow helpers
+## Current narrow helpers
 
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
 
-Optional later helper:
+Optional non-baseline helper if the implementation ever needs a separate bounded staging step:
 - `scripts/git-stage-files.sh`
 
 ## Explicit non-goals

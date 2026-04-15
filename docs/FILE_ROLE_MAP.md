@@ -1,6 +1,6 @@
 # File Role Map
 
-This file defines what the new repo should contain and what each area is responsible for.
+This file defines what the repo currently contains and what each area is responsible for.
 
 ## Design basis
 
@@ -37,7 +37,7 @@ Purpose:
 ### `docs/FILE_ROLE_MAP.md`
 Purpose:
 - define the file responsibilities for the repo
-- reduce future drift when implementation begins
+- reduce future drift as the implemented baseline evolves
 
 ### `docs/IMPLEMENTATION_SHAPE.md`
 Purpose:
@@ -57,17 +57,18 @@ Purpose:
 - include `SKILL.md` files with valid frontmatter
 - expose user-invocable skill commands
 
-Expected content for the first slice:
+Current content in the implemented baseline:
 - `skills/openclaw-git-workflow/SKILL.md`
-- optional `references/` under that skill for repo-specific workflow details
+- optional `references/` under that skill for repo-specific workflow details when a narrow repo-specific note is useful
 
 ### `plugin/`
 Purpose:
 - home for the small supporting plugin that carries the execute-mode tool surface
 - should stay minimal and exist only as bounded runtime support for execute
 - plugin manifest must include `configSchema`, even when empty, so live OpenClaw install/load succeeds
+- generated `dist/` output from this package is not the canonical fix target when a bug is first discovered there; durable fixes belong in source plus package/build definitions
 
-Expected content for the first slice:
+Current content in the implemented baseline:
 - `plugin/EXECUTE_SURFACE.md`
 - `plugin/openclaw.plugin.json`
 - `plugin/package.json`
@@ -86,12 +87,13 @@ Purpose:
 - bounded helper scripts only
 - no generic shell trampoline
 - scripts should correspond to explicit allowlisted actions
+- if behavior appears wrong first in copied/generated script output, trace back to the canonical script or source generator instead of normalizing the artifact patch
 
-Expected content for the first slice:
+Current baseline content and rules:
 - `scripts/git-create-branch.sh`
 - `scripts/git-create-commit.sh`
 - prefer several narrow scripts over one large dispatcher
-- do not treat any later push helper as part of the main public v1 branch+commit execute surface; if retained, it belongs to the separate bounded bridge track
+- do not treat any push helper as part of the main public v1 branch+commit execute surface; if retained, it belongs to the separate optional bounded bridge track that already covers the proven host-backed finish path
 
 ## Rules for implementation
 
@@ -110,7 +112,7 @@ OpenClaw skills can be user-invocable and can declare `command-dispatch: tool`, 
 User-invocable skills are exposed as slash commands and may also be used via `/skill <name> [input]`.
 
 ### Docker and git execution
-The current environment already has a validated operator-side git push path through the optional git layer and SSH-agent forwarding. That should be treated as a factual constraint when designing future bounded actions.
+The current environment already has a proven separate optional host-backed finish path for grouping -> branches -> push -> PR into `main`, with PR approval/review still remaining as the manual GitHub step. That should be treated as a factual constraint when describing future bounded actions.
 
 ### GitHub CLI
 The container runtime should still not be treated as the baseline place for PR creation in the first implementation slice. Any working `gh`-backed push/PR flow belongs to the optional internal `plugin-host-git-push/` bridge track, not to the main public v1 workflow surface.
