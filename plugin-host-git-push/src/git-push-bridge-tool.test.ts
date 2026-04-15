@@ -1,5 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
-import { createGitPushBridgeTool } from "./git-push-bridge-tool.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	createGitPushBridgeTool,
+	resolveTargetRepo,
+} from "./git-push-bridge-tool.js";
 
 const readyCapabilities = {
 	version: 1,
@@ -27,7 +30,58 @@ function parseToolText(
 	return JSON.parse(item.text) as Record<string, unknown>;
 }
 
+afterEach(() => {
+	delete process.env.OPENCLAW_GIT_TARGET_REPO;
+	delete process.env.OPENCLAW_GIT_WORKFLOW_REPO_DIR;
+	delete process.env.OPENCLAW_PROJECT_DIR;
+});
+
 describe("git_push_bridge_action", () => {
+	it("resolves the workflow repo target from host coordinates", () => {
+		process.env.OPENCLAW_GIT_WORKFLOW_REPO_DIR =
+			"/Users/svarnoy85/teodorArg/openclaw-git-workflow";
+
+		expect(resolveTargetRepo()).toBe("/home/node/repos/openclaw-git-workflow");
+	});
+
+	it("passes the resolved target repo into capability preflight and repo-state collection", async () => {
+		const readCapabilities = vi.fn(async () => readyCapabilities);
+		const collectRepoState = vi.fn(async () => ({
+			cwd: "/home/node/repos/openclaw-git-workflow",
+			branch: "feat/x",
+			head: "abc123",
+			remote: "origin",
+		}));
+		const tool = createGitPushBridgeTool({
+			readCapabilities,
+			collectRepoState,
+			writeJob: async () => ({
+				jobId: "job-123",
+				jobPath: "/spool/queue/job-123-push-current-branch.json",
+			}),
+			waitForResult: async () => ({
+				jobId: "job-123",
+				status: "done",
+				ok: true,
+			}),
+			resolveTargetRepo: () => "/home/node/repos/openclaw-git-workflow",
+		});
+
+		await tool.execute("call-target", {
+			action: "push-current-branch",
+			command: "/git-push current-branch",
+			commandName: "/git-push",
+			skillName: "openclaw-host-git-push",
+		});
+
+		expect(readCapabilities).toHaveBeenCalledWith(
+			"/home/node/repos/openclaw-git-workflow",
+		);
+		expect(collectRepoState).toHaveBeenCalledWith(
+			"/home/node/repos/openclaw-git-workflow",
+		);
+	});
+
 	it("returns blocked response and does not write a job when push capability is blocked", async () => {
 		const writeJob = vi.fn();
 		const collectRepoState = vi.fn();

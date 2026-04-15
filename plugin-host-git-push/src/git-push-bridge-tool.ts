@@ -7,6 +7,7 @@ import { Type } from "@sinclair/typebox";
 
 const execFileAsync = promisify(execFile);
 const DEFAULT_CORE_REPO = "/home/node/project";
+const DEFAULT_TARGET_REPO = "/home/node/repos/openclaw-git-workflow";
 const DEFAULT_SPOOL_ROOT = "/home/node/.openclaw/host-jobs/git";
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000;
 const DEFAULT_POLL_MS = 1500;
@@ -33,7 +34,7 @@ type ToolParams = {
 	timeoutMs?: number;
 };
 
-type CapabilitySummary = {
+export type CapabilitySummary = {
 	version: 1;
 	push: {
 		ready: boolean;
@@ -47,7 +48,7 @@ type CapabilitySummary = {
 	};
 };
 
-type JobResult = {
+export type JobResult = {
 	jobId: string;
 	status: string;
 	ok?: boolean;
@@ -55,7 +56,7 @@ type JobResult = {
 	message?: string;
 };
 
-type RepoState = {
+export type RepoState = {
 	cwd: string;
 	branch: string;
 	head: string;
@@ -63,7 +64,7 @@ type RepoState = {
 };
 
 type BridgeDeps = {
-	readCapabilities: () => Promise<CapabilitySummary>;
+	readCapabilities: (repoPath: string) => Promise<CapabilitySummary>;
 	collectRepoState: (repoPath: string) => Promise<RepoState>;
 	writeJob: (
 		repoState: RepoState,
@@ -84,22 +85,50 @@ function resolveSpoolRoot(): string {
 	);
 }
 
-function resolveTargetRepo(): string {
-	return path.resolve(process.env.OPENCLAW_PROJECT_DIR ?? "/home/node/project");
+export function resolveTargetRepo(): string {
+	const rawTarget =
+		process.env.OPENCLAW_GIT_TARGET_REPO ??
+		process.env.OPENCLAW_GIT_WORKFLOW_REPO_DIR ??
+		process.env.OPENCLAW_PROJECT_DIR ??
+		DEFAULT_TARGET_REPO;
+
+	if (
+		rawTarget === "/Users/svarnoy85/teodorArg/openclaw-git-workflow" ||
+		rawTarget === process.env.OPENCLAW_GIT_WORKFLOW_REPO_DIR
+	) {
+		return DEFAULT_TARGET_REPO;
+	}
+
+	if (
+		rawTarget === "/Users/svarnoy85/teodorArg/OpenClaw" ||
+		rawTarget === process.env.OPENCLAW_PROJECT_DIR
+	) {
+		return "/home/node/project";
+	}
+
+	return path.resolve(rawTarget);
 }
 
-async function readCapabilities(): Promise<CapabilitySummary> {
+export async function readCapabilities(
+	repoPath: string,
+): Promise<CapabilitySummary> {
 	const coreRepo = resolveCoreRepo();
 	const result = await execFileAsync(
 		"./scripts/openclaw-host-git.sh",
 		["print-capabilities-json"],
-		{ cwd: coreRepo },
+		{
+			cwd: coreRepo,
+			env: {
+				...process.env,
+				OPENCLAW_GIT_TARGET_REPO: repoPath,
+			},
+		},
 	);
 
 	return JSON.parse(result.stdout) as CapabilitySummary;
 }
 
-async function collectRepoState(repoPath: string): Promise<RepoState> {
+export async function collectRepoState(repoPath: string): Promise<RepoState> {
 	const branchResult = await execFileAsync(
 		"git",
 		["rev-parse", "--abbrev-ref", "HEAD"],
@@ -187,7 +216,7 @@ async function writeJob(repoState: RepoState) {
 	return { jobId, jobPath: finalPath };
 }
 
-async function waitForResult(
+export async function waitForResult(
 	jobId: string,
 	timeoutMs: number,
 ): Promise<JobResult> {
@@ -249,7 +278,8 @@ export function createGitPushBridgeTool(overrides: Partial<BridgeDeps> = {}) {
 				);
 			}
 
-			const capabilities = await deps.readCapabilities();
+			const targetRepo = deps.resolveTargetRepo();
+			const capabilities = await deps.readCapabilities(targetRepo);
 
 			if (params.action === "inspect-capabilities") {
 				return toToolText({
@@ -263,7 +293,7 @@ export function createGitPushBridgeTool(overrides: Partial<BridgeDeps> = {}) {
 				return toToolText(buildBlockedResponse(capabilities));
 			}
 
-			const repoState = await deps.collectRepoState(deps.resolveTargetRepo());
+			const repoState = await deps.collectRepoState(targetRepo);
 			const { jobId, jobPath } = await deps.writeJob(repoState);
 			const result = await deps.waitForResult(
 				jobId,

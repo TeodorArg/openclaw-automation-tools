@@ -14,10 +14,12 @@ Create a new repo that defines and then implements a skill-first workflow for th
 
 - In the current container session, the canonical implementation path for this repo is `/home/node/repos/openclaw-git-workflow`
 - Do not confuse that container path with the host path `/Users/svarnoy85/teodorArg/openclaw-git-workflow` when operating inside the container-backed assistant session
+- For the bounded host-backed push/PR seam, both coordinates now matter: operator-side host scripts may accept the real host path `/Users/...`, while typed jobs must still normalize back to the allowlisted container path `/home/node/repos/openclaw-git-workflow`
 - Old repo `/Users/svarnoy85/teodorArg/openclaw-host-git-push` is reference-only for proven ideas and prior runtime experiments
 - The target design should prefer skill slash commands and skill-to-tool dispatch
 - The target design must not depend on an always-on macOS helper app/node in autoload/bin style
-- PR creation is a separate later track and is not part of the first implementation slice
+- PR creation was originally a separate later track from the first implementation slice, and the bounded host-backed PR seam now lives only in the separate internal bridge package
+- That bounded PR seam has now progressed past scaffold-only state on the real macOS helper path: host-side `gh auth` is green, host-path targeting is fixed, `assert-pr-ready` is green, and the helper reaches real `gh pr create`; the current remaining blocker is target branch state, not auth/path/helper wiring
 - Workspace bootstrap hygiene matters for this implementation track: keep `MEMORY.md` compact and move long logs, audits, and chronology into `memory/*.md`
 
 ## Initial scope
@@ -41,7 +43,8 @@ See `docs/SKILL_SPEC.md`, `docs/CONFIRMED_PLAN_FORMAT.md`, `docs/IMPLEMENTATION_
 - integration with the validated operator-side `openclaw-git` path is a later step, not current first-slice reality
 - one-shot execute is not part of v1
 - push is a later step
-- PR is a later separate track
+- PR is a later separate track for the main public v1 workflow surface
+- but the separate internal bridge package now already carries a bounded host-backed PR seam whose current live blocker is branch push/divergence state for `feat/host-git-push-bridge-package`
 
 ## Current implementation state
 

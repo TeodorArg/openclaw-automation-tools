@@ -1,13 +1,20 @@
 # @openclaw/openclaw-host-git-push
 
-Private/internal plugin package for the bounded host push bridge.
+Private/internal plugin package for the bounded host push/PR bridge.
 
 This package bundles:
 - the `git_push_bridge_action` runtime tool
+- the `git_pr_bridge_action` runtime tool
 - the `openclaw-host-git-push` skill under `skills/openclaw-host-git-push/`
+- the `openclaw-host-git-pr` skill under `skills/openclaw-host-git-pr/`
 
 This package is intentionally separate from the main public `@openclaw/openclaw-git-workflow` release surface.
-It exists to support the bounded host-side Plan A push path and its capability preflight.
+It exists to support bounded host-side push/PR actions with explicit capability preflight.
+
+Latest live status:
+- the real macOS helper path now reaches bounded `gh pr create`
+- host-path targeting drift is fixed in the core helper scripts, so operator-side checks can use real `/Users/...` repo paths while typed jobs still keep canonical container-visible repo cwd
+- the current remaining PR blocker is downstream branch state for `feat/host-git-push-bridge-package`, not helper/auth/path wiring
 
 ## Local verify
 
