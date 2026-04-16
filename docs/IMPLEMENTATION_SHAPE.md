@@ -8,16 +8,12 @@ The repo is built around three layers:
 2. `plugin/` — bounded runtime tool surface
 3. `plugin/scripts/` — bounded write helpers
 
-The separate `plugin-host-git-push/` subtree is retained as a distinct finish-path bridge for push and PR.
-It is not part of the main branch+commit package contract.
-
 ## Main workflow
 
 Operator-facing canonical intents:
 - `send_to_git`
-- `open_pr`
 
-Human wording is an alias layer over those intent ids, so RU, EN, and future localized phrasings can map to the same workflow.
+Human wording is an alias layer over that intent id, so RU, EN, and future localized phrasings can map to the same workflow.
 
 Internal execution model under `send_to_git` remains:
 - plan
@@ -97,21 +93,13 @@ The main branch + commit package does not include:
 - arbitrary git subcommands
 - arbitrary shell execution
 - destructive recovery flows
+- push
+- PR creation
+- git or GitHub auth in runtime
+- remote checks in runtime
 
-## Retained bridge boundary
-
-`plugin-host-git-push/` exists for the bounded host-backed finish path behind the operator-facing intents:
-- optional finish step after `send_to_git`
-- run PR readiness checks
-- create PR to `main` for `open_pr`
-
-Keep it in the repo.
-Keep it separate from the main branch + commit package above.
-Current status split:
-- validated main baseline: branch + commit only
-- validated optional bridge: host-backed push/PR lane
-- not an operating lane in this setup: container-local finish-path exposure
-- do not authenticate git or GitHub in the runtime/container for this finish path
+Push, PR creation, GitHub auth, git auth, and remote checks are outside this repo runtime contract.
+If a host-backed finish path exists operationally, it must stay explicitly host-side and outside the plugin/runtime surface shipped by this repo.
 
 ## Verification baseline
 

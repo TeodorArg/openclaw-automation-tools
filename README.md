@@ -27,23 +27,20 @@ Source tree:
 
 Operator-facing intent contract:
 - `send_to_git`
-- `open_pr`
 
 Human phrasing is an alias layer, not the canon.
 Common examples:
-- RU: `отправь в гит`, `запушь`, `отправь изменения`, `сделай PR`
-- EN: `send to git`, `push it`, `ship to git`, `make a PR`, `open a PR`
+- RU: `отправь в гит`, `отправь изменения`
+- EN: `send to git`
 
-How the repo maps those intents:
+How the repo maps that intent:
 - `send_to_git` is the operator-facing entry for the public branch + commit baseline: repo inspection, git grouping, canonical branch and commit planning, and bounded branch + commit execution
-- `open_pr` is the separate operator-facing entry for the retained host-backed PR bridge
-- push after `send_to_git` and PR work behind `open_pr` stay on the separate bounded bridge layer, not in the main public package baseline
 
 Current status split:
 - validated baseline: branch + commit under `send_to_git`
-- validated optional bridge: host-backed grouping -> branches -> push -> PR into `main`
+- not in this repo/runtime contract: push, PR creation, or remote checks
 - not an operating lane in this setup: runtime-local slash-command/container finish path for push/PR
-- remaining manual GitHub step after the validated host-backed lane: PR approval/review confirmation
+- host-backed finish steps may exist operationally outside this repo/runtime, but they are not exposed or shipped here
 
 Hard rule for this setup:
 - do not authenticate git or GitHub in the runtime/container
@@ -52,27 +49,10 @@ Hard rule for this setup:
 
 Internal runtime safety remains the same:
 - plan -> confirm -> execute stays explicit inside the implementation
-- bounded branch + commit helpers stay separate from push/PR bridge helpers
+- bounded branch + commit helpers stay narrow and explicit
 - no arbitrary git passthrough
 - no arbitrary shell execution
 - no destructive recovery flows
-
-## Separate retained bridge
-
-This repo also keeps:
-- `plugin-host-git-push/`
-
-That subtree is retained because it carries the bounded host-backed finish path for:
-- pushing the current branch
-- PR readiness checks
-- creating PRs to `main`
-
-Simple boundary:
-- `plugin/` owns planning plus branch/commit execution
-- `plugin-host-git-push/` owns the separate host-backed push/PR finish path
-
-Keep it in the repo.
-Do not treat it as part of the main branch + commit package contract, even though it participates in the operator-facing intent flow above.
 
 ## Repo layout
 
@@ -82,8 +62,7 @@ Do not treat it as part of the main branch + commit package contract, even thoug
 - `docs/SKILL_SPEC.md` — user-facing workflow contract
 - `docs/IMPLEMENTATION_SHAPE.md` — current architecture and boundaries
 - `docs/FILE_ROLE_MAP.md` — file responsibility map
-- `docs/REFERENCE_NOTES.md` — narrow retained-boundary notes
-- `plugin-host-git-push/` — separate bounded host-backed push/PR bridge
+- `docs/REFERENCE_NOTES.md` — narrow runtime-boundary notes
 
 ## Verify main package
 
