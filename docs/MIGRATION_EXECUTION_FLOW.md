@@ -119,6 +119,11 @@ PR should contain:
 - verification result summary
 - any publication or compatibility caveats for that unit
 
+PR check polling rule for this repo:
+- first status check 30 seconds after PR creation
+- if checks are still `IN_PROGRESS`, poll every 15 seconds
+- stop polling only when checks are green or a failing check requires a fix-push cycle
+
 ## Hard Stops
 
 Stop and re-evaluate if any of these happen:

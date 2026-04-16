@@ -49,6 +49,7 @@ Repo-local execution rules:
 - do not authenticate git or GitHub inside runtime/container
 - push and PR happen on the host-backed lane only
 - for this repo, host-backed finish is part of the same execution chain: if the slice is on its dedicated branch, committed, and local verification passed, continue with `git push` and then open a PR to `main`
+- after opening a PR to `main`, check status once after 30 seconds; if checks are still `IN_PROGRESS`, poll every 15 seconds until they are green or a failing check needs a fix
 
 Recommended scopes for this repo:
 - `repo`
