@@ -24,10 +24,13 @@ openclaw plugins install clawhub:@openclaw/openclaw-git-workflow
 For local development:
 
 ```bash
+nvm use || nvm install
 pnpm install
 pnpm build
 openclaw plugins install -l ./plugin
 ```
+
+Node requirement: use Node `20.19.0+` (or `22.12.0+`). Older Node 20 releases can fail locally in `vitest` and `vite/rolldown` on macOS.
 
 ## Release policy
 
