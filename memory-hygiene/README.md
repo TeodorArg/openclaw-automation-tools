@@ -31,10 +31,16 @@ Secondary reference only:
 
 - slug: `memory-hygiene`
 - display name: `Memory Hygiene`
-- owner: `TBD`
+- owner: `TeodorArg`
 - version: `0.1.0`
 - tags: `memory`, `workflow`, `maintenance`
 - license: `MIT-0`
+
+Publish command baseline:
+
+```bash
+clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
+```
 
 ## Package Contents
 

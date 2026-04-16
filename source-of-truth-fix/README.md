@@ -31,10 +31,16 @@ Related context references only:
 
 - slug: `source-of-truth-fix`
 - display name: `Source Of Truth Fix`
-- owner: `TBD`
+- owner: `TeodorArg`
 - version: `0.1.0`
 - tags: `docs`, `verification`, `source-of-truth`
 - license: `MIT-0`
+
+Publish command baseline:
+
+```bash
+clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
+```
 
 ## Package Contents
 

@@ -1,24 +1,23 @@
 # CI Migration Plan
 
 Date: 2026-04-16
-Status: Stage 2 applied on the current Slice C branch; later stages remain planning-only
+Status: final post-reorg CI shape applied in the repo
 
 ## Purpose
 
 This document defines how CI should evolve during the repo reorg.
-Stage 2 of this plan is now applied on the current branch.
-Later stages remain planning-only.
+The repo is now past the per-unit migration phase.
+This document records the final CI shape that matches the classified units.
 
 ## Current state
 
 Current CI is defined in [ci.yml](/Users/svarnoy85/teodorArg/openclaw-git-workflow/.github/workflows/ci.yml).
 
-It is now hard-wired to:
-- install and validate `openclaw-git-workflow/`
-- shell-check `openclaw-git-workflow/scripts/git-create-branch.sh`
-- shell-check `openclaw-git-workflow/scripts/git-create-commit.sh`
-
-This is the correct Stage 2 state for the first migrated unit.
+It validates:
+- `openclaw-git-workflow/` as the real plugin package
+- skill-only package shape for `memory-hygiene/`, `source-of-truth-fix/`, and `openclaw-host-git-pr/`
+- required docs and forbidden manifests for `host-git-lane/`
+- shell syntax for the real package-local helper scripts under `openclaw-git-workflow/scripts/`
 
 ## Canon used for this plan
 
@@ -89,43 +88,28 @@ Validation should check:
 - no `openclaw.plugin.json`
 - no claimed runtime/package scaffold
 
-## Recommended rollout
+## Final rollout state
 
-### Stage 1: before any file moves
+Applied jobs:
+- `plugin-package`
+- `plugin-shell-scripts`
+- `skill-packages`
+- `host-git-lane`
 
-Leave `.github/workflows/ci.yml` unchanged.
+Applied matrix:
+- `memory-hygiene`
+- `source-of-truth-fix`
+- `openclaw-host-git-pr`
 
-Reason:
-- this was the pre-move state
-- changing CI now would create a docs/CI mismatch in the opposite direction
+Applied skill checks:
+- `SKILL.md`, `README.md`, `LICENSE` exist
+- `LICENSE` contains `MIT-0`
+- README keeps `slug`, `display name`, `owner`, `version`, and `tags` explicit
+- `package.json`, `openclaw.plugin.json`, and `src/` are absent
 
-### Stage 2: same branch as Slice C
-
-When `plugin/` moves to `openclaw-git-workflow/`, update CI in the same branch.
-Status: done on the current branch.
-
-Minimum required CI edit for Slice C:
-- rename the package job working directory from `plugin` to `openclaw-git-workflow`
-- update `cache-dependency-path`
-- move shell script checks from `plugin/scripts/` to `openclaw-git-workflow/scripts/`
-
-This keeps CI aligned with the first migrated unit without prematurely adding fake checks for units that do not exist yet.
-
-### Stage 3: after skill package folders exist
-
-Add one lightweight docs/shape validation job for skill-only packages.
-
-Recommended implementation shape:
-- one matrix job over `memory-hygiene`, `source-of-truth-fix`, `openclaw-host-git-pr`
-- each matrix entry checks required files and forbidden files
-
-### Stage 4: after `host-git-lane/` exists
-
-Add one companion-folder validation job.
-
-It should verify:
+Applied companion checks:
 - required docs exist
-- forbidden package manifests do not exist
+- `package.json` and `openclaw.plugin.json` are absent
 
 ## Recommended final workflow split
 
@@ -217,9 +201,10 @@ Reason:
 
 Only introduce path filters later if the multi-unit tree becomes stable and noisy enough to justify them.
 
-## Slice C acceptance for CI planning
+## Acceptance
 
-CI planning for the first real move is considered ready when these statements hold:
-- the repo has a documented Stage 2 edit for `plugin/` to `openclaw-git-workflow/`
-- the future validation shapes for skill-only packages and `host-git-lane/` are explicit
-- the plan does not invent npm-style checks for non-plugin units
+CI is considered aligned when these statements hold:
+- the plugin package keeps its real `pnpm` validation loop
+- skill-only packages are checked as skill-only packages, not fake npm packages
+- `host-git-lane/` is checked as a companion folder, not a publishable package
+- shell checks remain only where real scripts exist

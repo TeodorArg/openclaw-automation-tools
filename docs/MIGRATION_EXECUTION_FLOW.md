@@ -126,7 +126,7 @@ PR should contain:
 - any publication or compatibility caveats for that unit
 
 PR check polling rule for this repo:
-- first status check 30 seconds after PR creation
+- first status check 20 seconds after PR creation
 - if checks are still `IN_PROGRESS`, poll every 15 seconds
 - stop polling only when checks are green or a failing check requires a fix-push cycle
 
