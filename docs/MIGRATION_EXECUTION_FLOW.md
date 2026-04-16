@@ -49,16 +49,22 @@ Recommended examples:
 4. Create or move files only for that unit.
 5. Sync docs that are directly affected by that unit.
 6. Verify against official OpenClaw / ClawHub rules.
-7. Run the appropriate local checks.
-8. Commit with canonical title/body.
-9. Push the branch.
-10. Open a PR into `main`.
-11. Confirm PR checks pass.
-12. Update local `main`.
-13. Mark the completed slice in plan/TODO if needed.
-14. Start the next unit on a new branch.
+7. Before any `git push`, compare the resulting skill or plugin package shape with the local `openclaw-git-workflow/` reference when that comparison is relevant.
+8. Run the appropriate local checks.
+9. Commit with canonical title/body.
+10. Push the branch.
+11. Open a PR into `main`.
+12. Confirm PR checks pass.
+13. Update local `main`.
+14. Mark the completed slice in plan/TODO if needed.
+15. Start the next unit on a new branch.
 
 ## Verification By Unit Type
+
+Before pushing any unit branch:
+- check the resulting package or skill shape against official OpenClaw / ClawHub docs
+- compare it with the local `openclaw-git-workflow/` reference package when that reference is relevant to the unit type
+- do not push a unit that is only structurally plausible but not yet checked against those two baselines
 
 ### Plugin Package
 

@@ -58,11 +58,11 @@ Target folder:
 
 | Current path | Target path | Action | Reason / source-of-truth note |
 | --- | --- | --- | --- |
-| `/home/node/workspace/skills/memory-hygiene/SKILL.md` | `memory-hygiene/SKILL.md` | `copy` | strongest live canonical skill source |
+| `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md` | `memory-hygiene/SKILL.md` | `copy` | strongest live canonical skill source |
 | none | `memory-hygiene/README.md` | `rewrite` | package contract and publication-facing summary |
 | none | `memory-hygiene/LICENSE` | `generate` | skill publication requires package-local `MIT-0` |
-| `/home/node/project/templates/skills/memory-hygiene/SKILL.md` | none | `link` | secondary template reference only |
-| `/home/node/project/workspace/skills/memory-hygiene/SKILL.md` | none | `link` | secondary seed reference only |
+| `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/SKILL.md` | none | `link` | secondary template reference only |
+| `/Users/svarnoy85/teodorArg/OpenClaw/workspace/skills/memory-hygiene/SKILL.md` | none | `link` | secondary seed reference only |
 
 Publication metadata to prefill in docs:
 - slug: `memory-hygiene`

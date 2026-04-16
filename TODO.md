@@ -9,7 +9,7 @@ Goal:
 - this must explicitly include the mac-node/host-backed lane as its own separate companion folder `host-git-lane/`, not left implicit or mixed into another package
 - add a short top-level index/README that links to each package folder and explains what it contains
 - make the packages complete, with any needed bundled skills/instructions/docs carried over from current project canon
-- current execution state: Slice C in progress for `openclaw-git-workflow`
+- current execution state: `openclaw-git-workflow` slice is complete in `main`; `memory-hygiene` slice is in progress on `feat/skills-memory-hygiene-package`
 
 #### Phase 0, source inventory and source-of-truth map
 - [ ] Inventory every file currently belonging to:
@@ -23,9 +23,10 @@ Goal:
 
 ##### Current known live locations, container/workspace side
 - [ ] `memory-hygiene`
-  - live workspace skill: `/home/node/workspace/skills/memory-hygiene/SKILL.md`
-  - template copy: `/home/node/project/templates/skills/memory-hygiene/SKILL.md`
-  - repo workspace seed copy: `/home/node/project/workspace/skills/memory-hygiene/SKILL.md`
+  - live workspace skill: `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md`
+  - template copy: `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/SKILL.md`
+  - repo workspace seed copy: `/Users/svarnoy85/teodorArg/OpenClaw/workspace/skills/memory-hygiene/SKILL.md`
+  - local package folder now exists at `/Users/svarnoy85/teodorArg/openclaw-git-workflow/memory-hygiene/`
 - [ ] `source-of-truth-fix`
   - shared installed skill: `/home/node/.openclaw/skills/source-of-truth-fix/SKILL.md`
 - [ ] `openclaw-git-workflow`
@@ -98,7 +99,7 @@ Goal:
 - [ ] Note any current flaws/drift in the reference package so we do not blindly copy broken structure.
 
 #### Phase 3, package-by-package migration plan
-- [ ] `memory-hygiene`: define target folder, whether it stays skill-only or gets package metadata, and which docs/instructions must ship with it.
+- [x] `memory-hygiene`: define target folder, whether it stays skill-only or gets package metadata, and which docs/instructions must ship with it.
 - [ ] `source-of-truth-fix`: define target folder, whether it stays skill-only or gets package metadata, and which helper-agent/tooling instructions must be documented.
 - [ ] `openclaw-git-workflow`: define final package contents, shipped skill path, plugin runtime files, docs, and tests.
 - [ ] `openclaw-host-git-pr`: implement the settled skill-only package file set:
@@ -127,9 +128,9 @@ Goal:
 
 ##### Instruction/doc carry-over plan to define per package
 - [ ] `memory-hygiene`
-  - carry the skill instructions from `/home/node/workspace/skills/memory-hygiene/SKILL.md`
-  - review whether related canon pointers from `/home/node/workspace/MEMORY.md`, `/home/node/workspace/AGENTS.md`, and `/home/node/workspace/USER.md` need package README excerpts or references
-  - review whether template/seed copies under `/home/node/project/templates/skills/memory-hygiene/` and `/home/node/project/workspace/skills/memory-hygiene/` should be documented as downstream copies rather than treated as source
+  - carry the skill instructions from `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md`
+  - review whether related canon pointers from `/Users/svarnoy85/OpenClaw-workspace/MEMORY.md`, `/Users/svarnoy85/OpenClaw-workspace/AGENTS.md`, and `/Users/svarnoy85/OpenClaw-workspace/USER.md` need package README excerpts or references
+  - review whether template/seed copies under `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/` and `/Users/svarnoy85/teodorArg/OpenClaw/workspace/skills/memory-hygiene/` should be documented as downstream copies rather than treated as source
 - [ ] `source-of-truth-fix`
   - carry the skill instructions from `/home/node/.openclaw/skills/source-of-truth-fix/SKILL.md`
   - document the expected TODO-first workflow and official-doc/source-of-truth lookup order
@@ -232,7 +233,7 @@ Goal:
 - [x] Slice C: audit and move the existing `openclaw-git-workflow/` package as the gold reference.
 - [x] Slice D: produce file mapping tables for the five target packages, plus a separate legacy-reference table for `openclaw-host-git-push`.
 - [x] Slice E: draft top-level README/index plus per-package README outlines.
-- [ ] Slice F: implement one package end-to-end first, likely `openclaw-git-workflow`.
+- [x] Slice F: implement one package end-to-end first, likely `openclaw-git-workflow`.
 
 ## Notes
 
