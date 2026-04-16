@@ -44,4 +44,5 @@ Open work:
   - local verification
   - publication metadata
   - release blockers
+- [ ] track product-level host/node metadata requirement until the gateway/UI no longer shows normal host sessions as `unknown`
 - [ ] keep this file limited to current open work only

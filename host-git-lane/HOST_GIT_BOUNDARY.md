@@ -14,6 +14,27 @@ The host-backed git lane is outside the runtime/container surface of this repo.
 - package units may prepare branches, commits, readiness checks, or structured plans
 - host-backed finish steps perform push and PR creation
 - the host lane is explicit and separate, not an implied extension of the package runtime
+- host/node identity metadata must be emitted by the product-level lane strongly enough for gateway/UI instance lists to show real labels instead of `unknown`
+
+## Required Host/Node Identity Contract
+
+For any host-backed node or client visible in the gateway/UI, the lane should expose:
+- stable instance id
+- display name
+- host name
+- platform
+- client type
+- connection status
+- disconnect reason on close when available
+
+This contract matters because:
+- disconnected sessions still appear in the Instances UI
+- missing handshake metadata degrades the UI into `unknown`
+- operators need to distinguish real host nodes from transient UI/websocket clients
+
+Repo-local constraint:
+- this repo documents the requirement
+- this repo does not currently own the product-level node runtime that must implement it
 
 ## Forbidden Drift
 

@@ -31,6 +31,24 @@ Plugin packages:
 Companion folders:
 - required docs must exist
 - no fake package manifests may appear
+- operational contracts that belong to the product-level lane must be explicit even when this repo does not own the runtime implementation
+
+## Host-Lane Operational Requirement
+
+The product-level host/node lane must provide stable instance metadata to the gateway/UI.
+
+Minimum expected fields:
+- stable instance id
+- display name
+- host name
+- platform
+- client type
+- connection status
+- disconnect reason when available
+
+Current implication:
+- `host-git-lane/` is structurally ready as documentation
+- the underlying product/runtime work is still outside this repo and remains an external implementation dependency
 
 ## Per-Unit Publish Baseline
 
