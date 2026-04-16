@@ -2,6 +2,8 @@
 
 Plugin-first bounded git workflow repo for OpenClaw.
 
+Default local Node baseline in this repo is `24.13.0` via `.nvmrc`.
+
 ## What this repo is
 
 This repo contains a bounded git workflow implementation built around:
@@ -69,6 +71,7 @@ Internal runtime safety remains the same:
 ## Verify main package
 
 ```bash
+nvm use || nvm install
 cd plugin
 pnpm lint
 pnpm typecheck
