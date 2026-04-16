@@ -1,10 +1,10 @@
 # Execute Surface
 
 Repo-local contract doc for the main workflow package source tree.
-This file documents the current bounded runtime surface used by `plugin/`.
+This file documents the current bounded runtime surface used by `openclaw-git-workflow/`.
 Repo paths in this file use the source-tree frame, while packaged plugin paths use package-root paths like `skills/`.
 The packaged plugin file list currently ships `dist`, `openclaw.plugin.json`, `skills`, `README.md`, and `LICENSE`.
-Repo-local shell helpers under `plugin/scripts/` are not shipped in the package tarball and remain source-tree implementation details.
+Repo-local shell helpers under `openclaw-git-workflow/scripts/` are not shipped in the package tarball and remain source-tree implementation details.
 
 ## Goal
 
@@ -64,12 +64,12 @@ Anything else is out of scope.
 
 - plugin runtime validates request and confirmed plan
 - plugin runtime maps one bounded phase to one narrow script
-- scripts under `plugin/scripts/` receive structured args, not free-form prose
+- scripts under `openclaw-git-workflow/scripts/` receive structured args, not free-form prose
 - the plugin package itself remains a real TypeScript package
 
 ## Current package scripts
 
-Current scripts in `plugin/package.json`:
+Current scripts in `openclaw-git-workflow/package.json`:
 - `build`: `tsc -p tsconfig.build.json`
 - `format`: `biome format --write . --files-ignore-unknown=true`
 - `format:check`: `biome format --check . --files-ignore-unknown=true`
@@ -83,8 +83,8 @@ Current scripts in `plugin/package.json`:
 ## Current bounded helpers
 
 Current source-tree bounded helpers:
-- `plugin/scripts/git-create-branch.sh`
-- `plugin/scripts/git-create-commit.sh`
+- `openclaw-git-workflow/scripts/git-create-branch.sh`
+- `openclaw-git-workflow/scripts/git-create-commit.sh`
 
 These helpers are repo-local implementation details and are not part of the packaged plugin file list.
 
@@ -103,5 +103,5 @@ This execute surface must not include:
 
 The skill is user-facing.
 The tool contract is internal and structured.
-The scripts under `plugin/scripts/` are bounded helpers.
+The scripts under `openclaw-git-workflow/scripts/` are bounded helpers.
 No layer should silently widen into a generic command runner.

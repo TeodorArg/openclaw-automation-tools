@@ -10,8 +10,14 @@ describe("buildPlanResult", () => {
 				headCommit: "abc123",
 				changedFiles: [
 					{ path: "docs/SKILL_SPEC.md", status: "M" },
-					{ path: "plugin/src/git-workflow-tool.ts", status: "M" },
-					{ path: "plugin/scripts/git-create-commit.sh", status: "M" },
+					{
+						path: "openclaw-git-workflow/src/git-workflow-tool.ts",
+						status: "M",
+					},
+					{
+						path: "openclaw-git-workflow/scripts/git-create-commit.sh",
+						status: "M",
+					},
 				],
 			},
 			{
@@ -54,9 +60,18 @@ describe("buildPlanResult", () => {
 				currentBranch: "main",
 				headCommit: "abc123",
 				changedFiles: [
-					{ path: "plugin/src/runtime/plan-groups.ts", status: "M" },
-					{ path: "plugin/src/runtime/plan-groups.test.ts", status: "M" },
-					{ path: "plugin/scripts/git-create-commit.sh", status: "M" },
+					{
+						path: "openclaw-git-workflow/src/runtime/plan-groups.ts",
+						status: "M",
+					},
+					{
+						path: "openclaw-git-workflow/src/runtime/plan-groups.test.ts",
+						status: "M",
+					},
+					{
+						path: "openclaw-git-workflow/scripts/git-create-commit.sh",
+						status: "M",
+					},
 				],
 			},
 			{
@@ -72,8 +87,8 @@ describe("buildPlanResult", () => {
 			label: "Runtime planning logic",
 			branch: "feat/workflow-refine-planning",
 			files: [
-				"plugin/src/runtime/plan-groups.test.ts",
-				"plugin/src/runtime/plan-groups.ts",
+				"openclaw-git-workflow/src/runtime/plan-groups.test.ts",
+				"openclaw-git-workflow/src/runtime/plan-groups.ts",
 			],
 			commit: {
 				title: "feat(workflow): refine repo-aware planning",
@@ -84,7 +99,7 @@ describe("buildPlanResult", () => {
 			area: "runtime",
 			label: "Plugin and bounded execute runtime",
 			branch: "feat/workflow-refine-planning-and-execute",
-			files: ["plugin/scripts/git-create-commit.sh"],
+			files: ["openclaw-git-workflow/scripts/git-create-commit.sh"],
 			commit: {
 				title: "feat(workflow): refine planning and bounded execute",
 			},
@@ -99,8 +114,11 @@ describe("buildPlanResult", () => {
 				currentBranch: "main",
 				headCommit: "abc123",
 				changedFiles: [
-					{ path: "plugin/openclaw.plugin.json", status: "M" },
-					{ path: "plugin/package.json", status: "M" },
+					{
+						path: "openclaw-git-workflow/openclaw.plugin.json",
+						status: "M",
+					},
+					{ path: "openclaw-git-workflow/package.json", status: "M" },
 				],
 			},
 			{
@@ -127,8 +145,11 @@ describe("buildPlanResult", () => {
 				currentBranch: "main",
 				headCommit: "abc123",
 				changedFiles: [
-					{ path: "plugin/src/runtime/plan-groups.ts", status: "M" },
-					{ path: "plugin/src/index.ts", status: "M" },
+					{
+						path: "openclaw-git-workflow/src/runtime/plan-groups.ts",
+						status: "M",
+					},
+					{ path: "openclaw-git-workflow/src/index.ts", status: "M" },
 				],
 			},
 			{
@@ -155,7 +176,10 @@ describe("buildPlanResult", () => {
 				currentBranch: "main",
 				headCommit: "abc123",
 				changedFiles: [
-					{ path: "plugin/skills/openclaw-git-workflow/SKILL.md", status: "M" },
+					{
+						path: "openclaw-git-workflow/skills/openclaw-git-workflow/SKILL.md",
+						status: "M",
+					},
 				],
 			},
 			{

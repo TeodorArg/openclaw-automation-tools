@@ -45,7 +45,7 @@ async function createRepo(options?: {
 	await fs.writeFile(path.join(repoPath, "README.md"), "hello\n", "utf8");
 
 	if (options?.withWorkflowScripts) {
-		const scriptsDir = path.join(repoPath, "plugin", "scripts");
+		const scriptsDir = path.join(repoPath, "openclaw-git-workflow", "scripts");
 		await fs.mkdir(scriptsDir, { recursive: true });
 		await fs.copyFile(
 			path.join(fixtureRepoRoot, "scripts", "git-create-branch.sh"),

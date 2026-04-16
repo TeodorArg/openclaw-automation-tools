@@ -120,11 +120,11 @@ The implementation should stay aligned with:
 ## Current implementation layer now in repo
 
 The current implementation layer includes:
-- `plugin/skills/openclaw-git-workflow/SKILL.md`
+- `openclaw-git-workflow/skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
-- `plugin/EXECUTE_SURFACE.md`
-- the standalone plugin package under `plugin/`
-- bounded branch/commit helper scripts under `plugin/scripts/`
+- `openclaw-git-workflow/EXECUTE_SURFACE.md`
+- the standalone plugin package under `openclaw-git-workflow/`
+- bounded branch/commit helper scripts under `openclaw-git-workflow/scripts/`
 
 These files define the bounded UX and runtime contract for planning plus confirmed branch/commit execution.
 The current published plugin artifact ships the bundled skill, but not the repo-local shell helpers.

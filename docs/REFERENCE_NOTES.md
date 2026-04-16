@@ -8,7 +8,7 @@ Keep only notes that still matter to the current repo shape.
 Do not keep any runtime/plugin bridge for push or PR in this repo.
 
 The repo contract is now narrower:
-- `plugin/` owns planning plus branch/commit execution behind `send_to_git`
+- `openclaw-git-workflow/` owns planning plus branch/commit execution behind `send_to_git`
 - push, PR, auth, and remote checks stay outside the runtime/container surface entirely
 
 Specification wording may still reference broader workflow phrasing, but shipped runtime canon must stay anchored to the actual normalized intent and alias set implemented in code. The current runtime alias set already includes the RU planning and execute phrases.
@@ -17,8 +17,8 @@ Specification wording may still reference broader workflow phrasing, but shipped
 
 The main package in this repo remains:
 - `@openclaw/openclaw-git-workflow`
-- bundled workflow skill under `plugin/skills/` and packaged `skills/`
-- bounded branch/commit helpers under `plugin/scripts/`
+- bundled workflow skill under `openclaw-git-workflow/skills/` and packaged `skills/`
+- bounded branch/commit helpers under `openclaw-git-workflow/scripts/`
 - bounded branch + commit workflow only behind the operator-facing `send_to_git` intent
 
 This is the main package surface for the repo, while the package is still kept private in-repo.
@@ -31,5 +31,5 @@ Trace back to the real source and fix that instead.
 
 ## Install/runtime reminder
 
-For live OpenClaw plugin install, `plugin/openclaw.plugin.json` must include `configSchema`, even when empty.
+For live OpenClaw plugin install, `openclaw-git-workflow/openclaw.plugin.json` must include `configSchema`, even when empty.
 The current runtime still uses npm-based dependency installation during `openclaw plugins install`.
