@@ -49,7 +49,12 @@ Repo-local execution rules:
 - do not authenticate git or GitHub inside runtime/container
 - push and PR happen on the host-backed lane only
 - for this repo, host-backed finish is part of the same execution chain: if the slice is on its dedicated branch, committed, and local verification passed, continue with `git push` and then open a PR to `main`
+<<<<<<< HEAD
 - after opening a PR to `main`, check status once after 30 seconds; if checks are still `IN_PROGRESS`, poll every 15 seconds until they are green or a failing check needs a fix
+=======
+- after opening a PR to `main`, check status once after 20 seconds; if checks are still `IN_PROGRESS`, poll every 15 seconds until they are green or a failing check needs a fix
+- before any `git push` for a migration slice, verify the resulting skill or plugin package shape against official OpenClaw docs and compare it with the local reference package `openclaw-git-workflow/` where that comparison is relevant
+>>>>>>> d335c56 (feat(skills): package memory-hygiene skill)
 
 Recommended scopes for this repo:
 - `repo`
@@ -69,7 +74,7 @@ For each unit:
 2. move or create only the files for that unit
 3. sync docs and inventory if boundaries changed
 4. run the relevant verification
-5. validate against official OpenClaw/ClawHub requirements
+5. validate against official OpenClaw/ClawHub requirements and compare the resulting package shape against the local `openclaw-git-workflow/` reference when applicable
 6. commit with canonical title/body
 7. push branch
 8. open PR to `main`

@@ -51,14 +51,15 @@ Classification:
 - skill-only package target
 
 Canonical source:
-- `live-source`: `/home/node/workspace/skills/memory-hygiene/SKILL.md`
+- `live-source`: `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md`
 
 Secondary references:
-- `derived-config`: `/home/node/project/templates/skills/memory-hygiene/SKILL.md`
-- `derived-config`: `/home/node/project/workspace/skills/memory-hygiene/SKILL.md`
+- `derived-config`: `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/SKILL.md`
+- `derived-config`: `/Users/svarnoy85/teodorArg/OpenClaw/workspace/skills/memory-hygiene/SKILL.md`
 
 Notes:
 - workspace copy is the strongest current source-of-truth because it is the active shared skill copy in the running setup.
+- local repo materialization for this unit now exists at [memory-hygiene](/Users/svarnoy85/teodorArg/openclaw-git-workflow/memory-hygiene).
 
 ## 3. `source-of-truth-fix`
 

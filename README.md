@@ -3,9 +3,9 @@
 Repo index for the reorg from one technical `plugin/` folder into classified publish units plus one companion layer.
 
 Status on 2026-04-16:
-- Slice C is in progress on branch `refactor/plugin-openclaw-git-workflow-repack`
-- the main package has been moved to `openclaw-git-workflow/`
-- remaining units are still planning-only
+- Slice C for `openclaw-git-workflow` is complete in `main`
+- `memory-hygiene` is now in progress on branch `feat/skills-memory-hygiene-package`
+- remaining units after that are still planning-only
 
 ## Canon
 
@@ -44,7 +44,7 @@ Planned top-level units after the reorg:
 | Unit | Type | Status | Canonical source today |
 | --- | --- | --- | --- |
 | `openclaw-git-workflow/` | plugin + bundled skill package | moved in Slice C on the current branch | current live package in this repo |
-| `memory-hygiene/` | skill-only package | planned | workspace skill copy |
+| `memory-hygiene/` | skill-only package | in progress on current branch | workspace skill copy and local package folder |
 | `source-of-truth-fix/` | skill-only package | planned | shared `~/.openclaw` skill copy |
 | `openclaw-host-git-pr/` | skill-only package | package contract now documented; implementation still pending | installed skill + historical git source |
 | `host-git-lane/` | companion folder | exact local file set now documented; implementation still pending | `OpenClaw` docs/config canon |

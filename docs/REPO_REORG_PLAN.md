@@ -1,7 +1,7 @@
 # Repo Reorg Plan
 
 Date: 2026-04-16
-Status: Slice C in progress for `openclaw-git-workflow`
+Status: `openclaw-git-workflow` completed in `main`; `memory-hygiene` slice in progress
 
 ## 1. Что именно меняем
 
@@ -60,9 +60,9 @@ CI в [ci.yml](/Users/svarnoy85/teodorArg/openclaw-git-workflow/.github/workflow
 
 Проверенные live paths в контейнере:
 - `memory-hygiene`
-  - `/home/node/workspace/skills/memory-hygiene/SKILL.md`
-  - `/home/node/project/templates/skills/memory-hygiene/SKILL.md`
-  - `/home/node/project/workspace/skills/memory-hygiene/SKILL.md`
+  - `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md`
+  - `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/SKILL.md`
+  - `/Users/svarnoy85/teodorArg/OpenClaw/workspace/skills/memory-hygiene/SKILL.md`
 - `source-of-truth-fix`
   - `/home/node/.openclaw/skills/source-of-truth-fix/SKILL.md`
 - loaded installed `openclaw-git-workflow`
@@ -264,11 +264,11 @@ Target folder:
 - skill-only package
 
 Canonical source:
-- `/home/node/workspace/skills/memory-hygiene/SKILL.md`
+- `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md`
 
 Secondary references:
-- `/home/node/project/templates/skills/memory-hygiene/SKILL.md`
-- `/home/node/project/workspace/skills/memory-hygiene/SKILL.md`
+- `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/SKILL.md`
+- `/Users/svarnoy85/teodorArg/OpenClaw/workspace/skills/memory-hygiene/SKILL.md`
 
 Target folder:
 - `/Users/svarnoy85/teodorArg/openclaw-git-workflow/memory-hygiene/`
@@ -276,7 +276,7 @@ Target folder:
 Что переносим:
 - live `SKILL.md` как source-of-truth
 - новый `README.md` с коротким описанием назначения и boundaries
-- package metadata для публикации skill package
+- package-local `LICENSE` и publication metadata baseline для skill package
 
 Что документируем, но не тащим как source:
 - template copy
