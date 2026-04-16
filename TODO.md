@@ -53,5 +53,6 @@ Open work:
   - release blockers
 - [ ] track product-level host/node metadata requirement until the gateway/UI no longer shows normal host sessions as `unknown`
 - [x] consolidate the `openclaw node` install and identity contract into one repo-local doc
+- [x] add a short implementation checklist for the product-level node metadata gap
 - [ ] keep `host-git-lane/` excluded from any ClawHub publish workflow
 - [ ] keep this file limited to current open work only
