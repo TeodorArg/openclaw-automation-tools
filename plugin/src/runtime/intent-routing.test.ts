@@ -19,10 +19,18 @@ describe("normalizeWorkflowIntent", () => {
 	});
 
 	it("normalizes shipped RU planning and execute aliases", () => {
-		expect(normalizeWorkflowIntent("разложи по git-группам")).toBe("send_to_git");
-		expect(normalizeWorkflowIntent("разложи по git-группам с ветками")).toBe("send_to_git");
-		expect(normalizeWorkflowIntent("выполни git-группы с ветками")).toBe("send_to_git");
-		expect(normalizeWorkflowIntent("разложи по git группам")).toBe("send_to_git");
+		expect(normalizeWorkflowIntent("разложи по git-группам")).toBe(
+			"send_to_git",
+		);
+		expect(normalizeWorkflowIntent("разложи по git-группам с ветками")).toBe(
+			"send_to_git",
+		);
+		expect(normalizeWorkflowIntent("выполни git-группы с ветками")).toBe(
+			"send_to_git",
+		);
+		expect(normalizeWorkflowIntent("разложи по git группам")).toBe(
+			"send_to_git",
+		);
 	});
 
 	it("handles slash-prefixed and mixed-case inputs", () => {
