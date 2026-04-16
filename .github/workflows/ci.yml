@@ -54,5 +54,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash -n scripts/git-create-branch.sh
-      - run: bash -n scripts/git-create-commit.sh
+      - run: bash -n plugin/scripts/git-create-branch.sh
+      - run: bash -n plugin/scripts/git-create-commit.sh
