@@ -75,9 +75,13 @@ async function runScript(
 
 async function readGitConfig(repoPath: string, key: string): Promise<string> {
 	try {
-		const result = await execFileAsync("git", ["config", "--get", key], {
-			cwd: repoPath,
-		});
+		const result = await execFileAsync(
+			"git",
+			["config", "--local", "--get", key],
+			{
+				cwd: repoPath,
+			},
+		);
 		return result.stdout.trim();
 	} catch {
 		return "";
