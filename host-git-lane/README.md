@@ -10,6 +10,7 @@ It exists to keep the host-backed lane explicit without inventing a fake package
 - a companion-layer doc set for host-backed git and GitHub operations
 - the boundary between repo-local package logic and the external host execution lane
 - a local mirror of durable canon from the `OpenClaw` source family
+- the place where required host/node identity metadata expectations are documented for the product-level lane
 
 ## What This Unit Is Not
 
@@ -39,3 +40,21 @@ It exists to keep the host-backed lane explicit without inventing a fake package
 - `openclaw-git-workflow/` remains bounded to branch and commit planning/execution
 - `openclaw-host-git-pr/` remains a skill-only package with an external runtime boundary
 - this folder documents the host-backed finish lane those units depend on
+
+## Required Host Identity Metadata
+
+The host-backed lane must present stable instance metadata to the OpenClaw gateway/UI.
+
+Minimum expected fields:
+- stable instance or node id
+- display name
+- host name
+- platform
+- client type
+- connection state
+- disconnect reason when a session closes
+
+Operational expectation:
+- the UI should not fall back to generic `unknown` labels for normal host/node sessions once the handshake succeeds
+- if a disconnected entry still appears in history, the metadata should remain inspectable after disconnect
+- this is a product-level host-lane requirement, not a claim that this repo ships the runtime implementation
