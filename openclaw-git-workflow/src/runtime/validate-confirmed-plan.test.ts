@@ -13,14 +13,14 @@ function makePlan() {
 			{
 				id: "group-1",
 				branch: "feat/workflow-repo-aware-planning",
-				files: ["plugin/src/git-workflow-tool.ts"],
+				files: ["openclaw-git-workflow/src/git-workflow-tool.ts"],
 				commit: {
 					title: "feat(workflow): add repo-aware planning output",
 					body: [
 						"Add deterministic repo-aware planning output to the workflow runtime.",
 						"- Inspect git status and classify changed files by repo area.",
 						"- Generate stable groups, commit metadata, and branch suggestions.",
-						"- Cover the changed runtime files: plugin/src/git-workflow-tool.ts.",
+						"- Cover the changed runtime files: openclaw-git-workflow/src/git-workflow-tool.ts.",
 						"- Keep execute bounded to branch plus commit, with no push.",
 					].join("\n"),
 				},
@@ -60,8 +60,8 @@ describe("validateConfirmedPlan", () => {
 		duplicateFiles.groups[0] = {
 			...duplicateFiles.groups[0],
 			files: [
-				"plugin/src/git-workflow-tool.ts",
-				"plugin/src/git-workflow-tool.ts",
+				"openclaw-git-workflow/src/git-workflow-tool.ts",
+				"openclaw-git-workflow/src/git-workflow-tool.ts",
 			],
 		};
 		expect(() => validateConfirmedPlan(duplicateFiles, repoPath)).toThrow(

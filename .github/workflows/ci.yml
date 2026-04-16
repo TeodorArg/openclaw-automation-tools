@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: plugin
+        working-directory: openclaw-git-workflow
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: plugin/pnpm-lock.yaml
+          cache-dependency-path: openclaw-git-workflow/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
@@ -34,5 +34,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash -n plugin/scripts/git-create-branch.sh
-      - run: bash -n plugin/scripts/git-create-commit.sh
+      - run: bash -n openclaw-git-workflow/scripts/git-create-branch.sh
+      - run: bash -n openclaw-git-workflow/scripts/git-create-commit.sh

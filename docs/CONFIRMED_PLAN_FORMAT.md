@@ -30,7 +30,7 @@ Confirmed plan is a JSON document.
     {
       "id": "group-1",
       "branch": "docs/update-bundled-workflow-skill",
-      "files": ["plugin/skills/openclaw-git-workflow/SKILL.md"],
+      "files": ["openclaw-git-workflow/skills/openclaw-git-workflow/SKILL.md"],
       "commit": {
         "title": "docs(workflow): update bundled workflow skill",
         "body": "Update the bundled workflow skill wording.\n- Keep the bundled skill path explicit.\n- Preserve the bounded plan-to-execute contract.\n- Avoid widening the main workflow scope.\n- Leave push and PR outside the main workflow."

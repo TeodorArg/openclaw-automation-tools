@@ -20,7 +20,7 @@ function resolveRepoPath(): string {
 }
 
 function resolveScriptsDir(repoPath: string): string {
-	return path.resolve(repoPath, "plugin/scripts");
+	return path.resolve(repoPath, "openclaw-git-workflow/scripts");
 }
 
 const ToolSchema = Type.Object(

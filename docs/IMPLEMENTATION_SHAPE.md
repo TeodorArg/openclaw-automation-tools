@@ -4,9 +4,9 @@
 
 The repo is built around three layers:
 
-1. `plugin/skills/` — user-facing workflow contract
-2. `plugin/` — bounded runtime tool surface
-3. `plugin/scripts/` — bounded write helpers
+1. `openclaw-git-workflow/skills/` — user-facing workflow contract
+2. `openclaw-git-workflow/` — bounded runtime tool surface
+3. `openclaw-git-workflow/scripts/` — bounded write helpers
 
 ## Main workflow
 
@@ -43,12 +43,12 @@ Main responsibility:
 - map bounded actions into bounded helpers
 
 Main package shape in this repo:
-- `plugin/package.json`
-- `plugin/openclaw.plugin.json`
-- `plugin/README.md`
-- `plugin/EXECUTE_SURFACE.md`
-- `plugin/skills/openclaw-git-workflow/SKILL.md`
-- `plugin/src/*`
+- `openclaw-git-workflow/package.json`
+- `openclaw-git-workflow/openclaw.plugin.json`
+- `openclaw-git-workflow/README.md`
+- `openclaw-git-workflow/EXECUTE_SURFACE.md`
+- `openclaw-git-workflow/skills/openclaw-git-workflow/SKILL.md`
+- `openclaw-git-workflow/src/*`
 
 Packaged skill path:
 - `skills/openclaw-git-workflow/SKILL.md`
@@ -61,8 +61,8 @@ Main responsibility:
 - never widen into generic shell passthrough
 
 Current bounded helpers:
-- `plugin/scripts/git-create-branch.sh`
-- `plugin/scripts/git-create-commit.sh`
+- `openclaw-git-workflow/scripts/git-create-branch.sh`
+- `openclaw-git-workflow/scripts/git-create-commit.sh`
 
 ## Minimal internal tool contract
 
@@ -108,7 +108,7 @@ If a host-backed finish path exists operationally, it must stay explicitly host-
 Main package verification:
 
 ```bash
-cd plugin
+cd openclaw-git-workflow
 pnpm lint
 pnpm typecheck
 pnpm build

@@ -1,81 +1,81 @@
 # openclaw-git-workflow
 
-Plugin-first bounded git workflow repo for OpenClaw.
+Repo index for the reorg from one technical `plugin/` folder into classified publish units plus one companion layer.
 
-Default local Node baseline in this repo is `24.13.0` via `.nvmrc`.
+Status on 2026-04-16:
+- Slice C is in progress on branch `refactor/plugin-openclaw-git-workflow-repack`
+- the main package has been moved to `openclaw-git-workflow/`
+- remaining units are still planning-only
 
-## What this repo is
+## Canon
 
-This repo contains a bounded git workflow implementation built around:
-- planning git groups from current repo changes
-- proposing branches and canonical commits
-- executing only bounded branch + commit steps from a confirmed plan
+Read these first before moving structure:
+- [AGENTS.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/AGENTS.md)
+- [TODO.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/TODO.md)
+- [docs/REPO_REORG_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/REPO_REORG_PLAN.md)
+- [docs/SOURCE_INVENTORY.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/SOURCE_INVENTORY.md)
+- [docs/MIGRATION_EXECUTION_FLOW.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_EXECUTION_FLOW.md)
+- [docs/MIGRATION_TABLES.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_TABLES.md)
+- [docs/CI_MIGRATION_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CI_MIGRATION_PLAN.md)
 
-## Main package in this repo
+## Current Live Package
 
-Main package in this repo:
-- `@openclaw/openclaw-git-workflow`
+Live source today:
+- [openclaw-git-workflow](/Users/svarnoy85/teodorArg/openclaw-git-workflow/openclaw-git-workflow)
 
-Current status:
-- it is the main package surface for this repo
-- it is currently kept private in-repo via `plugin/package.json`
+This is still the active plugin-plus-skill package baseline.
 
-Source tree:
-- package source lives under `plugin/`
-- bundled skill source lives under `plugin/skills/openclaw-git-workflow/`
-- repo-source helper scripts live under `plugin/scripts/`
-- packaged skill path is `skills/openclaw-git-workflow/SKILL.md`
-- current published package file list does not ship the repo-local shell helpers
-
-Operator-facing intent contract:
-- canonical shipped workflow intent id: `send_to_git`
-
-Human phrasing is an alias layer, not the canon.
-Current recognized examples:
-- RU direct aliases: `отправь в гит`, `отправь изменения`
-- RU workflow aliases: `разложи по git-группам`, `разложи по git-группам с ветками`, `выполни git-группы с ветками`
-- EN: `send to git`
-
-How the repo maps that intent:
-- `send_to_git` is the current operator-facing entry for the shipped branch + commit baseline: repo inspection, git grouping, canonical branch and commit planning, and bounded branch + commit execution
-- planning and execute phrasing in RU is now also supported as a shipped alias layer, but the canonical runtime intent id still remains `send_to_git`
-
-Current status split:
-- validated baseline: branch + commit under `send_to_git`
-- not in this repo/runtime contract: push, PR creation, or remote checks
-- not an operating lane in this setup: runtime-local slash-command/container finish path for push/PR
-- host-backed finish steps may exist operationally outside this repo/runtime, but they are not exposed or shipped here
-
-Hard rule for this setup:
-- do not authenticate git or GitHub in the runtime/container
-- do not treat runtime-local `gh`, runtime-local SSH, or runtime-local PR creation as the operating path
-- all push, PR, and remote GitHub work goes through the host-backed lane
-
-Internal runtime safety remains the same:
-- plan -> confirm -> execute stays explicit inside the implementation
-- bounded branch + commit helpers stay narrow and explicit
-- no arbitrary git passthrough
-- no arbitrary shell execution
-- no destructive recovery flows
-
-## Repo layout
-
-- `plugin/` — main package source and bundled workflow skill
-- `plugin/scripts/` — bounded branch/commit helpers for the main package
-- `docs/CONFIRMED_PLAN_FORMAT.md` — confirmed execute payload contract
-- `docs/SKILL_SPEC.md` — product/spec reference for workflow wording and intent expectations
-- `docs/IMPLEMENTATION_SHAPE.md` — current architecture and boundaries
-- `docs/FILE_ROLE_MAP.md` — file responsibility map
-- `docs/REFERENCE_NOTES.md` — narrow runtime-boundary notes
-
-## Verify main package
+Verify it with:
 
 ```bash
 nvm use || nvm install
-cd plugin
+cd openclaw-git-workflow
 pnpm lint
 pnpm typecheck
 pnpm build
 pnpm test
 pnpm pack:smoke
 ```
+
+## Target Units
+
+Planned top-level units after the reorg:
+
+| Unit | Type | Status | Canonical source today |
+| --- | --- | --- | --- |
+| `openclaw-git-workflow/` | plugin + bundled skill package | moved in Slice C on the current branch | current live package in this repo |
+| `memory-hygiene/` | skill-only package | planned | workspace skill copy |
+| `source-of-truth-fix/` | skill-only package | planned | shared `~/.openclaw` skill copy |
+| `openclaw-host-git-pr/` | skill-only package | package contract now documented; implementation still pending | installed skill + historical git source |
+| `host-git-lane/` | companion folder | exact local file set now documented; implementation still pending | `OpenClaw` docs/config canon |
+
+## Scope Rules
+
+- one migration unit per branch
+- no mixed package migrations in one PR
+- `plugin-host-git-push` stays historical input only
+- `host-git-lane/` is not a publishable plugin package by current evidence
+- `openclaw-host-git-pr` stays skill-only unless a real live runtime source owner appears
+
+## Repo Docs By Role
+
+- [docs/REPO_REORG_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/REPO_REORG_PLAN.md): architecture, package classification, target boundaries
+- [docs/SOURCE_INVENTORY.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/SOURCE_INVENTORY.md): source-of-truth and non-source evidence
+- [docs/MIGRATION_EXECUTION_FLOW.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_EXECUTION_FLOW.md): exact per-unit execution loop
+- [docs/MIGRATION_TABLES.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_TABLES.md): current-to-target path mapping tables
+- [docs/CI_MIGRATION_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CI_MIGRATION_PLAN.md): plan for multi-unit CI after the first package move
+
+## Current Blockers
+
+Broad reorg execution is still blocked until actual package folders are created one unit at a time.
+
+What is no longer ambiguous:
+- `host-git-lane/` exact planned file set
+- `openclaw-host-git-pr` exact package contents and publication metadata baseline
+- repo-level migration tables
+- repo-level CI migration plan
+
+What still remains execution work:
+- create the new folders in dedicated branches
+- add skill package folders and companion docs in later slices
+- complete verification and commit for the current Slice C branch

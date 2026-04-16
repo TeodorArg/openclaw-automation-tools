@@ -137,7 +137,7 @@ function classifyRepoArea(filePath: string): RepoArea {
 		return "skills";
 	}
 
-	if (filePath.startsWith("plugin/")) {
+	if (filePath.startsWith("openclaw-git-workflow/")) {
 		return "runtime";
 	}
 
@@ -316,30 +316,32 @@ function splitRuntimeFilesIntoBuckets(
 
 function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 	if (
-		filePath === "plugin/src/runtime/plan-groups.ts" ||
-		filePath === "plugin/src/runtime/plan-groups.test.ts"
+		filePath === "openclaw-git-workflow/src/runtime/plan-groups.ts" ||
+		filePath === "openclaw-git-workflow/src/runtime/plan-groups.test.ts"
 	) {
 		return "planning";
 	}
 
 	if (
-		filePath.startsWith("plugin/scripts/") ||
-		filePath === "plugin/src/runtime/validate-confirmed-plan.ts" ||
-		filePath === "plugin/src/runtime/validate-confirmed-plan.test.ts" ||
-		filePath === "plugin/src/git-workflow-tool.ts"
+		filePath.startsWith("openclaw-git-workflow/scripts/") ||
+		filePath ===
+			"openclaw-git-workflow/src/runtime/validate-confirmed-plan.ts" ||
+		filePath ===
+			"openclaw-git-workflow/src/runtime/validate-confirmed-plan.test.ts" ||
+		filePath === "openclaw-git-workflow/src/git-workflow-tool.ts"
 	) {
 		return "execute";
 	}
 
 	if (
-		filePath === "plugin/openclaw.plugin.json" ||
-		filePath === "plugin/package.json" ||
-		filePath === "plugin/package-lock.json" ||
-		filePath === "plugin/pnpm-lock.yaml" ||
-		filePath === "plugin/tsconfig.json" ||
-		filePath === "plugin/tsconfig.build.json" ||
-		filePath === "plugin/index.ts" ||
-		filePath === "plugin/api.ts"
+		filePath === "openclaw-git-workflow/openclaw.plugin.json" ||
+		filePath === "openclaw-git-workflow/package.json" ||
+		filePath === "openclaw-git-workflow/package-lock.json" ||
+		filePath === "openclaw-git-workflow/pnpm-lock.yaml" ||
+		filePath === "openclaw-git-workflow/tsconfig.json" ||
+		filePath === "openclaw-git-workflow/tsconfig.build.json" ||
+		filePath === "openclaw-git-workflow/index.ts" ||
+		filePath === "openclaw-git-workflow/api.ts"
 	) {
 		return "install";
 	}
@@ -409,16 +411,22 @@ function buildRuntimeGroupForSubtype(
 		case "mixed":
 			return {
 				label: "Plugin and bounded runtime",
-				branch: files.some((file) => file.startsWith("plugin/scripts/"))
+				branch: files.some((file) =>
+					file.startsWith("openclaw-git-workflow/scripts/"),
+				)
 					? "feat/workflow-refine-planning-and-execute"
 					: "feat/workflow-repo-aware-planning",
 				files,
 				commit: {
-					title: files.some((file) => file.startsWith("plugin/scripts/"))
+					title: files.some((file) =>
+						file.startsWith("openclaw-git-workflow/scripts/"),
+					)
 						? "feat(workflow): refine planning and bounded execute"
 						: "feat(workflow): add repo-aware planning output",
 					body: createCommitBody(
-						files.some((file) => file.startsWith("plugin/scripts/"))
+						files.some((file) =>
+							file.startsWith("openclaw-git-workflow/scripts/"),
+						)
 							? "Refine the runtime path for planning and bounded execution."
 							: "Add deterministic repo-aware planning output to the workflow runtime.",
 						[
