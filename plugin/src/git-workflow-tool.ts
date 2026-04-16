@@ -14,7 +14,8 @@ const execFileAsync = promisify(execFile);
 function resolveRepoPath(): string {
 	return path.resolve(
 		process.env.OPENCLAW_GIT_WORKFLOW_REPO ??
-			"/home/node/repos/openclaw-git-workflow",
+			process.env.OPENCLAW_PROJECT_DIR ??
+			"/home/node/project",
 	);
 }
 
