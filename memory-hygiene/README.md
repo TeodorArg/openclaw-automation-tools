@@ -22,16 +22,16 @@ This package ships the canonical `memory-hygiene` skill and does not imply any r
 ## Canonical Source
 
 Current strongest source-of-truth for this package content:
-- local workspace skill copy: `/Users/svarnoy85/OpenClaw-workspace/skills/memory-hygiene/SKILL.md`
+- workspace skill copy under `<OPENCLAW_WORKSPACE_ROOT>/skills/memory-hygiene/SKILL.md`
 
 Secondary reference only:
-- `/Users/svarnoy85/teodorArg/OpenClaw/templates/skills/memory-hygiene/SKILL.md`
+- `<OPENCLAW_PROJECT_ROOT>/templates/skills/memory-hygiene/SKILL.md`
 
 ## Publication Metadata Baseline
 
 - slug: `memory-hygiene`
 - display name: `Memory Hygiene`
-- owner: `TeodorArg`
+- owner: `<clawhub-owner>`
 - version: `0.1.0`
 - tags: `memory`, `workflow`, `maintenance`
 - license: `MIT-0`
@@ -39,7 +39,7 @@ Secondary reference only:
 Publish command baseline:
 
 ```bash
-clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
+clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
 ```
 
 Current publish-host note:

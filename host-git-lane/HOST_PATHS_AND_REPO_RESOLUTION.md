@@ -2,17 +2,26 @@
 
 This companion layer documents the host and container path model used by the host-backed lane.
 
+## Placeholders
+
+- `<OPENCLAW_CONFIG_ROOT>`: host config root
+- `<OPENCLAW_WORKSPACE_ROOT>`: host workspace root
+- `<OPENCLAW_PROJECT_ROOT>`: host product repo root
+- `<CONTAINER_OPENCLAW_CONFIG_ROOT>`: container config root
+- `<CONTAINER_OPENCLAW_WORKSPACE_ROOT>`: container workspace root
+- `<CONTAINER_OPENCLAW_PROJECT_ROOT>`: container product repo root
+
 ## Canonical Host Paths
 
-- config root: `/Users/svarnoy85/OpenClaw-config`
-- workspace root: `/Users/svarnoy85/OpenClaw-workspace`
-- product repo: `/Users/svarnoy85/teodorArg/OpenClaw`
+- config root: `<OPENCLAW_CONFIG_ROOT>`
+- workspace root: `<OPENCLAW_WORKSPACE_ROOT>`
+- product repo: `<OPENCLAW_PROJECT_ROOT>`
 
 ## Canonical Container Paths
 
-- config root in container: `/home/node/.openclaw`
-- workspace root in container: `/home/node/workspace`
-- project root in container: `/home/node/project`
+- config root in container: `<CONTAINER_OPENCLAW_CONFIG_ROOT>`
+- workspace root in container: `<CONTAINER_OPENCLAW_WORKSPACE_ROOT>`
+- project root in container: `<CONTAINER_OPENCLAW_PROJECT_ROOT>`
 
 ## Repo Resolution Rule
 

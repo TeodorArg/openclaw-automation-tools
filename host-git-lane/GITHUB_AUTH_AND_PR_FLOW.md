@@ -27,5 +27,5 @@ This file captures the durable host-backed GitHub and PR flow used by this repo 
 ## PR Guidance
 
 - PR target is `main`
-- each PR should contain one migration unit only
+- keep each PR scoped to one coherent change
 - include verification results and any package/publication caveats

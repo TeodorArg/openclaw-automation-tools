@@ -21,17 +21,17 @@ This package ships the `source-of-truth-fix` skill and intentionally does not im
 ## Canonical Source
 
 Current strongest source-of-truth for this package content:
-- local shared skill copy: `/Users/svarnoy85/OpenClaw-config/skills/source-of-truth-fix/SKILL.md`
+- shared skill copy under `<OPENCLAW_CONFIG_ROOT>/skills/source-of-truth-fix/SKILL.md`
 
 Related context references only:
-- `/Users/svarnoy85/teodorArg/OpenClaw/templates/workspace-context/AGENTS.md`
-- `/Users/svarnoy85/teodorArg/OpenClaw/templates/workspace-context/USER.md`
+- `<OPENCLAW_PROJECT_ROOT>/templates/workspace-context/AGENTS.md`
+- `<OPENCLAW_PROJECT_ROOT>/templates/workspace-context/USER.md`
 
 ## Publication Metadata Baseline
 
 - slug: `source-of-truth-fix`
 - display name: `Source Of Truth Fix`
-- owner: `TeodorArg`
+- owner: `<clawhub-owner>`
 - version: `0.1.0`
 - tags: `docs`, `verification`, `source-of-truth`
 - license: `MIT-0`
@@ -39,7 +39,7 @@ Related context references only:
 Publish command baseline:
 
 ```bash
-clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
+clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
 ```
 
 Current publish-host note:

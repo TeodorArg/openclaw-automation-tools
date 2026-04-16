@@ -116,7 +116,7 @@ clawhub package publish ./openclaw-git-workflow \
   --version 0.1.0 \
   --changelog "Initial ClawHub package release" \
   --tags latest,git,workflow \
-  --source-repo TeodorArg/openclaw-git-workflow \
+  --source-repo <github-owner>/<github-repo> \
   --source-commit <git-sha> \
   --source-ref main \
   --source-path openclaw-git-workflow
