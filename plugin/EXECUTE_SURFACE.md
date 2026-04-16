@@ -3,8 +3,8 @@
 Repo-local contract doc for the main workflow package source tree.
 This file documents the current bounded runtime surface used by `plugin/`.
 Repo paths in this file use the source-tree frame, while packaged plugin paths use package-root paths like `skills/`.
-The current published plugin file list does not ship the repo-local shell helpers under `plugin/scripts/`.
-It is not currently shipped in the packaged file list.
+The packaged plugin file list currently ships `dist`, `openclaw.plugin.json`, `skills`, `README.md`, and `LICENSE`.
+Repo-local shell helpers under `plugin/scripts/` are not shipped in the package tarball and remain source-tree implementation details.
 
 ## Goal
 
@@ -73,8 +73,8 @@ Current scripts in `plugin/package.json`:
 - `build`: `tsc -p tsconfig.build.json`
 - `format`: `biome format --write . --files-ignore-unknown=true`
 - `format:check`: `biome format --check . --files-ignore-unknown=true`
-- `lint`: `biome check index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills scripts --files-ignore-unknown=true`
-- `lint:fix`: `biome check --write index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills scripts --files-ignore-unknown=true`
+- `lint`: `biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true`
+- `lint:fix`: `biome check --write index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true`
 - `check`: `pnpm lint && pnpm test && pnpm build`
 - `typecheck`: `tsc --noEmit -p tsconfig.json`
 - `test`: `vitest run --passWithNoTests`
@@ -82,8 +82,11 @@ Current scripts in `plugin/package.json`:
 
 ## Current bounded helpers
 
+Current source-tree bounded helpers:
 - `plugin/scripts/git-create-branch.sh`
 - `plugin/scripts/git-create-commit.sh`
+
+These helpers are repo-local implementation details and are not part of the packaged plugin file list.
 
 ## Explicit non-goals
 
