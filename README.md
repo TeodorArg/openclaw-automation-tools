@@ -22,6 +22,11 @@ openclaw plugins install -l ./openclaw-git-workflow
 
 Recommended local dev version: Node `24.13.0` via the repo-root `.nvmrc`.
 
+## Supporting Docs
+
+- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md): first-upload and publish-host preflight notes
+- [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md): product-level node install and identity contract
+
 ## Verify
 
 ```bash
