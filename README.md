@@ -17,6 +17,7 @@ Read these first before changing structure or release metadata:
 - [docs/MIGRATION_TABLES.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_TABLES.md)
 - [docs/CI_MIGRATION_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CI_MIGRATION_PLAN.md)
 - [docs/PUBLISH_READINESS.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/PUBLISH_READINESS.md)
+- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
 
 ## Units
 
@@ -59,3 +60,4 @@ Repo-wide CI now also validates:
 - keep CI aligned with the classified units
 - keep package publication metadata explicit and non-placeholder
 - keep repo-level readiness checklists current as units move from materialized to publish-ready
+- keep the first ClawHub upload procedure explicit, including local CLI compatibility differences
