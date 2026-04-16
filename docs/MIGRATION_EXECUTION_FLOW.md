@@ -107,6 +107,7 @@ For this repo:
 - prefer a commit body with one intro line and exactly 4 short bullets
 - one branch should close one migration slice
 - push and PR are host-backed only
+- for this repo, passing local verification on the dedicated slice branch means the same migration chain continues with host-backed `git push` and then PR creation into `main`
 
 ## PR Rule
 
