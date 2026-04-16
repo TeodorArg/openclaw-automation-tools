@@ -42,3 +42,4 @@ The tool surface is intentionally narrow:
 - push current branch
 
 The runtime path must stay bounded to the host-jobs spool and validated Plan A push path.
+Do not rely on runtime-local git auth, runtime-local SSH, or runtime-local GitHub auth for this workflow.
