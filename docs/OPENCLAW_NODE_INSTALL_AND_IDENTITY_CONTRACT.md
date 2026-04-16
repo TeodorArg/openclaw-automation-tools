@@ -129,5 +129,6 @@ Official OpenClaw docs confirmed via Context7:
 Repo-local canon:
 - [host-git-lane/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/host-git-lane/README.md)
 - [host-git-lane/HOST_GIT_BOUNDARY.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/host-git-lane/HOST_GIT_BOUNDARY.md)
+- [docs/OPENCLAW_NODE_METADATA_IMPLEMENTATION_CHECKLIST.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/OPENCLAW_NODE_METADATA_IMPLEMENTATION_CHECKLIST.md)
 - [docs/SOURCE_INVENTORY.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/SOURCE_INVENTORY.md)
 - [docs/REPO_REORG_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/REPO_REORG_PLAN.md)
