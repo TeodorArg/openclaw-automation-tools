@@ -13,7 +13,7 @@
 .history/
 .codex/
 memory.jsonl
-
+AGENTS.md
 # Vim / generic temp editor files
 *.swp
 *.swo
