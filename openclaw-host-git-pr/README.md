@@ -56,10 +56,16 @@ Allowed historical rewrite input:
 
 - slug: `openclaw-host-git-pr`
 - display name: `OpenClaw Host Git PR`
-- owner: `TBD`
+- owner: `TeodorArg`
 - version: `0.1.0`
 - tags: `git`, `github`, `pr`, `host`
 - license: `MIT-0`
+
+Publish command baseline:
+
+```bash
+clawhub skill publish ./openclaw-host-git-pr --slug openclaw-host-git-pr --name "OpenClaw Host Git PR" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags git,github,pr,host
+```
 
 ## Package Contents
 

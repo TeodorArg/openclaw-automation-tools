@@ -1,15 +1,14 @@
 # openclaw-git-workflow
 
-Repo index for the reorg from one technical `plugin/` folder into classified publish units plus one companion layer.
+Repo index for the classified OpenClaw publish units and the companion host-backed git lane.
 
 Status on 2026-04-16:
-- Slice C for `openclaw-git-workflow` is complete in `main`
-- `memory-hygiene` is now in progress on branch `feat/skills-memory-hygiene-package`
-- remaining units after that are still planning-only
+- repo reorg is complete in `main`
+- the active work is now post-reorg hardening: CI, publication metadata, and readiness checklists
 
 ## Canon
 
-Read these first before moving structure:
+Read these first before changing structure or release metadata:
 - [AGENTS.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/AGENTS.md)
 - [TODO.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/TODO.md)
 - [docs/REPO_REORG_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/REPO_REORG_PLAN.md)
@@ -17,15 +16,21 @@ Read these first before moving structure:
 - [docs/MIGRATION_EXECUTION_FLOW.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_EXECUTION_FLOW.md)
 - [docs/MIGRATION_TABLES.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_TABLES.md)
 - [docs/CI_MIGRATION_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CI_MIGRATION_PLAN.md)
+- [docs/PUBLISH_READINESS.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/PUBLISH_READINESS.md)
 
-## Current Live Package
+## Units
 
-Live source today:
-- [openclaw-git-workflow](/Users/svarnoy85/teodorArg/openclaw-git-workflow/openclaw-git-workflow)
+| Unit | Type | Status | Notes |
+| --- | --- | --- | --- |
+| `openclaw-git-workflow/` | plugin + bundled skill package | active package | bounded runtime/plugin surface |
+| `memory-hygiene/` | skill-only package | materialized | `MIT-0`, no runtime code |
+| `source-of-truth-fix/` | skill-only package | materialized | `MIT-0`, no runtime code |
+| `openclaw-host-git-pr/` | skill-only package | materialized | external host-backed runtime boundary |
+| `host-git-lane/` | companion folder | materialized | docs-only companion, not a publishable package |
 
-This is still the active plugin-plus-skill package baseline.
+## Verify
 
-Verify it with:
+Plugin package:
 
 ```bash
 nvm use || nvm install
@@ -37,45 +42,20 @@ pnpm test
 pnpm pack:smoke
 ```
 
-## Target Units
+Repo-wide CI now also validates:
+- skill-only package shape for `memory-hygiene/`, `source-of-truth-fix/`, and `openclaw-host-git-pr/`
+- required docs and forbidden manifests for `host-git-lane/`
 
-Planned top-level units after the reorg:
+## Package Index
 
-| Unit | Type | Status | Canonical source today |
-| --- | --- | --- | --- |
-| `openclaw-git-workflow/` | plugin + bundled skill package | moved in Slice C on the current branch | current live package in this repo |
-| `memory-hygiene/` | skill-only package | in progress on current branch | workspace skill copy and local package folder |
-| `source-of-truth-fix/` | skill-only package | in progress on current branch | shared config skill copy and local package folder |
-| `openclaw-host-git-pr/` | skill-only package | in progress on current branch | installed skill + historical git source + local package folder |
-| `host-git-lane/` | companion folder | in progress on current branch | `OpenClaw` docs/config canon plus local companion docs |
+- [openclaw-git-workflow/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/openclaw-git-workflow/README.md): publishable plugin package with bundled skill
+- [memory-hygiene/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/memory-hygiene/README.md): skill-only package for memory compaction and hygiene
+- [source-of-truth-fix/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/source-of-truth-fix/README.md): skill-only package for durable canonical-source fixes
+- [openclaw-host-git-pr/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/openclaw-host-git-pr/README.md): skill-only package for bounded host-backed PR flow
+- [host-git-lane/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/host-git-lane/README.md): companion-layer docs for host-backed git/GitHub execution
 
-## Scope Rules
+## Current Focus
 
-- one migration unit per branch
-- no mixed package migrations in one PR
-- `plugin-host-git-push` stays historical input only
-- `host-git-lane/` is not a publishable plugin package by current evidence
-- `openclaw-host-git-pr` stays skill-only unless a real live runtime source owner appears
-
-## Repo Docs By Role
-
-- [docs/REPO_REORG_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/REPO_REORG_PLAN.md): architecture, package classification, target boundaries
-- [docs/SOURCE_INVENTORY.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/SOURCE_INVENTORY.md): source-of-truth and non-source evidence
-- [docs/MIGRATION_EXECUTION_FLOW.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_EXECUTION_FLOW.md): exact per-unit execution loop
-- [docs/MIGRATION_TABLES.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/MIGRATION_TABLES.md): current-to-target path mapping tables
-- [docs/CI_MIGRATION_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CI_MIGRATION_PLAN.md): plan for multi-unit CI after the first package move
-
-## Current Blockers
-
-Broad reorg execution is still blocked until actual package folders are created one unit at a time.
-
-What is no longer ambiguous:
-- `host-git-lane/` exact planned file set
-- `openclaw-host-git-pr` exact package contents and publication metadata baseline
-- repo-level migration tables
-- repo-level CI migration plan
-
-What still remains execution work:
-- create the new folders in dedicated branches
-- add skill package folders and companion docs in later slices
-- complete verification and commit for the current Slice C branch
+- keep CI aligned with the classified units
+- keep package publication metadata explicit and non-placeholder
+- keep repo-level readiness checklists current as units move from materialized to publish-ready
