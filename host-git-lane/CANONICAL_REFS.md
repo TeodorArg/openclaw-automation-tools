@@ -20,6 +20,7 @@ This file records the upstream canonical docs used to define the companion host 
 - `docs/MIGRATION_TABLES.md`
 - `docs/PUBLISH_READINESS.md`
 - `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`
+- `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md`
 
 ## Interpretation Rule
 

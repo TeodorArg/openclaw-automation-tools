@@ -40,6 +40,7 @@ It exists to keep the host-backed lane explicit without inventing a fake package
 - `openclaw-git-workflow/` remains bounded to branch and commit planning/execution
 - `openclaw-host-git-pr/` remains a skill-only package with an external runtime boundary
 - this folder documents the host-backed finish lane those units depend on
+- the consolidated repo-local explanation of `openclaw node` install and identity requirements lives in [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md)
 
 ## Required Host Identity Metadata
 

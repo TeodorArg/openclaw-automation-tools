@@ -18,6 +18,7 @@ Read these first before changing structure or release metadata:
 - [docs/CI_MIGRATION_PLAN.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CI_MIGRATION_PLAN.md)
 - [docs/PUBLISH_READINESS.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/PUBLISH_READINESS.md)
 - [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+- [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md)
 
 ## Units
 
