@@ -40,11 +40,6 @@ Compatibility floor remains defined by `package.json` engines: Node `>=20.19.0 |
 - treat current `0.x` releases as pre-1.0 stabilization releases
 - publish only after green local verification plus one clean external install verification pass
 
-Release verification currently stays inline in this README because the repo does not keep a separate `docs/RELEASE_POLICY.md`.
-
-For the first ClawHub upload, also verify the current CLI syntax and source-provenance flags against:
-- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
-
 ## Verify
 
 ```bash

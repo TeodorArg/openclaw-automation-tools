@@ -9,7 +9,7 @@ describe("buildPlanResult", () => {
 				currentBranch: "main",
 				headCommit: "abc123",
 				changedFiles: [
-					{ path: "docs/SKILL_SPEC.md", status: "M" },
+					{ path: "README.md", status: "M" },
 					{
 						path: "openclaw-git-workflow/src/git-workflow-tool.ts",
 						status: "M",

@@ -15,12 +15,8 @@ This file records the upstream canonical docs used to define the companion host 
 
 ## Repo-Level Canon
 
-- `docs/SOURCE_INVENTORY.md`
-- `docs/REPO_REORG_PLAN.md`
-- `docs/MIGRATION_TABLES.md`
-- `docs/PUBLISH_READINESS.md`
-- `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`
-- `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md`
+- `README.md`
+- `openclaw-git-workflow/README.md`
 
 ## Interpretation Rule
 
