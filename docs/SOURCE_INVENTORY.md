@@ -17,7 +17,7 @@ Status: verified against current repo state, `openclaw-gateway` runtime state, a
 | --- | --- | --- | --- |
 | `openclaw-git-workflow` | publishable plugin + bundled skill package | `live-source` in this repo under `openclaw-git-workflow/` | current working package baseline |
 | `memory-hygiene` | skill-only package target | `live-source` is workspace skill copy | template/seed copies are secondary |
-| `source-of-truth-fix` | skill-only package target | `live-source` is shared `~/.openclaw` skill copy | no repo-local source package exists yet |
+| `source-of-truth-fix` | skill-only package target | `live-source` is shared config skill copy | local repo package folder now exists |
 | `openclaw-host-git-pr` | skill-only package target | current best source is installed skill + historical git source | runtime stays external to the package |
 | legacy `openclaw-host-git-push` | historical bounded bridge plugin package | `historical-git` in this repo history under `plugin-host-git-push/` | installed runtime copy still exists |
 | `host-git-lane` | companion adapter/service layer over product-level `openclaw node` transport | canonical source family is `OpenClaw` docs/config, not a standalone plugin package | chosen local companion-folder name is `host-git-lane/` |
@@ -67,7 +67,7 @@ Classification:
 - skill-only package target
 
 Canonical source:
-- `live-source`: `/home/node/.openclaw/skills/source-of-truth-fix/SKILL.md`
+- `live-source`: `/Users/svarnoy85/OpenClaw-config/skills/source-of-truth-fix/SKILL.md`
 
 Secondary references:
 - `derived-config`: `/Users/svarnoy85/teodorArg/OpenClaw/templates/workspace-context/AGENTS.md`
@@ -75,6 +75,7 @@ Secondary references:
 
 Notes:
 - current strongest source is the managed shared skill copy under `~/.openclaw/skills`.
+- local repo materialization for this unit now exists at [source-of-truth-fix](/Users/svarnoy85/teodorArg/openclaw-git-workflow/source-of-truth-fix).
 
 ## 4. `openclaw-host-git-pr`
 
