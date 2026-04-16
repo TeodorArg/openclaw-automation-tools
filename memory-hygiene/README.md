@@ -45,7 +45,7 @@ clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygi
 Current publish-host note:
 - official docs currently show `clawhub skill publish`
 - the locally observed `clawhub v0.9.0` exposes top-level `clawhub publish`
-- verify the installed CLI syntax before the first real upload using [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+- verify the installed CLI syntax on the publish host before the first real upload
 
 ## Package Contents
 
