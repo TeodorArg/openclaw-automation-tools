@@ -19,7 +19,7 @@ Preferred tool name:
 ```json
 {
   "action": "plan-groups" | "plan-groups-with-branches" | "execute-groups-with-branches",
-  "command": "<raw skill args>",
+  "command": "<raw skill args or normalized intent alias>",
   "commandName": "<slash command>",
   "skillName": "openclaw-git-workflow",
   "confirmedPlan": { "version": 1, "status": "confirmed", "groups": [] }
@@ -46,8 +46,8 @@ Preferred tool name:
 - reject free-form execution without structured plan
 - return structured success or rejection/failure payloads
 - create branches and commits only
-- no push
-- no PR
+- no direct push
+- no direct PR
 
 ## Bounded runtime operations
 
@@ -72,8 +72,8 @@ Current scripts in `plugin/package.json`:
 - `build`: `tsc -p tsconfig.build.json`
 - `format`: `biome format --write . --files-ignore-unknown=true`
 - `format:check`: `biome format --check . --files-ignore-unknown=true`
-- `lint`: `biome check index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true`
-- `lint:fix`: `biome check --write index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true`
+- `lint`: `biome check index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills scripts --files-ignore-unknown=true`
+- `lint:fix`: `biome check --write index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills scripts --files-ignore-unknown=true`
 - `check`: `pnpm lint && pnpm test && pnpm build`
 - `typecheck`: `tsc --noEmit -p tsconfig.json`
 - `test`: `vitest run --passWithNoTests`

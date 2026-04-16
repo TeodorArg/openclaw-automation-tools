@@ -14,7 +14,7 @@ Fixed model:
 - confirm
 - execute
 
-`выполни git-группы с ветками` may run only from a confirmed plan payload.
+Internal execute under `send_to_git` may run only from a confirmed plan payload.
 
 ## Canonical shape
 
@@ -25,7 +25,7 @@ Confirmed plan is a JSON document.
   "version": 1,
   "repoPath": "/abs/path/to/active-repo",
   "status": "confirmed",
-  "sourceCommand": "разложи по git-группам с ветками",
+  "sourceCommand": "send_to_git",
   "groups": [
     {
       "id": "group-1",
@@ -45,7 +45,7 @@ Confirmed plan is a JSON document.
 - `version`: integer, currently only `1`
 - `repoPath`: absolute target repo path
 - `status`: must be exactly `confirmed`
-- `sourceCommand`: planning command text that produced the plan
+- `sourceCommand`: normalized planning source that produced the plan, typically a canonical intent id or normalized alias
 - `groups`: non-empty array of execution groups
 
 ## Required group fields
@@ -88,10 +88,10 @@ Execution must fail closed when:
 
 The planning step may render the plan for the user in a readable way, but execute must consume the structured payload, not the prose rendering.
 
-For `разложи по git-группам с ветками`, the planning output should already include a ready-to-confirm payload in this exact shape.
-That lets the user review a readable plan and then confirm the same structured payload for `выполни git-группы с ветками` without reconstructing it from prose.
+For `send_to_git`, the planning output should already include a ready-to-confirm payload in this exact shape.
+That lets the assistant or user review a readable plan and then confirm the same structured payload for internal execute without reconstructing it from prose.
 
 ## Boundary
 
 This format exists only to support bounded branch + commit execution from a confirmed plan.
-Push and PR handoff belong to separate layers outside the main workflow surface.
+Push and PR handoff belong to separate bridge layers outside the main branch + commit execution surface.

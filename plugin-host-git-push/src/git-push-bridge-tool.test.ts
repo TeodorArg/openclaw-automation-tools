@@ -69,8 +69,8 @@ describe("git_push_bridge_action", () => {
 
 		await tool.execute("call-target", {
 			action: "push-current-branch",
-			command: "/git-push current-branch",
-			commandName: "/git-push",
+			command: "send_to_git",
+			commandName: "send_to_git",
 			skillName: "openclaw-host-git-push",
 		});
 
@@ -79,6 +79,72 @@ describe("git_push_bridge_action", () => {
 		);
 		expect(collectRepoState).toHaveBeenCalledWith(
 			"/home/node/repos/openclaw-git-workflow",
+		);
+	});
+
+	it("accepts supported human alias routing for send_to_git", async () => {
+		const readCapabilities = vi.fn(async () => readyCapabilities);
+		const tool = createGitPushBridgeTool({
+			readCapabilities,
+			collectRepoState: async () => ({
+				cwd: "/repo",
+				branch: "feat/x",
+				head: "abc123",
+				remote: "origin",
+			}),
+			writeJob: async () => ({
+				jobId: "job-alias",
+				jobPath: "/spool/queue/job-alias-push-current-branch.json",
+			}),
+			waitForResult: async () => ({
+				jobId: "job-alias",
+				status: "done",
+				ok: true,
+			}),
+			resolveTargetRepo: () => "/repo",
+		});
+
+		const result = await tool.execute("call-alias", {
+			action: "inspect-capabilities",
+			command: "запушь",
+			commandName: "",
+			skillName: "openclaw-host-git-push",
+		});
+		const payload = parseToolText(result);
+
+		expect(payload).toMatchObject({ ok: true, intent: "send_to_git" });
+		expect(readCapabilities).toHaveBeenCalledWith("/repo");
+	});
+
+	it("rejects unsupported push intent text", async () => {
+		const tool = createGitPushBridgeTool({
+			readCapabilities: async () => readyCapabilities,
+			collectRepoState: async () => ({
+				cwd: "/repo",
+				branch: "feat/x",
+				head: "abc123",
+				remote: "origin",
+			}),
+			writeJob: async () => ({
+				jobId: "job-ignored",
+				jobPath: "/spool/queue/job-ignored-push-current-branch.json",
+			}),
+			waitForResult: async () => ({
+				jobId: "job-ignored",
+				status: "done",
+			}),
+			resolveTargetRepo: () => "/repo",
+		});
+
+		await expect(
+			tool.execute("call-bad-alias", {
+				action: "inspect-capabilities",
+				command: "open a PR",
+				commandName: "",
+				skillName: "openclaw-host-git-push",
+			}),
+		).rejects.toThrow(
+			"git_push_bridge_action accepts only the canonical send_to_git intent or its supported aliases.",
 		);
 	});
 
@@ -108,8 +174,8 @@ describe("git_push_bridge_action", () => {
 
 		const result = await tool.execute("call-1", {
 			action: "push-current-branch",
-			command: "/git-push current-branch",
-			commandName: "/git-push",
+			command: "send_to_git",
+			commandName: "send_to_git",
 			skillName: "openclaw-host-git-push",
 		});
 		const payload = parseToolText(result);
@@ -153,8 +219,8 @@ describe("git_push_bridge_action", () => {
 
 		const result = await tool.execute("call-2", {
 			action: "push-current-branch",
-			command: "/git-push current-branch",
-			commandName: "/git-push",
+			command: "send_to_git",
+			commandName: "send_to_git",
 			skillName: "openclaw-host-git-push",
 		});
 		const payload = parseToolText(result);
@@ -200,8 +266,8 @@ describe("git_push_bridge_action", () => {
 
 		const result = await tool.execute("call-3", {
 			action: "push-current-branch",
-			command: "/git-push current-branch",
-			commandName: "/git-push",
+			command: "send_to_git",
+			commandName: "send_to_git",
 			skillName: "openclaw-host-git-push",
 			timeoutMs: 4321,
 		});

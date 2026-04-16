@@ -1,6 +1,6 @@
 ---
 name: openclaw-git-workflow
-description: Plans git groups for repo changes and, from a confirmed plan, executes only bounded branch + commit steps.
+description: Main branch-plus-commit workflow behind the operator-facing `send_to_git` intent. Plans git groups for repo changes and, from a confirmed plan, executes only bounded branch + commit steps before a separate push bridge takes over.
 user-invocable: true
 command-dispatch: tool
 command-tool: git_workflow_action
@@ -13,50 +13,41 @@ Use this skill for the bounded operator-facing git workflow, not for arbitrary g
 
 ## Supported intents
 
-This skill supports exactly these user-facing workflow intents:
+Этот skill должен обрабатывать только канонический операторский интент `send_to_git`.
+Точные пользовательские фразы не являются каноном, это только alias layer.
+Типовые примеры:
+- RU: `отправь в гит`
+- RU: `запушь`
+- RU: `отправь изменения`
+- EN: `send to git`
+- EN: `push it`
+- EN: `ship to git`
 
-1. `разложи по git-группам`
-2. `разложи по git-группам с ветками`
-3. `выполни git-группы с ветками`
+Внутри runtime этот интент по-прежнему раскладывается на стадии plan, confirm, execute.
 
-## Intent behavior
+## Поведение по интенту
 
-### `разложи по git-группам`
+### `send_to_git`
 
-Plan only:
+Внешне это один операторский интент, но внутри он должен сохранять bounded staged flow:
 - inspect repo state and changed files
 - propose logical git groups
-- propose canonical commit title and commit body text
-- do not create branches
-- do not create commits
-- do not push
-
-### `разложи по git-группам с ветками`
-
-Plan only, branch-aware:
-- do the normal planning work
-- propose branch names
-- emit the exact next confirmation step
-- emit a ready-to-confirm structured plan
-- do not execute writes
-
-### `выполни git-группы с ветками`
-
-Execute only from a confirmed plan:
+- propose canonical branch names and commit title/body text
 - do not reconstruct execution from free-form user text
-- require the confirmed plan format from the planning step
+- require the confirmed plan format for the write step
 - perform only bounded branch + commit actions
 - keep execution deterministic around branch base and commit identity
-- do not push in v1
-- do not open PRs
+- hand off push to a separate bounded bridge layer
+- do not open PRs here
 
 ## Hard rules
 
 - Do not accept arbitrary `git <anything>` input.
 - Do not pass user text through to shell.
+- Keep alias/intent routing separate from the internal execution payload.
 - Keep planning output separate from execution input.
 - If confirmed plan input is missing or invalid, stop execute and return a clear error.
-- Keep branch naming and commit format aligned with the target repo conventions.
+- Keep branch naming and commit format aligned with the target repo conventions and `GIT_GUIDANCE.md`.
 
 ## Runtime shape
 

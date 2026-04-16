@@ -16,7 +16,7 @@ describe("buildPlanResult", () => {
 			},
 			{
 				includeBranches: true,
-				sourceCommand: "разложи по git-группам с ветками",
+				sourceCommand: "send_to_git",
 			},
 		);
 
@@ -42,7 +42,7 @@ describe("buildPlanResult", () => {
 			version: 1,
 			status: "confirmed",
 			repoPath: "/home/node/repos/openclaw-git-workflow",
-			sourceCommand: "разложи по git-группам с ветками",
+			sourceCommand: "send_to_git",
 		});
 		expect(result.confirmedPlanCandidate?.groups).toHaveLength(2);
 	});
@@ -61,7 +61,7 @@ describe("buildPlanResult", () => {
 			},
 			{
 				includeBranches: true,
-				sourceCommand: "разложи по git-группам с ветками",
+				sourceCommand: "send_to_git",
 			},
 		);
 
@@ -105,7 +105,7 @@ describe("buildPlanResult", () => {
 			},
 			{
 				includeBranches: true,
-				sourceCommand: "разложи по git-группам с ветками",
+				sourceCommand: "send_to_git",
 			},
 		);
 
@@ -133,7 +133,7 @@ describe("buildPlanResult", () => {
 			},
 			{
 				includeBranches: true,
-				sourceCommand: "разложи по git-группам с ветками",
+				sourceCommand: "send_to_git",
 			},
 		);
 
@@ -160,7 +160,7 @@ describe("buildPlanResult", () => {
 			},
 			{
 				includeBranches: false,
-				sourceCommand: "разложи по git-группам",
+				sourceCommand: "send_to_git",
 			},
 		);
 		expect(plainPlan.groups).toHaveLength(1);
@@ -175,7 +175,7 @@ describe("buildPlanResult", () => {
 			},
 			{
 				includeBranches: true,
-				sourceCommand: "разложи по git-группам с ветками",
+				sourceCommand: "send_to_git",
 			},
 		);
 		expect(cleanPlan.groups).toHaveLength(0);

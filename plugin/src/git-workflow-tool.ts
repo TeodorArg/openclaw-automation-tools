@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Type } from "@sinclair/typebox";
+import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
 import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
 import {
 	type ConfirmedPlan,
@@ -223,10 +224,20 @@ export function createGitWorkflowTool() {
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoPath = resolveRepoPath();
+			const intent = resolveWorkflowIntent({
+				commandName: params.commandName,
+				command: params.command,
+			});
 
 			if (params.skillName !== "openclaw-git-workflow") {
 				throw new Error(
 					"git_workflow_action only accepts requests from skill openclaw-git-workflow.",
+				);
+			}
+
+			if (intent !== "send_to_git") {
+				throw new Error(
+					"git_workflow_action accepts only the canonical send_to_git intent or its supported aliases.",
 				);
 			}
 
@@ -237,7 +248,7 @@ export function createGitWorkflowTool() {
 				const repoState = await collectRepoState(repoPath);
 				const planResult = buildPlanResult(repoState, {
 					includeBranches: params.action === "plan-groups-with-branches",
-					sourceCommand: params.command,
+					sourceCommand: intent,
 				});
 
 				return {
@@ -250,6 +261,7 @@ export function createGitWorkflowTool() {
 									action: params.action,
 									repoPath,
 									mode: "plan-only",
+									intent,
 									commandName: params.commandName,
 									command: params.command,
 									currentBranch: planResult.currentBranch,
@@ -278,6 +290,13 @@ export function createGitWorkflowTool() {
 					normalizeConfirmedPlanInput(params.confirmedPlan),
 					repoPath,
 				);
+
+				if (confirmedPlan.sourceCommand !== intent) {
+					throw new Error(
+						"confirmedPlan.sourceCommand does not match the normalized send_to_git intent for this request.",
+					);
+				}
+
 				const result = await executeConfirmedPlan(confirmedPlan);
 
 				return {

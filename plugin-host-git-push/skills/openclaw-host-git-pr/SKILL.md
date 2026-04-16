@@ -1,6 +1,6 @@
 ---
 name: openclaw-host-git-pr
-description: Bounded skill for host-backed PR readiness checks and opening the current branch into `main`. Use when the user wants a chat/runtime PR path that stays separate from push readiness and does not widen into arbitrary gh passthrough.
+description: Bounded PR bridge behind the operator-facing `open_pr` intent. Performs host-backed PR readiness checks and opens the current branch into `main` without widening into arbitrary gh passthrough.
 user-invocable: true
 command-dispatch: tool
 command-tool: git_pr_bridge_action
@@ -13,9 +13,14 @@ Use this skill only for the bounded PR workflow.
 
 ## Supported intents
 
-1. `/git-pr ready`
-2. `/git-pr create`
-3. `открой pr из текущей ветки в main`
+Canonical operator intent:
+- `open_pr`
+
+Typical utterance examples:
+- RU: `сделай PR`
+- EN: `make a PR`
+- EN: `open a PR`
+- internal/runtime: normalized `open_pr` routing
 
 ## Required behavior
 

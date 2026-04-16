@@ -1,6 +1,6 @@
 ---
 name: openclaw-host-git-push
-description: Bounded skill for `/git-push current-branch` style behavior. Use when the user wants to push the current branch through the validated host-side Plan A path. Must run capability preflight first, must not write a push job when push readiness is blocked, and must keep push-via-SSH-agent separate from PR-via-gh state.
+description: Bounded push bridge used by the operator-facing `send_to_git` flow. Pushes the current branch through the validated host-side Plan A path after capability preflight, while keeping push-via-SSH-agent separate from PR-via-gh state.
 user-invocable: true
 command-dispatch: tool
 command-tool: git_push_bridge_action
@@ -13,9 +13,17 @@ Use this skill only for the bounded `push current branch` workflow.
 
 ## Supported intents
 
-1. `/git-push current-branch`
-2. `push current branch`
-3. `пушни текущую ветку`
+Canonical operator intent context:
+- `send_to_git`
+
+Typical utterance examples that may route here after planning and execute:
+- RU: `отправь в гит`
+- RU: `запушь`
+- RU: `отправь изменения`
+- EN: `send to git`
+- EN: `push it`
+- EN: `ship to git`
+- internal/runtime: `push current branch`
 
 ## Required behavior
 

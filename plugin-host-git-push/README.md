@@ -18,6 +18,11 @@ Stable contract:
 - assert PR readiness
 - create a PR from the current branch to `main`
 
+Status:
+- validated as a separate optional bounded bridge
+- not part of the main public branch + commit baseline
+- do not describe this package as if runtime-surface exposure is already universal or default
+
 Note:
 - `BRIDGE_SURFACE.md` is a repo-local contract doc for this package source tree
 - it is not currently shipped as part of the packaged file list

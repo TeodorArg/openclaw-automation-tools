@@ -11,6 +11,7 @@ import {
 	resolveTargetRepo,
 	waitForResult,
 } from "./git-push-bridge-tool.js";
+import { resolveWorkflowIntent } from "./intent-routing.js";
 
 const DEFAULT_SPOOL_ROOT = "/home/node/.openclaw/host-jobs/git";
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000;
@@ -149,11 +150,25 @@ export function createGitPrBridgeTool(overrides: Partial<PrBridgeDeps> = {}) {
 				);
 			}
 
+			const intent = resolveWorkflowIntent({
+				commandName: params.commandName,
+				command: params.command,
+			});
+
+			if (intent !== "open_pr") {
+				throw new Error(
+					"git_pr_bridge_action accepts only the canonical open_pr intent or its supported aliases.",
+				);
+			}
+
 			const targetRepo = deps.resolveTargetRepo();
 			const capabilities = await deps.readCapabilities(targetRepo);
 
 			if (params.action === "assert-pr-ready") {
-				return toToolText(buildReadinessResponse(capabilities));
+				return toToolText({
+					...buildReadinessResponse(capabilities),
+					intent,
+				});
 			}
 
 			if (!capabilities.pr.ready) {
@@ -181,6 +196,7 @@ export function createGitPrBridgeTool(overrides: Partial<PrBridgeDeps> = {}) {
 			return toToolText({
 				ok: result.status === "done",
 				action: params.action,
+				intent,
 				jobId,
 				jobPath,
 				repo: repoState,
