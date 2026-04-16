@@ -110,7 +110,8 @@ Keep it separate from the main branch + commit package above.
 Current status split:
 - validated main baseline: branch + commit only
 - validated optional bridge: host-backed push/PR lane
-- not validated as public baseline on this runtime surface: container-local finish-path exposure
+- not an operating lane in this setup: container-local finish-path exposure
+- do not authenticate git or GitHub in the runtime/container for this finish path
 
 ## Verification baseline
 

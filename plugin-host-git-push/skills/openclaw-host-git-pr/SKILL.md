@@ -38,3 +38,4 @@ The tool surface is intentionally narrow:
 - create a PR from the current branch into `main`
 
 The runtime path must stay bounded to capability preflight plus typed host-jobs spool payloads.
+Do not rely on runtime-local `gh` auth, runtime-local GitHub auth, or container-local PR creation for this workflow.

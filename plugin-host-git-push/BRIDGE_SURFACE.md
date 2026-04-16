@@ -40,6 +40,7 @@ Status framing:
 - this bridge is already validated on the host-backed lane
 - it remains separate from the main public branch + commit baseline
 - do not imply container-local runtime exposure is already solved unless a live check confirms that specific surface
+- do not authenticate git or GitHub in the runtime/container for this bridge, all push/PR work stays host-backed only
 
 Anything outside that contract should be treated as out of scope for this bridge rather than silently widening behavior.
 

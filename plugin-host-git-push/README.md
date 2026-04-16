@@ -22,6 +22,7 @@ Status:
 - validated as a separate optional bounded bridge
 - not part of the main public branch + commit baseline
 - do not describe this package as if runtime-surface exposure is already universal or default
+- do not authenticate git or GitHub in the runtime/container for this package, all push/PR work stays host-backed only
 
 Note:
 - `BRIDGE_SURFACE.md` is a repo-local contract doc for this package source tree

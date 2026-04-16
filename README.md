@@ -42,8 +42,13 @@ How the repo maps those intents:
 Current status split:
 - validated baseline: branch + commit under `send_to_git`
 - validated optional bridge: host-backed grouping -> branches -> push -> PR into `main`
-- non-baseline on this surface: runtime-local slash-command/container finish path for push/PR
+- not an operating lane in this setup: runtime-local slash-command/container finish path for push/PR
 - remaining manual GitHub step after the validated host-backed lane: PR approval/review confirmation
+
+Hard rule for this setup:
+- do not authenticate git or GitHub in the runtime/container
+- do not treat runtime-local `gh`, runtime-local SSH, or runtime-local PR creation as the operating path
+- all push, PR, and remote GitHub work goes through the host-backed lane
 
 Internal runtime safety remains the same:
 - plan -> confirm -> execute stays explicit inside the implementation
