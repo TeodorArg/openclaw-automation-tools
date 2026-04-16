@@ -170,6 +170,7 @@ Non-source conclusions:
 
 Resulting repo decision:
 - in this repo, this unit is modeled as companion folder `host-git-lane/`, not as a standalone publishable plugin package, unless new manifests/source roots are found later.
+- local repo materialization for this unit now exists at [host-git-lane](/Users/svarnoy85/teodorArg/openclaw-git-workflow/host-git-lane).
 
 Exact target file set:
 - `host-git-lane/README.md`
