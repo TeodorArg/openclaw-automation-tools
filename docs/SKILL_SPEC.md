@@ -2,84 +2,129 @@
 
 ## Purpose
 
-The main workflow skill should implement a bounded git workflow, not generic git command passthrough.
+The skill must implement a real operator-facing git workflow rather than exposing low-level generic git commands.
 
-## Supported user intents
+## User-facing workflow
 
-The operator-facing workflow supports exactly these canonical intents:
+The skill should support these workflow intents:
 
-1. `send_to_git`
-2. `open_pr`
-
-Human wording is not the canon.
-The same intent may arrive through RU, EN, or future localized utterances.
-Examples:
-- `отправь в гит`
-- `запушь`
-- `отправь изменения`
-- `send to git`
-- `push it`
-- `ship to git`
-- `сделай PR`
-- `make a PR`
-- `open a PR`
+1. `разложи по git-группам`
+2. `разложи по git-группам с ветками`
+3. `выполни git-группы с ветками`
 
 ## Required behavior
 
-### `send_to_git`
-Operator-facing send flow:
-- inspect repo state
-- group changed files
-- propose canonical branches and commits
-- preserve the internal `plan -> confirm -> execute` contract
-- execute bounded branch + commit steps only from a confirmed structured payload
-- keep push as a separate optional host-backed bridge step, not part of the main public branch + commit baseline
+### 1. `разложи по git-группам`
 
-### `open_pr`
-Operator-facing PR flow:
-- run PR readiness checks through the separate bounded bridge
-- open the current branch into `main`
-- keep base/head behavior bounded and explicit
-- do not widen into arbitrary `gh` passthrough
+Plan only.
 
-## What the workflow must preserve
+The skill should:
+- inspect the repo state and changed files
+- group changes into logical git groups
+- propose commit boundaries
+- propose commit titles and bodies using the canonical repo guidance
+- not create branches
+- not create commits
+- not push
 
-The workflow must preserve:
-- canonical intent ids, independent of user language
-- branch naming rules
-- canonical commit title/body rules
-- the separation between plan and execute inside runtime execution
-- the boundary between the main branch + commit package and the retained push/PR bridge
+### 2. `разложи по git-группам с ветками`
 
-## Architecture intent
+Plan only, but branch-aware.
 
-Preferred architecture:
-- user-invocable skill
-- deterministic tool dispatch
-- bounded runtime actions
-- no arbitrary shell proxy
+The skill should:
+- do everything from the plan-only mode
+- additionally propose branch names using canonical branch naming rules
+- provide exact command sequences for later execution
+- still not execute branch creation, commit, push, or PR creation
 
-## Non-goals
+### 3. `выполни git-группы с ветками`
 
-The main workflow should not include:
+Execution mode.
+
+The skill should:
+- use the already-prepared git grouping logic
+- run only after an explicit confirmation step
+- execute against a confirmed internal plan format
+- create the planned branches
+- stage the intended file groups
+- create commits using the canonical commit format
+- not push in v1
+- never treat PR creation into `main` as implicit
+
+## What the skill must know
+
+The skill must encode and/or read:
+- the canonical branch naming format
+- the canonical commit title and body format
+- the rule that PR creation into `main` is a separate explicit step
+- the distinction between plan-only and execute modes
+- the distinction between planning-only and execute-capable runtime paths
+
+## Architectural intent
+
+The preferred architecture is:
+- user-invocable skill command(s)
+- skill command dispatches into tool execution when deterministic behavior is needed
+- tool execution routes into bounded git runtime actions
+- no arbitrary shell proxy exposed to user input
+
+This follows OpenClaw docs that allow skills to be user-invocable slash commands and optionally declare `command-dispatch: tool`, which routes the slash command directly into the tool pipeline.
+
+## Non-goals for v1
+
+The first version should not include:
 - arbitrary `git <anything>` execution
 - arbitrary shell execution
-- force-push or destructive recovery flows
-- arbitrary PR base/head overrides
-- designs that depend on always-on helper processes
+- push inside `выполни git-группы с ветками`
+- force push
+- rebase flows
+- reset or destructive recovery flows
+- branch deletion
+- PR creation via `gh`
+- any design that depends on an always-on macOS helper app/node in autoload/bin style
 
 ## Security constraints
 
 The implementation must:
-- validate branch names
-- validate confirmed-plan structure
+- validate branch names and commit inputs
 - keep bounded actions explicit
 - avoid generic shell passthrough
+- keep SSH-agent and Docker trust boundaries explicit
+- avoid hidden background helper processes on the Mac
 
-## Retained separate bridge
+## External references to respect
 
-The separate `plugin-host-git-push/` subtree provides the bounded host-backed finish path for push and PR. It stays separate at the package/runtime level even when the operator sees only the higher-level `send_to_git` and `open_pr` intents.
-Current status is explicit:
-- validated public baseline: branch + commit flow
-- validated optional bridge: host-backed push/PR lane
-- non-baseline on the current runtime surface: direct container/slash finish path
+The implementation should stay aligned with:
+- OpenClaw skills docs
+- OpenClaw slash-commands docs
+- the active target repo path at runtime
+- OpenClaw plugin install behavior for local path installs
+
+## Fixed v1 execution decisions
+
+- `выполни git-группы с ветками` does not include push
+- execution model for v1 is `plan -> confirm -> execute`
+- the current first slice uses bounded local branch + commit helpers inside the target repo
+- runtime should target `OPENCLAW_GIT_WORKFLOW_REPO`, then `OPENCLAW_PROJECT_DIR`, then `/home/node/project`
+- one-shot execute is out of scope for v1
+- push is a separate later step
+- PR creation is an even later separate step
+
+## Fixed product decisions after specification review
+
+- plan-only workflow may work without a plugin
+- execute is expected to use a minimal plugin/tool layer
+- execute must depend on a confirmed internal plan format
+- execute must not be reconstructed from free-form user text alone
+- prefer several narrow scripts over one large dispatcher script
+
+## Current implementation layer now in repo
+
+The current implementation layer includes:
+- `skills/openclaw-git-workflow/SKILL.md`
+- `docs/CONFIRMED_PLAN_FORMAT.md`
+- `plugin/EXECUTE_SURFACE.md`
+- the standalone plugin package under `plugin/`
+- bounded branch/commit helper scripts under `scripts/`
+
+These files define the bounded UX and runtime contract for planning plus confirmed branch/commit execution.
