@@ -16,10 +16,11 @@ The repo contract is now narrower:
 The main package in this repo remains:
 - `@openclaw/openclaw-git-workflow`
 - bundled workflow skill under `plugin/skills/` and packaged `skills/`
-- bounded branch/commit helpers under `plugin/scripts/` and packaged `scripts/`
+- bounded branch/commit helpers under `plugin/scripts/`
 - bounded branch + commit workflow only behind the operator-facing `send_to_git` intent
 
 This is the main package surface for the repo, while the package is still kept private in-repo.
+The current published package file list does not include the repo-local shell helper scripts.
 
 ## Generated-output rule
 

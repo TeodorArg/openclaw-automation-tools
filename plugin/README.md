@@ -36,7 +36,7 @@ openclaw plugins install -l ./plugin
 - treat current `0.x` releases as pre-1.0 stabilization releases
 - publish only after green local verification plus one clean external install verification pass
 
-Detailed release guidance lives in `../docs/RELEASE_POLICY.md`.
+Release verification currently stays inline in this README because the repo does not keep a separate `docs/RELEASE_POLICY.md`.
 
 ## Verify
 
