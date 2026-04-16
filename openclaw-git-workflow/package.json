@@ -4,13 +4,13 @@
 	"description": "Bounded git workflow plugin for OpenClaw, with bundled skill for planning and confirmed branch+commit execution.",
 	"license": "MIT",
 	"author": "TeodorArg",
-	"homepage": "https://github.com/TeodorArg/openclaw-git-workflow#readme",
+	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
 	"bugs": {
-		"url": "https://github.com/TeodorArg/openclaw-git-workflow/issues"
+		"url": "https://github.com/TeodorArg/openclaw-automation-tools/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/TeodorArg/openclaw-git-workflow.git"
+		"url": "git+https://github.com/TeodorArg/openclaw-automation-tools.git"
 	},
 	"keywords": [
 		"openclaw",
