@@ -1,9 +1,10 @@
 {
 	"id": "openclaw-git-workflow",
 	"name": "OpenClaw Git Workflow",
-	"description": "Minimal bounded tool carrier for git workflow branch and commit execution.",
-	"entry": "./src/index.ts",
+	"description": "Bounded git workflow runtime with bundled skill for planning and confirmed branch+commit execution.",
+	"version": "0.1.0",
 	"skills": ["./skills"],
+	"entry": "./dist/index.js",
 	"configSchema": {
 		"type": "object",
 		"additionalProperties": false,

@@ -1,35 +1,43 @@
 {
 	"name": "@openclaw/openclaw-git-workflow",
 	"version": "0.1.0",
-	"private": true,
-	"description": "Bounded execute plugin for openclaw-git-workflow.",
+	"description": "Bounded git workflow plugin for OpenClaw, with bundled skill for planning and confirmed branch+commit execution.",
+	"license": "MIT",
+	"author": "TeodorArg",
+	"homepage": "https://github.com/TeodorArg/openclaw-git-workflow#readme",
+	"bugs": {
+		"url": "https://github.com/TeodorArg/openclaw-git-workflow/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/TeodorArg/openclaw-git-workflow.git"
+	},
+	"keywords": [
+		"openclaw",
+		"plugin",
+		"git",
+		"workflow",
+		"skill"
+	],
 	"type": "module",
-	"main": "./index.ts",
+	"main": "./dist/index.js",
 	"files": [
-		"index.ts",
-		"api.ts",
+		"dist",
 		"openclaw.plugin.json",
+		"skills",
 		"README.md",
-		"scripts/git-create-branch.sh",
-		"scripts/git-create-commit.sh",
-		"src/index.ts",
-		"src/git-workflow-tool.ts",
-		"src/runtime/intent-routing.ts",
-		"src/runtime/plan-groups.ts",
-		"src/runtime/validate-confirmed-plan.ts",
-		"src/types/openclaw-plugin-sdk.d.ts",
-		"skills/openclaw-git-workflow/SKILL.md"
+		"LICENSE"
 	],
 	"scripts": {
 		"build": "tsc -p tsconfig.build.json",
 		"format": "biome format --write . --files-ignore-unknown=true",
 		"format:check": "biome format --check . --files-ignore-unknown=true",
-		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills scripts --files-ignore-unknown=true",
-		"lint:fix": "biome check --write index.ts api.ts openclaw.plugin.json package.json README.md tsconfig.json tsconfig.build.json src skills scripts --files-ignore-unknown=true",
+		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
+		"lint:fix": "biome check --write index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
 		"check": "pnpm lint && pnpm test && pnpm build",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --passWithNoTests",
-		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz | grep -E 'package/(index.ts|api.ts|openclaw.plugin.json|README.md|scripts/git-create-branch.sh|scripts/git-create-commit.sh|src/index.ts|src/git-workflow-tool.ts|src/runtime/intent-routing.ts|src/runtime/plan-groups.ts|src/runtime/validate-confirmed-plan.ts|src/types/openclaw-plugin-sdk.d.ts|skills/openclaw-git-workflow/SKILL.md)$'"
+		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz | grep -E 'package/(dist/index.js|openclaw.plugin.json|skills/openclaw-git-workflow/SKILL.md|README.md|LICENSE)$'"
 	},
 	"dependencies": {
 		"@sinclair/typebox": "0.34.49"
@@ -40,9 +48,20 @@
 		"typescript": "^5.9.3",
 		"vitest": "^4.1.2"
 	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"openclaw": {
 		"extensions": [
-			"./index.ts"
-		]
+			"./dist/index.js"
+		],
+		"compat": {
+			"pluginApi": ">=2026.3.24-beta.2",
+			"minGatewayVersion": ">=2026.3.24-beta.2"
+		},
+		"build": {
+			"openclawVersion": "2026.3.24-beta.2",
+			"pluginSdkVersion": "2026.3.24-beta.2"
+		}
 	}
 }
