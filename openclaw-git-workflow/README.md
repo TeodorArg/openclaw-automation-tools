@@ -30,7 +30,8 @@ pnpm build
 openclaw plugins install -l ./openclaw-git-workflow
 ```
 
-Node requirement: use Node `20.19.0+` (or `22.12.0+`). Older Node 20 releases can fail locally in `vitest` and `vite/rolldown` on macOS.
+Recommended local dev version: Node `24.13.0` via the repo-root `.nvmrc`.
+Compatibility floor remains defined by `package.json` engines: Node `>=20.19.0 || >=22.12.0`.
 
 ## Release policy
 
