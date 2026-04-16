@@ -2,47 +2,45 @@
 
 ## Purpose
 
-The skill must implement a real operator-facing git workflow rather than exposing low-level generic git commands.
+The workflow must implement a real operator-facing git workflow rather than exposing low-level generic git commands.
 
-## User-facing workflow
+## Canon split
 
-The skill should support these workflow intents:
+Keep two layers explicit and do not blur them:
 
-1. `разложи по git-группам`
-2. `разложи по git-группам с ветками`
-3. `выполни git-группы с ветками`
+1. Product-language workflow phrases
+2. Shipped runtime intent ids and aliases
+
+Current shipped runtime canon:
+- canonical intent id: `send_to_git`
+- current recognized aliases in code: `send_to_git`, `отправь в гит`, `отправь изменения`, `разложи по git-группам`, `разложи по git-группам с ветками`, `выполни git-группы с ветками`, `send to git`
+
+Product-language workflow phrases still describe the intended user journey, but for the current implementation those RU phrases are also part of the shipped alias layer rather than being spec-only wording.
 
 ## Required behavior
 
-### 1. `разложи по git-группам`
+### Planning-only behavior
 
-Plan only.
-
-The skill should:
+The workflow should be able to:
 - inspect the repo state and changed files
 - group changes into logical git groups
 - propose commit boundaries
-- propose commit titles and bodies using the canonical repo guidance
-- not create branches
-- not create commits
-- not push
+- propose commit titles and bodies using canonical repo guidance
+- avoid creating branches or commits in pure planning mode
+- avoid push
 
-### 2. `разложи по git-группам с ветками`
+### Branch-aware planning behavior
 
-Plan only, but branch-aware.
+The workflow should also support a branch-aware planning mode that:
+- does everything from planning mode
+- proposes canonical branch names
+- provides exact command sequences for later execution
+- emits a ready-to-confirm structured payload for execute
+- still does not execute branch creation, commit, push, or PR creation
 
-The skill should:
-- do everything from the plan-only mode
-- additionally propose branch names using canonical branch naming rules
-- provide exact command sequences for later execution
-- still not execute branch creation, commit, push, or PR creation
+### Execution behavior
 
-### 3. `выполни git-группы с ветками`
-
-Execution mode.
-
-The skill should:
-- use the already-prepared git grouping logic
+Execution mode should:
 - run only after an explicit confirmation step
 - execute against a confirmed internal plan format
 - create the planned branches
@@ -51,9 +49,9 @@ The skill should:
 - not push in v1
 - never treat PR creation into `main` as implicit
 
-## What the skill must know
+## What the workflow must know
 
-The skill must encode and/or read:
+The workflow must encode and/or read:
 - the canonical branch naming format
 - the canonical commit title and body format
 - the rule that PR creation into `main` is a separate explicit step
@@ -63,9 +61,10 @@ The skill must encode and/or read:
 ## Architectural intent
 
 The preferred architecture is:
-- user-invocable skill command(s)
-- skill command dispatches into tool execution when deterministic behavior is needed
-- tool execution routes into bounded git runtime actions
+- user-facing workflow language or aliases
+- deterministic intent normalization into a stable runtime intent id
+- tool execution for deterministic behavior
+- bounded git runtime actions only
 - no arbitrary shell proxy exposed to user input
 
 This follows OpenClaw docs that allow skills to be user-invocable slash commands and optionally declare `command-dispatch: tool`, which routes the slash command directly into the tool pipeline.
@@ -75,7 +74,7 @@ This follows OpenClaw docs that allow skills to be user-invocable slash commands
 The first version should not include:
 - arbitrary `git <anything>` execution
 - arbitrary shell execution
-- push inside `выполни git-группы с ветками`
+- push inside bounded execute
 - force push
 - rebase flows
 - reset or destructive recovery flows
@@ -102,11 +101,11 @@ The implementation should stay aligned with:
 
 ## Fixed v1 execution decisions
 
-- `выполни git-группы с ветками` does not include push
+- bounded execute does not include push
 - execution model for v1 is `plan -> confirm -> execute`
 - the current first slice uses bounded local branch + commit helpers inside the target repo
 - runtime should target `OPENCLAW_GIT_WORKFLOW_REPO`, then `OPENCLAW_PROJECT_DIR`, then `/home/node/project`
-- one-shot execute is out of scope for v1
+- one-shot execute from free-form prose is out of scope for v1
 - push is a separate later step
 - PR creation is an even later separate step
 
@@ -121,7 +120,7 @@ The implementation should stay aligned with:
 ## Current implementation layer now in repo
 
 The current implementation layer includes:
-- `skills/openclaw-git-workflow/SKILL.md`
+- `plugin/skills/openclaw-git-workflow/SKILL.md`
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
 - the standalone plugin package under `plugin/`

@@ -11,6 +11,8 @@ The repo contract is now narrower:
 - `plugin/` owns planning plus branch/commit execution behind `send_to_git`
 - push, PR, auth, and remote checks stay outside the runtime/container surface entirely
 
+Specification wording may still reference broader workflow phrasing, but shipped runtime canon must stay anchored to the actual normalized intent and alias set implemented in code. The current runtime alias set already includes the RU planning and execute phrases.
+
 ## Main package reminder
 
 The main package in this repo remains:

@@ -26,15 +26,17 @@ Source tree:
 - current published package file list does not ship the repo-local shell helpers
 
 Operator-facing intent contract:
-- `send_to_git`
+- canonical shipped workflow intent id: `send_to_git`
 
 Human phrasing is an alias layer, not the canon.
-Common examples:
-- RU: `отправь в гит`, `отправь изменения`
+Current recognized examples:
+- RU direct aliases: `отправь в гит`, `отправь изменения`
+- RU workflow aliases: `разложи по git-группам`, `разложи по git-группам с ветками`, `выполни git-группы с ветками`
 - EN: `send to git`
 
 How the repo maps that intent:
-- `send_to_git` is the operator-facing entry for the public branch + commit baseline: repo inspection, git grouping, canonical branch and commit planning, and bounded branch + commit execution
+- `send_to_git` is the current operator-facing entry for the shipped branch + commit baseline: repo inspection, git grouping, canonical branch and commit planning, and bounded branch + commit execution
+- planning and execute phrasing in RU is now also supported as a shipped alias layer, but the canonical runtime intent id still remains `send_to_git`
 
 Current status split:
 - validated baseline: branch + commit under `send_to_git`
@@ -59,7 +61,7 @@ Internal runtime safety remains the same:
 - `plugin/` — main package source and bundled workflow skill
 - `plugin/scripts/` — bounded branch/commit helpers for the main package
 - `docs/CONFIRMED_PLAN_FORMAT.md` — confirmed execute payload contract
-- `docs/SKILL_SPEC.md` — user-facing workflow contract
+- `docs/SKILL_SPEC.md` — product/spec reference for workflow wording and intent expectations
 - `docs/IMPLEMENTATION_SHAPE.md` — current architecture and boundaries
 - `docs/FILE_ROLE_MAP.md` — file responsibility map
 - `docs/REFERENCE_NOTES.md` — narrow runtime-boundary notes
