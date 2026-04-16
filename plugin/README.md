@@ -13,7 +13,7 @@ Why this shape:
 
 So the practical public install model for this project is plugin-first, with the user-facing workflow skill shipped inside the plugin package.
 
-Separate from that public package, this repo also contains the private/internal `plugin-host-git-push/` and `skills/openclaw-host-git-push/` subtree for bounded host-push work. That bridge track is intentionally not part of the main public `openclaw-git-workflow` release surface.
+This package and repo runtime surface are intentionally limited to planning plus confirmed branch + commit execution. Push, PR creation, and remote checks are outside this package contract and must stay outside the runtime/container path.
 
 ## Install
 

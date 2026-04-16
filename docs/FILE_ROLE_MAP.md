@@ -11,8 +11,7 @@ The main package baseline in this repo is the plugin-first workflow package:
 
 This package is the main package surface for the repo, but it is currently kept private in-repo.
 
-The separate `plugin-host-git-push/` subtree is retained in the repo, but it is not part of that main package baseline.
-Simple boundary: `plugin/` owns planning plus branch/commit execution, while `plugin-host-git-push/` owns the separate host-backed push/PR finish path.
+Push, PR, auth, and remote checks are not part of the main package baseline and are not implemented as runtime/plugin surfaces in this repo.
 
 ## Top-level areas
 
@@ -20,7 +19,7 @@ Simple boundary: `plugin/` owns planning plus branch/commit execution, while `pl
 Purpose:
 - explain what the repo is
 - explain the main package shape
-- explain the retained bridge boundary
+- explain the bounded branch+commit-only boundary
 - give a short verify path
 
 ### `docs/CONFIRMED_PLAN_FORMAT.md`
@@ -31,13 +30,13 @@ Purpose:
 ### `docs/SKILL_SPEC.md`
 Purpose:
 - define the canonical operator-facing workflow intents
-- define how those intents map onto bounded internal packages and bridges
+- define how that intent maps onto the bounded internal package surface
 
 ### `docs/IMPLEMENTATION_SHAPE.md`
 Purpose:
 - define how skill, plugin, and scripts fit together
 - record the bounded runtime/tool split
-- keep the bridge boundary explicit
+- keep the branch+commit-only boundary explicit
 
 ### `docs/FILE_ROLE_MAP.md`
 Purpose:
@@ -47,7 +46,7 @@ Purpose:
 ### `docs/REFERENCE_NOTES.md`
 Purpose:
 - keep only narrow reference notes that still matter
-- record why `plugin-host-git-push/` stays retained but separate
+- record the narrowed runtime contract and related reminders
 
 ### `plugin/`
 Purpose:
@@ -73,26 +72,11 @@ Current scripts:
 - `plugin/scripts/git-create-branch.sh`
 - `plugin/scripts/git-create-commit.sh`
 
-### `plugin-host-git-push/`
-Purpose:
-- separate bounded host-backed push/PR bridge
-- retained in-repo finish path for push and PR
-- not part of the main package contract above
-
-Key files:
-- `plugin-host-git-push/package.json`
-- `plugin-host-git-push/openclaw.plugin.json`
-- `plugin-host-git-push/README.md`
-- `plugin-host-git-push/BRIDGE_SURFACE.md`
-- `plugin-host-git-push/skills/*`
-- `plugin-host-git-push/src/*`
-
 ## Rules
 
 - Keep the main branch + commit package narrow.
 - Keep canonical intent ids language-agnostic, with utterances treated as aliases.
-- Keep push and PR in the retained bridge layer, not inside the branch + commit package.
-- Keep `plugin-host-git-push/` separate when it remains in the repo.
-- Keep `plugin/EXECUTE_SURFACE.md` and `plugin-host-git-push/BRIDGE_SURFACE.md` aligned with the real package and runtime surface.
+- Keep push, PR, auth, and remote checks outside the runtime/plugin surface for this repo.
+- Keep `plugin/EXECUTE_SURFACE.md` aligned with the real package and runtime surface.
 - Do not widen any user-facing surface into arbitrary git or shell passthrough.
 - If a bug is first found in generated output, fix the canonical source rather than normalizing the artifact patch.

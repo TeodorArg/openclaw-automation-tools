@@ -3,16 +3,13 @@
 This file should stay narrow.
 Keep only notes that still matter to the current repo shape.
 
-## Retained bridge decision
+## Runtime boundary decision
 
-Keep `plugin-host-git-push/` in the repo.
+Do not keep any runtime/plugin bridge for push or PR in this repo.
 
-Do not treat it as part of the main branch+commit package baseline.
-Simple boundary: `plugin/` owns planning plus branch/commit execution behind `send_to_git`, while `plugin-host-git-push/` owns the separate host-backed push/PR finish path behind the higher-level operator intents.
-Treat it as a separate internal-explicit subtree because it carries the bounded host-backed finish path for:
-- push current branch
-- PR readiness checks
-- create PR to `main`
+The repo contract is now narrower:
+- `plugin/` owns planning plus branch/commit execution behind `send_to_git`
+- push, PR, auth, and remote checks stay outside the runtime/container surface entirely
 
 ## Main package reminder
 

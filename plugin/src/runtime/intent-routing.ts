@@ -1,20 +1,10 @@
-export type WorkflowIntent = "send_to_git" | "open_pr";
+export type WorkflowIntent = "send_to_git";
 
 const SEND_TO_GIT_ALIASES = new Set([
 	"send_to_git",
 	"отправь в гит",
-	"запушь",
 	"отправь изменения",
 	"send to git",
-	"push it",
-	"ship to git",
-]);
-
-const OPEN_PR_ALIASES = new Set([
-	"open_pr",
-	"сделай pr",
-	"make a pr",
-	"open a pr",
 ]);
 
 function normalizeUtterance(raw: string): string {
@@ -31,10 +21,6 @@ export function normalizeWorkflowIntent(raw: string): WorkflowIntent | null {
 
 	if (SEND_TO_GIT_ALIASES.has(normalized)) {
 		return "send_to_git";
-	}
-
-	if (OPEN_PR_ALIASES.has(normalized)) {
-		return "open_pr";
 	}
 
 	return null;

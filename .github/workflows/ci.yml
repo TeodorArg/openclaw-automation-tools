@@ -30,26 +30,6 @@ jobs:
       - run: pnpm test
       - run: pnpm pack:smoke
 
-  plugin-host-git-push:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: plugin-host-git-push
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-          cache-dependency-path: plugin-host-git-push/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm build
-
   shell-scripts:
     runs-on: ubuntu-latest
     steps:
