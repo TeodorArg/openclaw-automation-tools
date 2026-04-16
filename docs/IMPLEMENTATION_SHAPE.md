@@ -10,10 +10,12 @@ The repo is built around three layers:
 
 ## Main workflow
 
-Operator-facing canonical intents:
+Shipped runtime canonical intent id:
 - `send_to_git`
 
-Human wording is an alias layer over that intent id, so RU, EN, and future localized phrasings can map to the same workflow.
+Human wording is an alias layer over that intent id, so RU, EN, and future localized phrasings can map to the same workflow when alias support exists in code.
+The current shipped alias set includes both direct send-style wording and the RU planning/execute workflow phrases.
+Shipped canon for runtime behavior must follow the actual normalized intent set implemented in code.
 
 Internal execution model under `send_to_git` remains:
 - plan

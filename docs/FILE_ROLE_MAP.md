@@ -29,8 +29,9 @@ Purpose:
 
 ### `docs/SKILL_SPEC.md`
 Purpose:
-- define the canonical operator-facing workflow intents
-- define how that intent maps onto the bounded internal package surface
+- define the product/spec-level workflow wording and intent expectations
+- keep the split explicit between specification phrases and shipped runtime intent ids
+- define how the workflow maps onto the bounded internal package surface
 
 ### `docs/IMPLEMENTATION_SHAPE.md`
 Purpose:
