@@ -240,5 +240,5 @@ Official OpenClaw docs confirmed via Context7:
 - `docs/gateway/troubleshooting.md`
 
 Repo-local canon:
-- [host-git-lane/README.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/host-git-lane/README.md)
-- [host-git-lane/HOST_GIT_BOUNDARY.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/host-git-lane/HOST_GIT_BOUNDARY.md)
+- [host-git-lane/README.md](../host-git-lane/README.md)
+- [host-git-lane/HOST_GIT_BOUNDARY.md](../host-git-lane/HOST_GIT_BOUNDARY.md)

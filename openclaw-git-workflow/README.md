@@ -41,7 +41,7 @@ Compatibility floor remains defined by `package.json` engines: Node `>=20.19.0 |
 - publish only after green local verification plus one clean external install verification pass
 
 For first upload and publish-host checks, see:
-- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](../docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
 
 ## Verify
 

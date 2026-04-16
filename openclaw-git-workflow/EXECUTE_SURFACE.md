@@ -1,10 +1,10 @@
 # Execute Surface
 
-Repo-local contract doc for the main workflow package source tree.
-This file documents the current bounded runtime surface used by `openclaw-git-workflow/`.
-Repo paths in this file use the source-tree frame, while packaged plugin paths use package-root paths like `skills/`.
-The packaged plugin file list currently ships `dist`, `openclaw.plugin.json`, `skills`, `README.md`, and `LICENSE`.
-Repo-local shell helpers under `openclaw-git-workflow/scripts/` are not shipped in the package tarball and remain source-tree implementation details.
+Contract doc for the bounded runtime surface of `openclaw-git-workflow`.
+Repo paths in this file use repo-relative source paths.
+Packaged plugin paths use package-root paths like `skills/`.
+The packaged plugin currently ships `dist`, `openclaw.plugin.json`, `skills`, `README.md`, and `LICENSE`.
+Repo-local shell helpers under `openclaw-git-workflow/scripts/` are source-tree implementation details and are not part of the published tarball.
 
 ## Goal
 

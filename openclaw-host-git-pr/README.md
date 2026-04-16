@@ -47,7 +47,7 @@ It does not bundle or imply a local bridge runtime inside this package.
 ## Canonical Source
 
 Current strongest source-of-truth for this package content:
-- local installed skill copy: `/Users/svarnoy85/OpenClaw-config/extensions/openclaw-host-git-push/skills/openclaw-host-git-pr/SKILL.md`
+- installed skill copy under `<OPENCLAW_CONFIG_ROOT>/extensions/openclaw-host-git-push/skills/openclaw-host-git-pr/SKILL.md`
 
 Allowed historical rewrite input:
 - git history `plugin-host-git-push/skills/openclaw-host-git-pr/SKILL.md`
@@ -56,7 +56,7 @@ Allowed historical rewrite input:
 
 - slug: `openclaw-host-git-pr`
 - display name: `OpenClaw Host Git PR`
-- owner: `TeodorArg`
+- owner: `<clawhub-owner>`
 - version: `0.1.0`
 - tags: `git`, `github`, `pr`, `host`
 - license: `MIT-0`
@@ -64,7 +64,7 @@ Allowed historical rewrite input:
 Publish command baseline:
 
 ```bash
-clawhub skill publish ./openclaw-host-git-pr --slug openclaw-host-git-pr --name "OpenClaw Host Git PR" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags git,github,pr,host
+clawhub skill publish ./openclaw-host-git-pr --slug openclaw-host-git-pr --name "OpenClaw Host Git PR" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags git,github,pr,host
 ```
 
 Current publish-host note:
