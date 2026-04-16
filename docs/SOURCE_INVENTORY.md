@@ -95,6 +95,7 @@ Notes:
 - current local filesystem has no standalone live source folder for `openclaw-host-git-pr`.
 - until extracted, use the installed skill plus historical git source as the canonical rewrite input.
 - package contents should be limited to skill instructions, publish metadata, and README/LICENSE; no local runtime code is currently justified.
+- local repo materialization for this unit now exists at [openclaw-host-git-pr](/Users/svarnoy85/teodorArg/openclaw-git-workflow/openclaw-host-git-pr).
 
 Exact target file set:
 - `openclaw-host-git-pr/SKILL.md`
