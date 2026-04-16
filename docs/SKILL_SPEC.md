@@ -125,6 +125,7 @@ The current implementation layer includes:
 - `docs/CONFIRMED_PLAN_FORMAT.md`
 - `plugin/EXECUTE_SURFACE.md`
 - the standalone plugin package under `plugin/`
-- bounded branch/commit helper scripts under `scripts/`
+- bounded branch/commit helper scripts under `plugin/scripts/`
 
 These files define the bounded UX and runtime contract for planning plus confirmed branch/commit execution.
+The current published plugin artifact ships the bundled skill, but not the repo-local shell helpers.

@@ -2,7 +2,8 @@
 
 Repo-local contract doc for the main workflow package source tree.
 This file documents the current bounded runtime surface used by `plugin/`.
-Repo paths in this file use the source-tree frame, while packaged plugin paths use package-root paths like `scripts/` and `skills/`.
+Repo paths in this file use the source-tree frame, while packaged plugin paths use package-root paths like `skills/`.
+The current published plugin file list does not ship the repo-local shell helpers under `plugin/scripts/`.
 It is not currently shipped in the packaged file list.
 
 ## Goal

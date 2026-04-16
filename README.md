@@ -23,7 +23,7 @@ Source tree:
 - bundled skill source lives under `plugin/skills/openclaw-git-workflow/`
 - repo-source helper scripts live under `plugin/scripts/`
 - packaged skill path is `skills/openclaw-git-workflow/SKILL.md`
-- packaged helper path is `scripts/`
+- current published package file list does not ship the repo-local shell helpers
 
 Operator-facing intent contract:
 - `send_to_git`
