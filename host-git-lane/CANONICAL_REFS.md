@@ -18,6 +18,8 @@ This file records the upstream canonical docs used to define the companion host 
 - `docs/SOURCE_INVENTORY.md`
 - `docs/REPO_REORG_PLAN.md`
 - `docs/MIGRATION_TABLES.md`
+- `docs/PUBLISH_READINESS.md`
+- `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`
 
 ## Interpretation Rule
 

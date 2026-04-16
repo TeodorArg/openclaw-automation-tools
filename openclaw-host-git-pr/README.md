@@ -67,6 +67,11 @@ Publish command baseline:
 clawhub skill publish ./openclaw-host-git-pr --slug openclaw-host-git-pr --name "OpenClaw Host Git PR" --owner TeodorArg --version 0.1.0 --changelog "Initial standalone package release" --tags git,github,pr,host
 ```
 
+Current publish-host note:
+- official docs currently show `clawhub skill publish`
+- the locally observed `clawhub v0.9.0` exposes top-level `clawhub publish`
+- verify the installed CLI syntax before the first real upload using [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+
 ## Package Contents
 
 - `SKILL.md`

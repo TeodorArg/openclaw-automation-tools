@@ -41,6 +41,9 @@ Node requirement: use Node `20.19.0+` (or `22.12.0+`). Older Node 20 releases ca
 
 Release verification currently stays inline in this README because the repo does not keep a separate `docs/RELEASE_POLICY.md`.
 
+For the first ClawHub upload, also verify the current CLI syntax and source-provenance flags against:
+- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+
 ## Verify
 
 ```bash

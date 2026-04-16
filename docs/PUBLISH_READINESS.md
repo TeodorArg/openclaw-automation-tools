@@ -5,13 +5,15 @@ Status: post-reorg readiness baseline
 
 This document tracks whether each classified unit is only materialized or actually ready for publication.
 
+See [CLAWHUB_PUBLISH_PREFLIGHT.md](/Users/svarnoy85/teodorArg/openclaw-git-workflow/docs/CLAWHUB_PUBLISH_PREFLIGHT.md) for the exact first-upload procedure and current CLI compatibility notes.
+
 ## Unit Status
 
 | Unit | Type | Structural shape | Local verification | Publication metadata | Publish status | Current blocker |
 | --- | --- | --- | --- | --- | --- | --- |
 | `openclaw-git-workflow/` | plugin + bundled skill | ready | ready | mostly ready | blocked | first external release pass still not recorded |
-| `memory-hygiene/` | skill-only | ready | ready | ready | blocked | first ClawHub publish/dry-run not yet recorded |
-| `source-of-truth-fix/` | skill-only | ready | ready | ready | blocked | first ClawHub publish/dry-run not yet recorded |
+| `memory-hygiene/` | skill-only | ready | ready | ready | blocked | first ClawHub publish not yet recorded |
+| `source-of-truth-fix/` | skill-only | ready | ready | ready | blocked | first ClawHub publish not yet recorded |
 | `openclaw-host-git-pr/` | skill-only | ready | ready | ready | blocked | host-backed runtime dependency stays external and not yet release-validated |
 | `host-git-lane/` | companion folder | ready | ready | n/a | not publishable | companion docs only by design |
 
@@ -49,6 +51,7 @@ Minimum expected fields:
 Current implication:
 - `host-git-lane/` is structurally ready as documentation
 - the underlying product/runtime work is still outside this repo and remains an external implementation dependency
+- this unit must be explicitly excluded from any ClawHub publish batch
 
 ## Per-Unit Publish Baseline
 
@@ -103,9 +106,12 @@ clawhub skill publish ./openclaw-host-git-pr --slug openclaw-host-git-pr --name 
 - source repo: `TeodorArg/openclaw-git-workflow`
 - source ref: `main`
 - release blocker: external install verification is still required before the first public release is treated as ready
+- local CLI blocker: observed `clawhub v0.9.0` does not expose `package publish --dry-run`
 
 ## Sources Used
 
 - official GitHub Actions docs via Context7 for matrix job structure
 - official OpenClaw docs for plugin manifest/package shape:
   - https://docs.openclaw.ai/plugins
+- official OpenClaw docs for ClawHub commands:
+  - https://docs.openclaw.ai/tools/clawhub

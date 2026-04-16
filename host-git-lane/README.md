@@ -58,3 +58,7 @@ Operational expectation:
 - the UI should not fall back to generic `unknown` labels for normal host/node sessions once the handshake succeeds
 - if a disconnected entry still appears in history, the metadata should remain inspectable after disconnect
 - this is a product-level host-lane requirement, not a claim that this repo ships the runtime implementation
+
+Release-policy implication:
+- `host-git-lane/` never enters a ClawHub publish batch
+- its metadata exists for operator clarity in gateway/UI and host execution debugging, not for registry publication
