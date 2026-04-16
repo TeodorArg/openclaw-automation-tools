@@ -81,7 +81,7 @@ Target folder:
 
 | Current path | Target path | Action | Reason / source-of-truth note |
 | --- | --- | --- | --- |
-| `/home/node/.openclaw/skills/source-of-truth-fix/SKILL.md` | `source-of-truth-fix/SKILL.md` | `copy` | strongest live canonical skill source |
+| `/Users/svarnoy85/OpenClaw-config/skills/source-of-truth-fix/SKILL.md` | `source-of-truth-fix/SKILL.md` | `copy` | strongest live canonical skill source |
 | none | `source-of-truth-fix/README.md` | `rewrite` | package contract and usage boundaries |
 | none | `source-of-truth-fix/LICENSE` | `generate` | skill publication requires package-local `MIT-0` |
 | `/Users/svarnoy85/teodorArg/OpenClaw/templates/workspace-context/AGENTS.md` | none | `link` | contextual reference only |

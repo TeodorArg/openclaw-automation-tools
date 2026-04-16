@@ -45,7 +45,7 @@ Planned top-level units after the reorg:
 | --- | --- | --- | --- |
 | `openclaw-git-workflow/` | plugin + bundled skill package | moved in Slice C on the current branch | current live package in this repo |
 | `memory-hygiene/` | skill-only package | in progress on current branch | workspace skill copy and local package folder |
-| `source-of-truth-fix/` | skill-only package | planned | shared `~/.openclaw` skill copy |
+| `source-of-truth-fix/` | skill-only package | in progress on current branch | shared config skill copy and local package folder |
 | `openclaw-host-git-pr/` | skill-only package | package contract now documented; implementation still pending | installed skill + historical git source |
 | `host-git-lane/` | companion folder | exact local file set now documented; implementation still pending | `OpenClaw` docs/config canon |
 
