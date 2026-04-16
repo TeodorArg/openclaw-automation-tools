@@ -67,8 +67,8 @@ describe("git_pr_bridge_action", () => {
 
 		await tool.execute("call-target", {
 			action: "create-pr-to-main",
-			command: "/git-pr create",
-			commandName: "/git-pr",
+			command: "open_pr",
+			commandName: "open_pr",
 			skillName: "openclaw-host-git-pr",
 			title: "Bridge PR",
 			body: "Summary",
@@ -81,6 +81,74 @@ describe("git_pr_bridge_action", () => {
 			"/home/node/repos/openclaw-git-workflow",
 		);
 	});
+	it("accepts supported human alias routing for open_pr", async () => {
+		const tool = createGitPrBridgeTool({
+			readCapabilities: async () => readyCapabilities,
+			collectRepoState: async () => ({
+				cwd: "/repo",
+				branch: "feat/x",
+				head: "abc123",
+				remote: "origin",
+			}),
+			writeJob: async () => ({
+				jobId: "job-readiness",
+				jobPath: "/spool/queue/job-readiness-create-pr-to-main.json",
+			}),
+			waitForResult: async () => ({
+				jobId: "job-readiness",
+				status: "done",
+				ok: true,
+			}),
+			resolveTargetRepo: () => "/repo",
+		});
+
+		const result = await tool.execute("call-readiness", {
+			action: "assert-pr-ready",
+			command: "make a PR",
+			commandName: "",
+			skillName: "openclaw-host-git-pr",
+		});
+		const payload = parseToolText(result);
+
+		expect(payload).toMatchObject({
+			ok: true,
+			action: "assert-pr-ready",
+			intent: "open_pr",
+		});
+	});
+
+	it("rejects unsupported pr intent text", async () => {
+		const tool = createGitPrBridgeTool({
+			readCapabilities: async () => readyCapabilities,
+			collectRepoState: async () => ({
+				cwd: "/repo",
+				branch: "feat/x",
+				head: "abc123",
+				remote: "origin",
+			}),
+			writeJob: async () => ({
+				jobId: "job-ignored",
+				jobPath: "/spool/queue/job-ignored-create-pr-to-main.json",
+			}),
+			waitForResult: async () => ({
+				jobId: "job-ignored",
+				status: "done",
+			}),
+			resolveTargetRepo: () => "/repo",
+		});
+
+		await expect(
+			tool.execute("call-bad-alias", {
+				action: "assert-pr-ready",
+				command: "push it",
+				commandName: "",
+				skillName: "openclaw-host-git-pr",
+			}),
+		).rejects.toThrow(
+			"git_pr_bridge_action accepts only the canonical open_pr intent or its supported aliases.",
+		);
+	});
+
 	it("returns pr readiness without writing a job", async () => {
 		const writeJob = vi.fn();
 		const tool = createGitPrBridgeTool({
@@ -114,7 +182,7 @@ describe("git_pr_bridge_action", () => {
 		const result = await tool.execute("call-1", {
 			action: "assert-pr-ready",
 			command: "/git-pr ready",
-			commandName: "/git-pr",
+			commandName: "open_pr",
 			skillName: "openclaw-host-git-pr",
 		});
 		const payload = parseToolText(result);
@@ -155,8 +223,8 @@ describe("git_pr_bridge_action", () => {
 
 		const result = await tool.execute("call-2", {
 			action: "create-pr-to-main",
-			command: "/git-pr create",
-			commandName: "/git-pr",
+			command: "open_pr",
+			commandName: "open_pr",
 			skillName: "openclaw-host-git-pr",
 			title: "Bridge PR",
 			body: "Summary\n\n- item",
@@ -202,8 +270,8 @@ describe("git_pr_bridge_action", () => {
 
 		const result = await tool.execute("call-3", {
 			action: "create-pr-to-main",
-			command: "/git-pr create",
-			commandName: "/git-pr",
+			command: "open_pr",
+			commandName: "open_pr",
 			skillName: "openclaw-host-git-pr",
 			title: "Bridge PR",
 			body: "Summary\n\n- item",
@@ -259,8 +327,8 @@ describe("git_pr_bridge_action", () => {
 
 		const result = await tool.execute("call-4", {
 			action: "create-pr-to-main",
-			command: "/git-pr create",
-			commandName: "/git-pr",
+			command: "open_pr",
+			commandName: "open_pr",
 			skillName: "openclaw-host-git-pr",
 			title: "Bridge PR",
 			body: "Summary\n\n- item",

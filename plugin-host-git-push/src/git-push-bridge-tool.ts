@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Type } from "@sinclair/typebox";
+import { resolveWorkflowIntent } from "./intent-routing.js";
 
 const execFileAsync = promisify(execFile);
 const DEFAULT_CORE_REPO = "/home/node/project";
@@ -269,12 +270,23 @@ export function createGitPushBridgeTool(overrides: Partial<BridgeDeps> = {}) {
 	return {
 		name: "git_push_bridge_action",
 		description:
-			"Bounded bridge for /git-push current-branch using capability preflight and host-jobs spool.",
+			"Bounded bridge for the send_to_git push finish step using capability preflight and host-jobs spool.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			if (params.skillName !== "openclaw-host-git-push") {
 				throw new Error(
 					"git_push_bridge_action only accepts requests from skill openclaw-host-git-push.",
+				);
+			}
+
+			const intent = resolveWorkflowIntent({
+				commandName: params.commandName,
+				command: params.command,
+			});
+
+			if (intent !== "send_to_git") {
+				throw new Error(
+					"git_push_bridge_action accepts only the canonical send_to_git intent or its supported aliases.",
 				);
 			}
 
@@ -285,6 +297,7 @@ export function createGitPushBridgeTool(overrides: Partial<BridgeDeps> = {}) {
 				return toToolText({
 					ok: true,
 					action: params.action,
+					intent,
 					capabilities,
 				});
 			}
@@ -303,6 +316,7 @@ export function createGitPushBridgeTool(overrides: Partial<BridgeDeps> = {}) {
 			return toToolText({
 				ok: result.status === "done",
 				action: params.action,
+				intent,
 				jobId,
 				jobPath,
 				repo: repoState,

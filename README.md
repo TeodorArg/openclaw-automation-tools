@@ -25,25 +25,32 @@ Source tree:
 - packaged skill path is `skills/openclaw-git-workflow/SKILL.md`
 - packaged helper path is `scripts/`
 
-Main workflow contract:
-- `разложи по git-группам`
-- `разложи по git-группам с ветками`
-- `выполни git-группы с ветками`
+Operator-facing intent contract:
+- `send_to_git`
+- `open_pr`
 
-This workflow does:
-- inspect repo state
-- build logical git groups
-- suggest branches
-- validate a confirmed plan
-- create branches
-- create commits
+Human phrasing is an alias layer, not the canon.
+Common examples:
+- RU: `отправь в гит`, `запушь`, `отправь изменения`, `сделай PR`
+- EN: `send to git`, `push it`, `ship to git`, `make a PR`, `open a PR`
 
-This workflow does not do:
-- push
-- PR creation
-- arbitrary git passthrough
-- arbitrary shell execution
-- destructive recovery flows
+How the repo maps those intents:
+- `send_to_git` is the operator-facing entry for the public branch + commit baseline: repo inspection, git grouping, canonical branch and commit planning, and bounded branch + commit execution
+- `open_pr` is the separate operator-facing entry for the retained host-backed PR bridge
+- push after `send_to_git` and PR work behind `open_pr` stay on the separate bounded bridge layer, not in the main public package baseline
+
+Current status split:
+- validated baseline: branch + commit under `send_to_git`
+- validated optional bridge: host-backed grouping -> branches -> push -> PR into `main`
+- non-baseline on this surface: runtime-local slash-command/container finish path for push/PR
+- remaining manual GitHub step after the validated host-backed lane: PR approval/review confirmation
+
+Internal runtime safety remains the same:
+- plan -> confirm -> execute stays explicit inside the implementation
+- bounded branch + commit helpers stay separate from push/PR bridge helpers
+- no arbitrary git passthrough
+- no arbitrary shell execution
+- no destructive recovery flows
 
 ## Separate retained bridge
 
@@ -60,7 +67,7 @@ Simple boundary:
 - `plugin-host-git-push/` owns the separate host-backed push/PR finish path
 
 Keep it in the repo.
-Do not treat it as part of the main package contract above.
+Do not treat it as part of the main branch + commit package contract, even though it participates in the operator-facing intent flow above.
 
 ## Repo layout
 

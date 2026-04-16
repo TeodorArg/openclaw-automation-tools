@@ -30,8 +30,8 @@ Purpose:
 
 ### `docs/SKILL_SPEC.md`
 Purpose:
-- define the supported user-facing workflow intents
-- define what the main workflow does and does not do
+- define the canonical operator-facing workflow intents
+- define how those intents map onto bounded internal packages and bridges
 
 ### `docs/IMPLEMENTATION_SHAPE.md`
 Purpose:
@@ -89,8 +89,9 @@ Key files:
 
 ## Rules
 
-- Keep the main package narrow.
-- Keep push and PR outside the main branch+commit contract.
+- Keep the main branch + commit package narrow.
+- Keep canonical intent ids language-agnostic, with utterances treated as aliases.
+- Keep push and PR in the retained bridge layer, not inside the branch + commit package.
 - Keep `plugin-host-git-push/` separate when it remains in the repo.
 - Keep `plugin/EXECUTE_SURFACE.md` and `plugin-host-git-push/BRIDGE_SURFACE.md` aligned with the real package and runtime surface.
 - Do not widen any user-facing surface into arbitrary git or shell passthrough.

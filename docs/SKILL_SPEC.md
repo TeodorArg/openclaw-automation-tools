@@ -6,47 +6,50 @@ The main workflow skill should implement a bounded git workflow, not generic git
 
 ## Supported user intents
 
-The workflow supports exactly these intents:
+The operator-facing workflow supports exactly these canonical intents:
 
-1. `разложи по git-группам`
-2. `разложи по git-группам с ветками`
-3. `выполни git-группы с ветками`
+1. `send_to_git`
+2. `open_pr`
+
+Human wording is not the canon.
+The same intent may arrive through RU, EN, or future localized utterances.
+Examples:
+- `отправь в гит`
+- `запушь`
+- `отправь изменения`
+- `send to git`
+- `push it`
+- `ship to git`
+- `сделай PR`
+- `make a PR`
+- `open a PR`
 
 ## Required behavior
 
-### `разложи по git-группам`
-Plan only:
+### `send_to_git`
+Operator-facing send flow:
 - inspect repo state
 - group changed files
-- propose canonical commits
-- do not create branches
-- do not create commits
-- do not push
+- propose canonical branches and commits
+- preserve the internal `plan -> confirm -> execute` contract
+- execute bounded branch + commit steps only from a confirmed structured payload
+- keep push as a separate optional host-backed bridge step, not part of the main public branch + commit baseline
 
-### `разложи по git-группам с ветками`
-Plan only, branch-aware:
-- do all planning work
-- propose branch names
-- emit the exact next confirmation step
-- emit a ready-to-confirm structured plan
-- do not execute writes
-
-### `выполни git-группы с ветками`
-Execute only from a confirmed plan:
-- require a confirmed structured payload
-- create the planned branches
-- stage the planned file groups
-- create the planned commits
-- do not push
-- do not open PRs
+### `open_pr`
+Operator-facing PR flow:
+- run PR readiness checks through the separate bounded bridge
+- open the current branch into `main`
+- keep base/head behavior bounded and explicit
+- do not widen into arbitrary `gh` passthrough
 
 ## What the workflow must preserve
 
 The workflow must preserve:
+- canonical intent ids, independent of user language
 - branch naming rules
 - canonical commit title/body rules
-- the separation between plan and execute
-- the rule that push and PR stay outside the main contract
+- the separation between plan and execute inside runtime execution
+- the boundary between the main branch + commit package and the retained push/PR bridge
 
 ## Architecture intent
 
@@ -61,9 +64,8 @@ Preferred architecture:
 The main workflow should not include:
 - arbitrary `git <anything>` execution
 - arbitrary shell execution
-- push inside execute
-- PR creation
 - force-push or destructive recovery flows
+- arbitrary PR base/head overrides
 - designs that depend on always-on helper processes
 
 ## Security constraints
@@ -76,4 +78,8 @@ The implementation must:
 
 ## Retained separate bridge
 
-The separate `plugin-host-git-push/` subtree may provide the host-backed finish path for push and PR, but it stays outside the main workflow contract.
+The separate `plugin-host-git-push/` subtree provides the bounded host-backed finish path for push and PR. It stays separate at the package/runtime level even when the operator sees only the higher-level `send_to_git` and `open_pr` intents.
+Current status is explicit:
+- validated public baseline: branch + commit flow
+- validated optional bridge: host-backed push/PR lane
+- non-baseline on the current runtime surface: direct container/slash finish path

@@ -9,16 +9,15 @@ Current status:
 This package bundles:
 - the `git_workflow_action` runtime tool
 - repo-source helper scripts under `plugin/scripts/`, packaged as `scripts/`
-- the workflow skill source under `plugin/skills/openclaw-git-workflow/`, packaged as `skills/openclaw-git-workflow/SKILL.md`
+- the workflow skill source under `plugin/skills/openclaw-git-workflow/`
+- packaged skill output at `skills/openclaw-git-workflow/SKILL.md`
 
-Main workflow:
-- plan git groups
-- plan git groups with branch suggestions
-- execute only bounded branch + commit steps from a confirmed plan
+This package is the main branch + commit engine behind the operator-facing `send_to_git` intent.
+It plans git groups, proposes branches, and executes only bounded branch + commit steps from a confirmed plan.
 
-Out of scope:
-- push
-- PR creation
+Out of scope for this package:
+- direct push
+- direct PR creation
 - arbitrary shell passthrough
 - destructive recovery flows
 

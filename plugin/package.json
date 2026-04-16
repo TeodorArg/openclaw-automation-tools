@@ -14,6 +14,7 @@
 		"scripts/git-create-commit.sh",
 		"src/index.ts",
 		"src/git-workflow-tool.ts",
+		"src/runtime/intent-routing.ts",
 		"src/runtime/plan-groups.ts",
 		"src/runtime/validate-confirmed-plan.ts",
 		"src/types/openclaw-plugin-sdk.d.ts",
@@ -28,7 +29,7 @@
 		"check": "pnpm lint && pnpm test && pnpm build",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --passWithNoTests",
-		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz | grep -E 'package/(index.ts|api.ts|openclaw.plugin.json|README.md|scripts/git-create-branch.sh|scripts/git-create-commit.sh|src/index.ts|src/git-workflow-tool.ts|src/runtime/plan-groups.ts|src/runtime/validate-confirmed-plan.ts|src/types/openclaw-plugin-sdk.d.ts|skills/openclaw-git-workflow/SKILL.md)$'"
+		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz | grep -E 'package/(index.ts|api.ts|openclaw.plugin.json|README.md|scripts/git-create-branch.sh|scripts/git-create-commit.sh|src/index.ts|src/git-workflow-tool.ts|src/runtime/intent-routing.ts|src/runtime/plan-groups.ts|src/runtime/validate-confirmed-plan.ts|src/types/openclaw-plugin-sdk.d.ts|skills/openclaw-git-workflow/SKILL.md)$'"
 	},
 	"dependencies": {
 		"@sinclair/typebox": "0.34.49"

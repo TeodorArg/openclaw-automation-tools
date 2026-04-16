@@ -24,17 +24,22 @@ Preferred tool names:
 
 Canonical request shape:
 - `skillName` must be exactly `openclaw-host-git-push` or `openclaw-host-git-pr`
-- `commandName` should be `/git-push` for push actions and `/git-pr` for PR actions
+- `commandName` may come from normalized operator-intent routing such as `send_to_git` or `open_pr`, or from narrower bridge-local command names
 - `action=inspect-capabilities` and `action=assert-pr-ready` are the read-only preflight paths
 - `action=push-current-branch` and `action=create-pr-to-main` are the only write paths
 - `command` is audit/context text from the skill invocation, not a free-form git or shell passthrough surface
 - `timeoutMs` only controls how long the bridge waits for a typed result after job creation
 
 Accepted intent mapping:
-- `/git-push current-branch` -> `action=push-current-branch`
+- optional `send_to_git` finish step -> `action=push-current-branch`
 - push capability/preflight check -> `action=inspect-capabilities`
-- `/git-pr create` -> `action=create-pr-to-main`
+- `open_pr` -> `action=create-pr-to-main`
 - PR readiness/preflight check -> `action=assert-pr-ready`
+
+Status framing:
+- this bridge is already validated on the host-backed lane
+- it remains separate from the main public branch + commit baseline
+- do not imply container-local runtime exposure is already solved unless a live check confirms that specific surface
 
 Anything outside that contract should be treated as out of scope for this bridge rather than silently widening behavior.
 

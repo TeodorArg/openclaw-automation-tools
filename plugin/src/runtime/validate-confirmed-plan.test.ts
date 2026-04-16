@@ -8,7 +8,7 @@ function makePlan() {
 		version: 1 as const,
 		repoPath,
 		status: "confirmed" as const,
-		sourceCommand: "разложи по git-группам с ветками",
+		sourceCommand: "send_to_git",
 		groups: [
 			{
 				id: "group-1",

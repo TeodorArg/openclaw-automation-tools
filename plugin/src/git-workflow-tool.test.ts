@@ -4,7 +4,10 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
-import { resolveCommitIdentityEnv } from "./git-workflow-tool.js";
+import {
+	createGitWorkflowTool,
+	resolveCommitIdentityEnv,
+} from "./git-workflow-tool.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
@@ -75,5 +78,22 @@ describe("resolveCommitIdentityEnv", () => {
 			GIT_COMMITTER_NAME: "OpenClaw Agent",
 			GIT_COMMITTER_EMAIL: "openclaw@example.test",
 		});
+	});
+});
+
+describe("git_workflow_action intent normalization", () => {
+	it("rejects unsupported intents before planning", async () => {
+		const tool = createGitWorkflowTool();
+
+		await expect(
+			tool.execute("call-unsupported", {
+				action: "plan-groups",
+				command: "git status",
+				commandName: "git status",
+				skillName: "openclaw-git-workflow",
+			}),
+		).rejects.toThrow(
+			"git_workflow_action accepts only the canonical send_to_git intent or its supported aliases.",
+		);
 	});
 });

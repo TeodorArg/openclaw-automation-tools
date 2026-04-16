@@ -13,23 +13,25 @@ It is not part of the main branch+commit package contract.
 
 ## Main workflow
 
-The main workflow is:
+Operator-facing canonical intents:
+- `send_to_git`
+- `open_pr`
+
+Human wording is an alias layer over those intent ids, so RU, EN, and future localized phrasings can map to the same workflow.
+
+Internal execution model under `send_to_git` remains:
 - plan
 - confirm
 - execute
 
-Supported intents:
-- `разложи по git-группам`
-- `разложи по git-группам с ветками`
-- `выполни git-группы с ветками`
-
-Execution requires a confirmed structured plan.
-Execution performs only bounded branch + commit operations.
+Execution still requires a confirmed structured plan.
+The main package still performs only bounded branch + commit operations.
 
 ## Skill layer
 
 Main responsibility:
-- expose the workflow-level command surface
+- expose the workflow-level intent surface for the branch + commit package
+- normalize human phrasing into stable workflow intent ids
 - separate planning from execution
 - route deterministic execution into the bounded tool contract
 
@@ -84,29 +86,31 @@ For execute, the request must also carry a confirmed plan payload.
 
 ## Main workflow boundaries
 
-The main workflow includes:
+The main branch + commit package includes:
 - planning git groups
 - proposing branches and commits
 - confirmed-plan validation
 - bounded branch creation
 - bounded commit creation
 
-The main workflow does not include:
-- push
-- PR creation
+The main branch + commit package does not include:
 - arbitrary git subcommands
 - arbitrary shell execution
 - destructive recovery flows
 
 ## Retained bridge boundary
 
-`plugin-host-git-push/` exists for the bounded host-backed finish path:
-- push current branch
-- PR readiness checks
-- create PR to `main`
+`plugin-host-git-push/` exists for the bounded host-backed finish path behind the operator-facing intents:
+- optional finish step after `send_to_git`
+- run PR readiness checks
+- create PR to `main` for `open_pr`
 
 Keep it in the repo.
-Keep it separate from the main package above.
+Keep it separate from the main branch + commit package above.
+Current status split:
+- validated main baseline: branch + commit only
+- validated optional bridge: host-backed push/PR lane
+- not validated as public baseline on this runtime surface: container-local finish-path exposure
 
 ## Verification baseline
 
