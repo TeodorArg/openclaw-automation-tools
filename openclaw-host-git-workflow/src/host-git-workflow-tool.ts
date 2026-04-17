@@ -3,6 +3,7 @@ import { Type } from "@sinclair/typebox";
 import { createPullRequest, pushCurrentBranch } from "./runtime/host-ops.js";
 import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
 import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
+import { preflightHostOps } from "./runtime/preflight.js";
 import { validateConfirmedPlan } from "./runtime/validate-confirmed-plan.js";
 
 function resolveRepoPath(): string {
@@ -19,6 +20,7 @@ const ToolSchema = Type.Object(
 			Type.Literal("plan"),
 			Type.Literal("plan_with_branches"),
 			Type.Literal("validate_confirmed_plan"),
+			Type.Literal("preflight"),
 			Type.Literal("push_branch"),
 			Type.Literal("create_pr"),
 		]),
@@ -35,6 +37,7 @@ type ToolParams = {
 		| "plan"
 		| "plan_with_branches"
 		| "validate_confirmed_plan"
+		| "preflight"
 		| "push_branch"
 		| "create_pr";
 	command: string;
@@ -162,6 +165,32 @@ export function createHostGitWorkflowTool() {
 									intent,
 									...prResult,
 									note: "Pull request creation is bounded to the current branch into main and derives title/body from the latest commit.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "preflight") {
+				const preflight = await preflightHostOps(repoPath, {
+					requireGhAuth: true,
+					requireNonMainBranch: false,
+				});
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...preflight,
+									note: "Host workflow preflight passed for repo access, git/gh availability, origin remote, current branch, and GitHub CLI auth.",
 								},
 								null,
 								2,

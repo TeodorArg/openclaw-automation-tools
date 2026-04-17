@@ -3,7 +3,7 @@
 Publishable plugin package for the current standalone host-backed git workflow package in this repo family.
 
 This package already ships:
-- the runtime plugin/tool layer for intent normalization, repo-aware planning, confirmed-plan validation, bounded push, and bounded PR creation
+- the runtime plugin/tool layer for intent normalization, repo-aware planning, confirmed-plan validation, host preflight, bounded push, and bounded PR creation
 - the bundled `openclaw-host-git-workflow` skill under `skills/openclaw-host-git-workflow/`
 
 This package does not yet ship the full host-backed finish flow.
@@ -11,6 +11,7 @@ Current bounded runtime coverage is:
 - planning only
 - branch-aware planning
 - confirmed-plan validation
+- host preflight for repo access, git/gh readiness, origin, branch identity, and GitHub auth
 - push of the current non-main branch to `origin`
 - PR creation from the current non-main branch into `main` via `gh`
 
