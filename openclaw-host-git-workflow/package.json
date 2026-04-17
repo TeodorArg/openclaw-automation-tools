@@ -1,0 +1,70 @@
+{
+	"name": "@openclaw/openclaw-host-git-workflow",
+	"version": "0.1.0",
+	"description": "Host-backed git workflow plugin scaffold for OpenClaw, with bundled skill and self-contained planning runtime modules.",
+	"license": "MIT",
+	"author": "TeodorArg",
+	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
+	"bugs": {
+		"url": "https://github.com/TeodorArg/openclaw-automation-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/TeodorArg/openclaw-automation-tools.git"
+	},
+	"keywords": [
+		"openclaw",
+		"plugin",
+		"git",
+		"workflow",
+		"host"
+	],
+	"type": "module",
+	"engines": {
+		"node": ">=20.19.0 || >=22.12.0"
+	},
+	"main": "./dist/index.js",
+	"files": [
+		"dist",
+		"openclaw.plugin.json",
+		"skills",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"format": "biome format --write . --files-ignore-unknown=true",
+		"format:check": "biome format --check . --files-ignore-unknown=true",
+		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
+		"lint:fix": "biome check --write index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
+		"check": "pnpm lint && pnpm test && pnpm build",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "vitest run --passWithNoTests",
+		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz | grep -E 'package/(dist/index.js|openclaw.plugin.json|skills/openclaw-host-git-workflow/SKILL.md|README.md|LICENSE)$'"
+	},
+	"dependencies": {
+		"@sinclair/typebox": "0.34.49"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.11",
+		"@types/node": "^24.0.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.1.2"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"openclaw": {
+		"extensions": [
+			"./dist/index.js"
+		],
+		"compat": {
+			"pluginApi": ">=2026.3.24-beta.2",
+			"minGatewayVersion": ">=2026.3.24-beta.2"
+		},
+		"build": {
+			"openclawVersion": "2026.3.24-beta.2",
+			"pluginSdkVersion": "2026.3.24-beta.2"
+		}
+	}
+}
