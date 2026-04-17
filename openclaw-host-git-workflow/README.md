@@ -33,6 +33,8 @@ Branch-aware planning output now generates branch suggestions and commit titles 
 - no arbitrary shell passthrough
 - no arbitrary `git` passthrough
 - no arbitrary `gh` passthrough
+- no git or GitHub authentication inside the runtime/container surface
+- push and PR creation stay on the bound host node through `node.invoke` `system.run.prepare` / `system.run`
 - branch entry is bounded to a validated non-main local branch name
 - branch entry may carry uncommitted changes only for `main -> new local branch` creation
 - push is bounded to the current local non-main branch and `origin`
@@ -40,6 +42,7 @@ Branch-aware planning output now generates branch suggestions and commit titles 
 - checks waiting is bounded to required checks for the current branch PR into `main`
 - merge is bounded to the current branch PR into `main` with HEAD SHA matching
 - sync-main is bounded to a clean worktree and `origin/main`
+- repo resolution must come from the canonical configured host repo path rather than installed extension output or implicit cwd assumptions
 
 ## Install
 

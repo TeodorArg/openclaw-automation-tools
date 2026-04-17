@@ -143,6 +143,44 @@ describe("buildPlanResult", () => {
 		});
 	});
 
+	it("keeps package-root shipped docs and support files in the package-shape group", () => {
+		const result = buildPlanResult(
+			{
+				repoPath: "/home/node/repos/openclaw-host-git-workflow",
+				currentBranch: "main",
+				headCommit: "abc123",
+				changedFiles: [
+					{
+						path: "openclaw-host-git-workflow/.npmignore",
+						status: "M",
+					},
+					{
+						path: "openclaw-host-git-workflow/README.md",
+						status: "M",
+					},
+				],
+			},
+			{
+				includeBranches: true,
+				sourceCommand: "send_to_git",
+			},
+		);
+
+		expect(result.groups).toHaveLength(1);
+		expect(result.groups[0]).toMatchObject({
+			area: "runtime",
+			label: "Plugin install and package shape",
+			branch: "fix/openclaw-host-git-workflow-package-shape",
+			files: [
+				"openclaw-host-git-workflow/.npmignore",
+				"openclaw-host-git-workflow/README.md",
+			],
+			commit: {
+				title: "fix(openclaw-host-git-workflow): refine package shape",
+			},
+		});
+	});
+
 	it("falls back to a single runtime group when runtime changes are mixed", () => {
 		const result = buildPlanResult(
 			{

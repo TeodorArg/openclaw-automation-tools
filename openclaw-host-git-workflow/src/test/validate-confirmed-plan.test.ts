@@ -22,7 +22,7 @@ function makePlan() {
 						"- Inspect git status and classify changed files by repo area.",
 						"- Generate stable groups, commit metadata, and branch suggestions.",
 						"- Cover the changed runtime files: openclaw-host-git-workflow/src/host-git-workflow-tool.ts.",
-						"- Keep execution limited to shipped validation-only behavior in this slice.",
+						"- Keep planning output aligned with the shipped bounded workflow actions.",
 					].join("\n"),
 				},
 			},
@@ -67,6 +67,29 @@ describe("validateConfirmedPlan", () => {
 		};
 		expect(() => validateConfirmedPlan(duplicateFiles, repoPath)).toThrow(
 			"confirmedPlan.groups[0].files must not contain duplicates.",
+		);
+	});
+
+	it("rejects foreign branch and commit scopes", () => {
+		const wrongBranchScope = makePlan();
+		wrongBranchScope.groups[0] = {
+			...wrongBranchScope.groups[0],
+			branch: "feat/workflow-runtime",
+		};
+		expect(() => validateConfirmedPlan(wrongBranchScope, repoPath)).toThrow(
+			"confirmedPlan.groups[0].branch must identify the owning package slug or an explicit repo surface.",
+		);
+
+		const wrongCommitScope = makePlan();
+		wrongCommitScope.groups[0] = {
+			...wrongCommitScope.groups[0],
+			commit: {
+				...wrongCommitScope.groups[0].commit,
+				title: "feat(workflow): add repo-aware runtime output",
+			},
+		};
+		expect(() => validateConfirmedPlan(wrongCommitScope, repoPath)).toThrow(
+			"confirmedPlan.groups[0].commit.title must identify the owning package slug or an explicit repo surface.",
 		);
 	});
 });

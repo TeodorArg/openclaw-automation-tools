@@ -1,1 +1,2 @@
-
+# Keep this file present so npm pack stops inheriting the repo-root `.gitignore`.
+# Shipped files are controlled by `package.json > files`.
