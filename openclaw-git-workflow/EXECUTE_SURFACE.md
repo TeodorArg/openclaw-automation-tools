@@ -19,7 +19,7 @@ Preferred tool name:
 
 ```json
 {
-  "action": "plan-groups" | "plan-groups-with-branches" | "execute-groups-with-branches",
+  "action": "plan-groups" | "plan-groups-with-branches" | "execute-groups-with-branches" | "push_branch" | "create_pr" | "wait_for_checks" | "merge_pr" | "sync_main",
   "command": "<raw skill args or normalized intent alias>",
   "commandName": "<slash command>",
   "skillName": "openclaw-git-workflow",
@@ -47,8 +47,31 @@ Preferred tool name:
 - reject free-form execution without structured plan
 - return structured success or rejection/failure payloads
 - create branches and commits only
-- no direct push
-- no direct PR
+
+### `push_branch`
+- push only the current local non-`main` branch
+- push only to remote `origin`
+- no arbitrary remote or ref override
+
+### `create_pr`
+- open a PR only from the current local non-`main` branch into `main`
+- derive PR title/body from the latest local commit
+- no arbitrary base/head override
+
+### `wait_for_checks`
+- poll only required checks for the current branch PR
+- continue until checks pass or a failing/cancelled check requires a fix cycle
+- no arbitrary PR selector or custom gh passthrough
+
+### `merge_pr`
+- merge only the current branch PR into `main`
+- require required checks to pass before merge continues
+- delete the merged branch as part of the bounded finish step
+
+### `sync_main`
+- require a clean working tree
+- switch to local `main`
+- run only `git pull --ff-only origin main`
 
 ## Bounded runtime operations
 
@@ -57,6 +80,10 @@ The main workflow allows only these write-side operations:
 1. create each planned branch from the initial HEAD captured at execute start
 2. stage an explicit allowlisted file set for one group
 3. create a commit with validated title/body
+4. push the current non-`main` branch to `origin`
+5. open the current branch PR into `main`
+6. merge the current branch PR into `main` after required checks pass
+7. switch to local `main` and fast-forward it from `origin/main`
 
 Anything else is out of scope.
 
@@ -85,6 +112,7 @@ Current scripts in `openclaw-git-workflow/package.json`:
 Current source-tree bounded helpers:
 - `openclaw-git-workflow/scripts/git-create-branch.sh`
 - `openclaw-git-workflow/scripts/git-create-commit.sh`
+- `openclaw-git-workflow/src/runtime/host-ops.ts`
 
 These helpers are repo-local implementation details and are not part of the packaged plugin file list.
 
@@ -93,9 +121,7 @@ These helpers are repo-local implementation details and are not part of the pack
 This execute surface must not include:
 - arbitrary shell
 - arbitrary git subcommands
-- push
 - force push
-- PR creation
 - branch deletion
 - reset/rebase/cleanup flows
 

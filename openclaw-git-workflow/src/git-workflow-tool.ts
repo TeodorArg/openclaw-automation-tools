@@ -2,6 +2,13 @@ import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Type } from "@sinclair/typebox";
+import {
+	createPullRequest,
+	mergePullRequest,
+	pushCurrentBranch,
+	syncMain,
+	waitForChecks,
+} from "./runtime/host-ops.js";
 import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
 import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
 import {
@@ -29,6 +36,11 @@ const ToolSchema = Type.Object(
 			Type.Literal("plan-groups"),
 			Type.Literal("plan-groups-with-branches"),
 			Type.Literal("execute-groups-with-branches"),
+			Type.Literal("push_branch"),
+			Type.Literal("create_pr"),
+			Type.Literal("wait_for_checks"),
+			Type.Literal("merge_pr"),
+			Type.Literal("sync_main"),
 		]),
 		command: Type.String(),
 		commandName: Type.String(),
@@ -42,7 +54,12 @@ type ToolParams = {
 	action:
 		| "plan-groups"
 		| "plan-groups-with-branches"
-		| "execute-groups-with-branches";
+		| "execute-groups-with-branches"
+		| "push_branch"
+		| "create_pr"
+		| "wait_for_checks"
+		| "merge_pr"
+		| "sync_main";
 	command: string;
 	commandName: string;
 	skillName: string;
@@ -277,6 +294,124 @@ export function createGitWorkflowTool() {
 										planResult.groups.length > 0
 											? "Planning output is repo-aware and derived from current changed files. Execute remains bounded and still requires an explicit confirmed plan handoff."
 											: "No changed files detected in the target repo, so there is nothing to group yet.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "push_branch") {
+				const pushResult = await pushCurrentBranch(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...pushResult,
+									note: "Current branch push completed with bounded origin/current-branch behavior.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "create_pr") {
+				const prResult = await createPullRequest(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...prResult,
+									note: "Pull request creation is bounded to the current branch into main and derives title/body from the latest commit.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "wait_for_checks") {
+				const checksResult = await waitForChecks(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: checksResult.status === "checks_passed",
+									action: params.action,
+									intent,
+									...checksResult,
+									note:
+										checksResult.status === "checks_passed"
+											? "Required checks finished green for the current branch PR."
+											: "Required checks finished with a failing or cancelled status and need a fix cycle before merge.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "merge_pr") {
+				const mergeResult = await mergePullRequest(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...mergeResult,
+									note: "Merge stays bounded to the current branch PR into main, after required checks pass.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "sync_main") {
+				const syncResult = await syncMain(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...syncResult,
+									note: "Local main was updated with a bounded ff-only pull from origin/main.",
 								},
 								null,
 								2,
