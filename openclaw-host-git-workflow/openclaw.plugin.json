@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-host-git-workflow",
 	"name": "OpenClaw Host Git Workflow",
-	"description": "Host-backed git workflow scaffold with bundled skill and bounded runtime slices for planning, repo resolution, node selection, preflight, push, PR creation, checks wait, merge, and sync-main.",
+	"description": "Host-backed git workflow with bundled skill, single send_to_git entrypoint, and bounded runtime slices for planning, repo resolution, live host node binding, preflight, push, PR creation, checks wait, merge, and sync-main.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
 	"entry": "./dist/index.js",
@@ -19,7 +19,7 @@
 			},
 			"nodeSelector": {
 				"type": "string",
-				"description": "Optional host node selector used to bind the bounded workflow to one concrete node before host-backed execution."
+				"description": "Optional host node selector used to bind the bounded workflow to one concrete host node before execution."
 			}
 		}
 	}
