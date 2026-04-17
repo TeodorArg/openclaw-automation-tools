@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlanResult } from "./plan-groups.js";
+import { buildPlanResult } from "../runtime/planning/plan-groups.js";
 
 describe("buildPlanResult", () => {
 	it("creates repo-aware groups and a confirmed plan candidate for branch-aware planning", () => {
@@ -15,7 +15,7 @@ describe("buildPlanResult", () => {
 						status: "M",
 					},
 					{
-						path: "openclaw-host-git-workflow/src/runtime/validate-confirmed-plan.ts",
+						path: "openclaw-host-git-workflow/src/runtime/planning/validate-confirmed-plan.ts",
 						status: "M",
 					},
 				],
@@ -61,11 +61,11 @@ describe("buildPlanResult", () => {
 				headCommit: "abc123",
 				changedFiles: [
 					{
-						path: "openclaw-host-git-workflow/src/runtime/plan-groups.ts",
+						path: "openclaw-host-git-workflow/src/runtime/planning/plan-groups.ts",
 						status: "M",
 					},
 					{
-						path: "openclaw-host-git-workflow/src/runtime/plan-groups.test.ts",
+						path: "openclaw-host-git-workflow/src/test/plan-groups.test.ts",
 						status: "M",
 					},
 					{
@@ -87,8 +87,8 @@ describe("buildPlanResult", () => {
 			label: "Runtime planning logic",
 			branch: "feat/host-workflow-refine-planning",
 			files: [
-				"openclaw-host-git-workflow/src/runtime/plan-groups.test.ts",
-				"openclaw-host-git-workflow/src/runtime/plan-groups.ts",
+				"openclaw-host-git-workflow/src/runtime/planning/plan-groups.ts",
+				"openclaw-host-git-workflow/src/test/plan-groups.test.ts",
 			],
 			commit: {
 				title: "feat(workflow): refine host repo-aware planning",
@@ -149,7 +149,7 @@ describe("buildPlanResult", () => {
 				headCommit: "abc123",
 				changedFiles: [
 					{
-						path: "openclaw-host-git-workflow/src/runtime/plan-groups.ts",
+						path: "openclaw-host-git-workflow/src/runtime/planning/plan-groups.ts",
 						status: "M",
 					},
 					{ path: "openclaw-host-git-workflow/src/index.ts", status: "M" },

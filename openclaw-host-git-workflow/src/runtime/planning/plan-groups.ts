@@ -1,4 +1,4 @@
-import type { HostCommandRunner } from "./node-execution.js";
+import type { HostCommandRunner } from "../node/execution.js";
 import type {
 	ConfirmedGroup,
 	ConfirmedPlan,
@@ -318,17 +318,18 @@ function splitRuntimeFilesIntoBuckets(
 
 function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 	if (
-		filePath === "openclaw-host-git-workflow/src/runtime/plan-groups.ts" ||
-		filePath === "openclaw-host-git-workflow/src/runtime/plan-groups.test.ts"
+		filePath ===
+			"openclaw-host-git-workflow/src/runtime/planning/plan-groups.ts" ||
+		filePath === "openclaw-host-git-workflow/src/test/plan-groups.test.ts"
 	) {
 		return "planning";
 	}
 
 	if (
 		filePath ===
-			"openclaw-host-git-workflow/src/runtime/validate-confirmed-plan.ts" ||
+			"openclaw-host-git-workflow/src/runtime/planning/validate-confirmed-plan.ts" ||
 		filePath ===
-			"openclaw-host-git-workflow/src/runtime/validate-confirmed-plan.test.ts" ||
+			"openclaw-host-git-workflow/src/test/validate-confirmed-plan.test.ts" ||
 		filePath === "openclaw-host-git-workflow/src/host-git-workflow-tool.ts"
 	) {
 		return "execute";

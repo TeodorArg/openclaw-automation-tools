@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateConfirmedPlan } from "./validate-confirmed-plan.js";
+import { validateConfirmedPlan } from "../runtime/planning/validate-confirmed-plan.js";
 
 const repoPath = "/home/node/repos/openclaw-host-git-workflow";
 

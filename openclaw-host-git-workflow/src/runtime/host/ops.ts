@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import type { HostCommandRunner } from "./node-execution.js";
+import type { HostCommandRunner } from "../node/execution.js";
+import { resolveHostGhBin, resolveHostGitBin } from "./binaries.js";
 import { type HostPreflight, preflightHostOps } from "./preflight.js";
 
 const execFileAsync = promisify(execFile);
@@ -69,14 +70,6 @@ export type SyncMainResult = HostPreflight & {
 	stderr: string;
 };
 
-function resolveGitBin(): string {
-	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GIT_BIN || "git";
-}
-
-function resolveGhBin(): string {
-	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN || "gh";
-}
-
 const CHECKS_WATCH_INTERVAL_SECONDS = 10;
 
 async function runBinary(
@@ -108,15 +101,19 @@ async function readLatestCommit(
 	runner: HostCommandRunner,
 ): Promise<LatestCommit> {
 	const title = await runner.run(
-		resolveGitBin(),
+		resolveHostGitBin(),
 		["log", "-1", "--pretty=%s"],
 		{
 			cwd: repoPath,
 		},
 	);
-	const body = await runner.run(resolveGitBin(), ["log", "-1", "--pretty=%b"], {
-		cwd: repoPath,
-	});
+	const body = await runner.run(
+		resolveHostGitBin(),
+		["log", "-1", "--pretty=%b"],
+		{
+			cwd: repoPath,
+		},
+	);
 
 	if (title.stdout.trim() === "") {
 		throw new Error(
@@ -134,7 +131,7 @@ async function readHeadCommitSha(
 	repoPath: string,
 	runner: HostCommandRunner,
 ): Promise<string> {
-	const sha = await runner.run(resolveGitBin(), ["rev-parse", "HEAD"], {
+	const sha = await runner.run(resolveHostGitBin(), ["rev-parse", "HEAD"], {
 		cwd: repoPath,
 	});
 
@@ -149,7 +146,7 @@ async function assertCleanWorktree(
 	repoPath: string,
 	runner: HostCommandRunner,
 ) {
-	const status = await runner.run(resolveGitBin(), ["status", "--short"], {
+	const status = await runner.run(resolveHostGitBin(), ["status", "--short"], {
 		cwd: repoPath,
 	});
 	if (status.stdout.trim() !== "") {
@@ -166,7 +163,7 @@ async function localBranchExists(
 ): Promise<boolean> {
 	try {
 		await runner.run(
-			resolveGitBin(),
+			resolveHostGitBin(),
 			["rev-parse", "--verify", `refs/heads/${branchName}`],
 			{ cwd: repoPath },
 		);
@@ -196,7 +193,7 @@ export async function pushCurrentBranch(
 ): Promise<PushResult> {
 	const preflight = await preflightPushPr(repoPath, runner);
 	const result = await runner.run(
-		resolveGitBin(),
+		resolveHostGitBin(),
 		["push", "--set-upstream", "origin", preflight.currentBranch],
 		{ cwd: repoPath },
 	);
@@ -216,7 +213,7 @@ export async function createPullRequest(
 	const preflight = await preflightPushPr(repoPath, runner);
 	const latestCommit = await readLatestCommit(repoPath, runner);
 	const result = await runner.run(
-		resolveGhBin(),
+		resolveHostGhBin(),
 		[
 			"pr",
 			"create",
@@ -249,7 +246,7 @@ async function readCurrentPullRequest(
 	runner: HostCommandRunner,
 ): Promise<CurrentPullRequest> {
 	const result = await runner.run(
-		resolveGhBin(),
+		resolveHostGhBin(),
 		[
 			"pr",
 			"view",
@@ -293,7 +290,7 @@ export async function waitForPullRequestChecks(
 		runner,
 	);
 	const result = await runner.run(
-		resolveGhBin(),
+		resolveHostGhBin(),
 		[
 			"pr",
 			"checks",
@@ -332,7 +329,7 @@ export async function mergePullRequest(
 	);
 	const headCommitSha = await readHeadCommitSha(repoPath, runner);
 	const result = await runner.run(
-		resolveGhBin(),
+		resolveHostGhBin(),
 		[
 			"pr",
 			"merge",
@@ -371,14 +368,14 @@ export async function syncMainBranch(
 	);
 
 	await assertCleanWorktree(repoPath, runner);
-	await runner.run(resolveGitBin(), ["fetch", "origin", "main"], {
+	await runner.run(resolveHostGitBin(), ["fetch", "origin", "main"], {
 		cwd: repoPath,
 	});
 
 	const mainExists = await localBranchExists(repoPath, "main", runner);
 	if (!mainExists) {
 		const createResult = await runner.run(
-			resolveGitBin(),
+			resolveHostGitBin(),
 			["checkout", "-b", "main", "--track", "origin/main"],
 			{ cwd: repoPath },
 		);
@@ -397,12 +394,12 @@ export async function syncMainBranch(
 	}
 
 	const checkoutResult = await runner.run(
-		resolveGitBin(),
+		resolveHostGitBin(),
 		["checkout", "main"],
 		{ cwd: repoPath },
 	);
 	const mergeResult = await runner.run(
-		resolveGitBin(),
+		resolveHostGitBin(),
 		["merge", "--ff-only", "origin/main"],
 		{ cwd: repoPath },
 	);

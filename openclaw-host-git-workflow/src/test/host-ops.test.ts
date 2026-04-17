@@ -10,7 +10,7 @@ import {
 	pushCurrentBranch,
 	syncMainBranch,
 	waitForPullRequestChecks,
-} from "./host-ops.js";
+} from "../runtime/host/ops.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_NODE_SELECTOR_PLACEHOLDER,
 	resolveHostNodeSelection,
-} from "./node-selection.js";
+} from "../runtime/node/selection.js";
 
 describe("host node selection", () => {
 	it("prefers plugin config nodeSelector over environment values", async () => {

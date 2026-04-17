@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
-import type { HostNodeSelection } from "./node-selection.js";
+import { loadOpenClawBrowserSupport } from "./browser-support.js";
+import type { HostNodeSelection } from "./selection.js";
 
 export type HostCommandRunner = {
 	run(
@@ -26,23 +27,6 @@ type SystemRunPayload = {
 	error?: string;
 	exitCode?: number | null;
 };
-
-async function loadBrowserSupport() {
-	return (await import("openclaw/plugin-sdk/browser-support")) as {
-		callGatewayTool<T = Record<string, unknown>>(
-			method: string,
-			opts: {
-				gatewayUrl?: string;
-				gatewayToken?: string;
-				timeoutMs?: number;
-			},
-			params?: unknown,
-			extra?: {
-				expectFinal?: boolean;
-			},
-		): Promise<T>;
-	};
-}
 
 function shellEscape(value: string): string {
 	if (value === "") {
@@ -107,7 +91,7 @@ async function invokePreparedSystemRun(params: {
 	sessionKey?: string;
 }): Promise<{ stdout: string; stderr: string }> {
 	const rawCommand = formatCommand([params.command, ...params.args]);
-	const { callGatewayTool } = await loadBrowserSupport();
+	const { callGatewayTool } = await loadOpenClawBrowserSupport();
 	const prepareResponse = await callGatewayTool<{ payload?: unknown }>(
 		"node.invoke",
 		{ timeoutMs: params.timeoutMs ?? 15000 },

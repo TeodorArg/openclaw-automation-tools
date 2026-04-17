@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
-import type { HostCommandRunner } from "./node-execution.js";
-import { preflightHostOps } from "./preflight.js";
+import { preflightHostOps } from "../runtime/host/preflight.js";
+import type { HostCommandRunner } from "../runtime/node/execution.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
