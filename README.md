@@ -1,6 +1,6 @@
 # openclaw-automation-tools
 
-Multi-package OpenClaw repository for one active host-backed plugin package, skill-only packages, and companion documentation.
+Multi-package OpenClaw repository for one active host-backed plugin package and skill-only packages.
 
 ## Canon Docs
 
@@ -17,7 +17,6 @@ The active publishable plugin package now matches the current runtime/test layou
 | [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
 | [memory-hygiene/README.md](memory-hygiene/README.md) | skill-only package | Memory maintenance skill package |
 | [source-of-truth-fix/README.md](source-of-truth-fix/README.md) | skill-only package | Source-of-truth repair skill package |
-| [host-git-lane/README.md](host-git-lane/README.md) | companion docs only | Canonical docs for the external host lane and product boundary |
 
 ## Active Package Direction
 
@@ -88,7 +87,7 @@ For each skill-only package, verify:
 - The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
 - Local development is pinned to Node `24.13.0` via `.nvmrc`.
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
-- `host-git-lane/` remains documentation-only and must not be reshaped into a fake package.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
+- Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the active package docs.
 - The active `openclaw-host-git-workflow/` package now uses domain-grouped runtime modules under `src/runtime/` and flat default tests under `src/test/`, in line with the tracked package canon.

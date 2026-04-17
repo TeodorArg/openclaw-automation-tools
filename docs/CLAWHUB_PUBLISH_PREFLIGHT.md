@@ -15,8 +15,10 @@ Skill-only packages:
 - `memory-hygiene/`
 - `source-of-truth-fix/`
 
-Non-publishable companion docs:
-- `host-git-lane/`
+Non-publishable repo docs:
+- `README.md`
+- `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`
+- `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md`
 
 ## Plugin Checks
 
