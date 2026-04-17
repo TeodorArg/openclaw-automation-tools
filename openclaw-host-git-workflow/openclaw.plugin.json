@@ -1,0 +1,26 @@
+{
+	"id": "openclaw-host-git-workflow",
+	"name": "OpenClaw Host Git Workflow",
+	"description": "Host-backed git workflow scaffold with bundled skill and self-contained planning runtime modules.",
+	"version": "0.1.0",
+	"skills": ["./skills"],
+	"entry": "./dist/index.js",
+	"configSchema": {
+		"type": "object",
+		"additionalProperties": false,
+		"properties": {
+			"repoPath": {
+				"type": "string",
+				"description": "Optional explicit repo path override for workflow planning."
+			},
+			"baseBranch": {
+				"type": "string",
+				"description": "Preferred base branch for later host-backed finish flow."
+			},
+			"nodeSelector": {
+				"type": "string",
+				"description": "Reserved host node selector for the future host-backed execution lane."
+			}
+		}
+	}
+}

@@ -14,7 +14,8 @@ This document puts one question in one place:
 `openclaw node` is a product-level host service, not a publishable plugin package from this repo.
 
 For this repo:
-- `openclaw-git-workflow/` is the publishable plugin package
+- `openclaw-host-git-workflow/` is the materialized standalone host-backed plugin package direction
+- `openclaw-git-workflow/` is the current materialized plugin package and a legacy prototype/reference for reusable planning/runtime modules
 - `openclaw-host-git-pr/` is a skill-only package
 - `host-git-lane/` is the companion-layer documentation for the external host-backed execution path
 
@@ -52,6 +53,7 @@ openclaw nodes rename --node <id|name|ip> --name "Living Room iPad"
 Correct current modeling:
 - installation of the node belongs to official OpenClaw product docs and CLI
 - repo-local packages may depend on the host-backed lane
+- the self-contained package that should own that dependency boundary is `openclaw-host-git-workflow/`
 - repo-local packages do not currently ship the node service implementation
 
 Incorrect modeling:

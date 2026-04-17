@@ -79,15 +79,23 @@ clawhub skill publish ./openclaw-host-git-pr --slug openclaw-host-git-pr --name 
 
 ## Plugin Package
 
-Target plugin package:
+Current host-backed target plugin package:
+- `openclaw-host-git-workflow/`
+
+Current materialized plugin reference package:
 - `openclaw-git-workflow/`
+
+Practical rule:
+- do not treat `openclaw-git-workflow/` as the final long-term publish target for the host-backed flow
+- use it as the package-shape and verification reference while migrating runtime/modules into `openclaw-host-git-workflow/`
+- publish the host-backed workflow only after the new package root passes the full plugin verification baseline as a self-contained artifact and its shipped README/runtime contract matches the actually implemented slice
 
 ### Required Local Checks
 
 Run:
 
 ```bash
-cd openclaw-git-workflow
+cd openclaw-host-git-workflow
 pnpm lint
 pnpm typecheck
 pnpm build
@@ -109,17 +117,17 @@ Then verify:
 ### Current CLI-Compatible Publish Command
 
 ```bash
-clawhub package publish ./openclaw-git-workflow \
+clawhub package publish ./openclaw-host-git-workflow \
   --family code-plugin \
-  --name @openclaw/openclaw-git-workflow \
-  --display-name "OpenClaw Git Workflow" \
+  --name @openclaw/openclaw-host-git-workflow \
+  --display-name "OpenClaw Host Git Workflow" \
   --version 0.1.0 \
-  --changelog "Initial ClawHub package release" \
-  --tags latest,git,workflow \
+  --changelog "Initial self-contained host-backed plugin package release" \
+  --tags latest,git,workflow,host \
   --source-repo <github-owner>/<github-repo> \
   --source-commit <git-sha> \
   --source-ref main \
-  --source-path openclaw-git-workflow
+  --source-path openclaw-host-git-workflow
 ```
 
 ### Current Blockers
@@ -127,6 +135,7 @@ clawhub package publish ./openclaw-git-workflow \
 - `clawhub whoami` currently returns `Not logged in`
 - current local CLI does not expose `package publish --dry-run`
 - first external install verification is still not recorded
+- checks polling, merge, and sync-main are not yet implemented inside the new package runtime
 
 ## Host Git Lane
 
