@@ -208,4 +208,45 @@ describe("buildPlanResult", () => {
 		expect(cleanPlan.groups).toHaveLength(0);
 		expect(cleanPlan.confirmedPlanCandidate).toBeNull();
 	});
+
+	it("classifies bundled package skill changes into the skills area", () => {
+		const result = buildPlanResult(
+			{
+				repoPath: "/home/node/repos/openclaw-host-git-workflow",
+				currentBranch: "main",
+				headCommit: "abc123",
+				changedFiles: [
+					{
+						path: "openclaw-host-git-workflow/skills/openclaw-host-git-workflow/SKILL.md",
+						status: "M",
+					},
+				],
+			},
+			{
+				includeBranches: true,
+				sourceCommand: "send_to_git",
+			},
+		);
+
+		expect(result.changedFiles).toEqual([
+			{
+				path: "openclaw-host-git-workflow/skills/openclaw-host-git-workflow/SKILL.md",
+				status: "M",
+				area: "skills",
+			},
+		]);
+		expect(result.groups).toHaveLength(1);
+		expect(result.groups[0]).toMatchObject({
+			area: "skills",
+			label: "Skill UX and command contract",
+			branch: "feat/skills-refine-host-workflow",
+			files: [
+				"openclaw-host-git-workflow/skills/openclaw-host-git-workflow/SKILL.md",
+			],
+			commit: {
+				title: "feat(skills): refine host git workflow contract",
+			},
+		});
+		expect(result.confirmedPlanCandidate?.groups).toHaveLength(1);
+	});
 });
