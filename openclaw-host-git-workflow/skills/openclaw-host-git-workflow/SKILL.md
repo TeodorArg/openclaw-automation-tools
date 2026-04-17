@@ -1,6 +1,6 @@
 ---
 name: openclaw-host-git-workflow
-description: Выполняет bounded host git workflow через единый canonical intent `send_to_git`: нормализует intent, строит repo-aware план, нормализует repo resolution и node selection, делает host preflight, валидирует confirmed plan, делает bounded push текущей ветки, открывает bounded PR в `main` и синхронизирует локальный `main`.
+description: Выполняет bounded host git workflow через единый canonical intent `send_to_git`: нормализует intent, строит repo-aware план, нормализует repo resolution и node selection, делает host preflight, валидирует confirmed plan, делает bounded push текущей ветки, открывает bounded PR в `main`, дожидается required checks, bounded-мержит PR и синхронизирует локальный `main`.
 user-invocable: true
 command-dispatch: tool
 command-tool: host_git_workflow_action
@@ -30,13 +30,13 @@ Shipped runtime canon для этого skill такой:
 6. confirmed-plan validation
 7. push current branch to `origin`
 8. create PR from current branch into `main`
-9. sync local `main` from `origin/main` with clean-worktree and fast-forward-only behavior
+9. wait for required checks on the open current-branch PR into `main`
+10. merge the open current-branch PR into `main` with bounded head matching
+11. sync local `main` from `origin/main` with clean-worktree and fast-forward-only behavior
 
 Текущий slice не выполняет:
 
 - host-backed branch/commit execution
-- `wait_for_checks`
-- `merge_pr`
 
 ## Жёсткие правила
 
@@ -46,6 +46,8 @@ Shipped runtime canon для этого skill такой:
 - Если confirmed plan отсутствует или невалиден, validation должна остановиться с понятной ошибкой.
 - Push должен работать только для текущей non-main ветки и только в `origin`.
 - PR должен открываться только из текущей non-main ветки в `main` и только через bounded `gh pr create`.
+- `wait_for_checks` должен смотреть только required checks и только для open PR текущей ветки в `main`.
+- `merge_pr` должен работать только для open PR текущей ветки в `main`, только через bounded merge-commit strategy и только с `--match-head-commit`.
 - `sync_main` должен работать только при clean worktree и только для bounded sync локального `main` от `origin/main`.
 - Node selection должен оставаться явно `not_bound`, пока runtime не подключён к `node.invoke`.
 - Finish-flow шаги сверх shipped slice не должны заявляться как implemented, пока соответствующий runtime не реализован внутри этого package.

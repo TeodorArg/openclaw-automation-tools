@@ -1,8 +1,10 @@
 import { Type } from "@sinclair/typebox";
 import {
 	createPullRequest,
+	mergePullRequest,
 	pushCurrentBranch,
 	syncMainBranch,
+	waitForPullRequestChecks,
 } from "./runtime/host-ops.js";
 import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
 import { resolveHostNodeSelection } from "./runtime/node-selection.js";
@@ -20,6 +22,8 @@ const ToolSchema = Type.Object(
 			Type.Literal("preflight"),
 			Type.Literal("push_branch"),
 			Type.Literal("create_pr"),
+			Type.Literal("wait_for_checks"),
+			Type.Literal("merge_pr"),
 			Type.Literal("sync_main"),
 		]),
 		command: Type.String(),
@@ -38,6 +42,8 @@ type ToolParams = {
 		| "preflight"
 		| "push_branch"
 		| "create_pr"
+		| "wait_for_checks"
+		| "merge_pr"
 		| "sync_main";
 	command: string;
 	commandName: string;
@@ -74,7 +80,7 @@ export function createHostGitWorkflowTool(
 	return {
 		name: "host_git_workflow_action",
 		description:
-			"Bounded host git workflow scaffold for planning, repo resolution, node selection, host preflight, confirmed-plan validation, push, PR creation, and sync-main.",
+			"Bounded host git workflow scaffold for planning, repo resolution, node selection, host preflight, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoTarget = resolveRepoTarget();
@@ -130,7 +136,7 @@ export function createHostGitWorkflowTool(
 									confirmedPlanCandidate: planResult.confirmedPlanCandidate,
 									note:
 										params.action === "plan_with_branches"
-											? "This package slice supports branch-aware planning now, with repo resolution, node selection, host preflight, bounded push, bounded PR creation, and sync_main available as separate runtime actions or contracts. wait_for_checks and merge_pr land in later runtime slices."
+											? "This package slice supports branch-aware planning now, with repo resolution, node selection, host preflight, bounded push, bounded PR creation, bounded wait_for_checks, bounded merge_pr, and sync_main available as separate runtime actions."
 											: "This package slice currently supports planning-only output without execution.",
 								},
 								null,
@@ -207,6 +213,56 @@ export function createHostGitWorkflowTool(
 									nodeSelection,
 									...syncResult,
 									note: "Local main sync is bounded to origin/main with a clean worktree check and fast-forward-only update behavior.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "wait_for_checks") {
+				const checksResult = await waitForPullRequestChecks(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									repoResolution: repoTarget,
+									nodeSelection,
+									...checksResult,
+									note: "Required checks are watched only for the bounded current-branch pull request into main.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "merge_pr") {
+				const mergeResult = await mergePullRequest(repoPath);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									repoResolution: repoTarget,
+									nodeSelection,
+									...mergeResult,
+									note: "PR merge is bounded to the open current-branch pull request into main with HEAD SHA matching.",
 								},
 								null,
 								2,

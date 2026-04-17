@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-host-git-workflow",
 	"version": "0.1.0",
-	"description": "Host-backed git workflow plugin for OpenClaw with bundled skill and bounded runtime slices for planning, repo resolution, node selection, preflight, push, PR creation, and sync-main.",
+	"description": "Host-backed git workflow plugin for OpenClaw with bundled skill and bounded runtime slices for planning, repo resolution, node selection, preflight, push, PR creation, checks wait, merge, and sync-main.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
