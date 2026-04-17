@@ -1,6 +1,7 @@
 import { Type } from "@sinclair/typebox";
 import { createPullRequest, pushCurrentBranch } from "./runtime/host-ops.js";
 import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
+import { resolveHostNodeSelection } from "./runtime/node-selection.js";
 import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
 import { preflightHostOps } from "./runtime/preflight.js";
 import { resolveRepoTarget } from "./runtime/repo-resolution.js";
@@ -38,6 +39,12 @@ type ToolParams = {
 	confirmedPlan?: unknown;
 };
 
+type HostGitWorkflowToolOptions = {
+	pluginConfig?: {
+		nodeSelector?: unknown;
+	};
+};
+
 function normalizeConfirmedPlanInput(raw: unknown): unknown {
 	if (typeof raw !== "string") {
 		return raw;
@@ -55,14 +62,19 @@ function normalizeConfirmedPlanInput(raw: unknown): unknown {
 	}
 }
 
-export function createHostGitWorkflowTool() {
+export function createHostGitWorkflowTool(
+	options: HostGitWorkflowToolOptions = {},
+) {
 	return {
 		name: "host_git_workflow_action",
 		description:
-			"Bounded host git workflow scaffold for planning, confirmed-plan validation, push, and PR creation.",
+			"Bounded host git workflow scaffold for planning, repo resolution, node selection, host preflight, confirmed-plan validation, push, and PR creation.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoTarget = resolveRepoTarget();
+			const nodeSelection = resolveHostNodeSelection({
+				pluginConfig: options.pluginConfig,
+			});
 			const repoPath = repoTarget.repoPath;
 			const intent = resolveWorkflowIntent({
 				commandName: params.commandName,
@@ -98,6 +110,7 @@ export function createHostGitWorkflowTool() {
 									action: params.action,
 									repoPath,
 									repoResolution: repoTarget,
+									nodeSelection,
 									mode:
 										params.action === "plan"
 											? "plan-only"
@@ -111,7 +124,7 @@ export function createHostGitWorkflowTool() {
 									confirmedPlanCandidate: planResult.confirmedPlanCandidate,
 									note:
 										params.action === "plan_with_branches"
-											? "This package slice supports branch-aware planning now, with bounded push and PR creation available as separate actions. Checks, merge, and sync land in later runtime slices."
+											? "This package slice supports branch-aware planning now, with repo resolution, node selection, host preflight, bounded push, and bounded PR creation available as separate runtime actions or contracts. sync-main, wait_for_checks, and merge_pr land in later runtime slices."
 											: "This package slice currently supports planning-only output without execution.",
 								},
 								null,
@@ -135,6 +148,7 @@ export function createHostGitWorkflowTool() {
 									action: params.action,
 									intent,
 									repoResolution: repoTarget,
+									nodeSelection,
 									...pushResult,
 									note: "Current branch push completed with bounded origin/current-branch behavior.",
 								},
@@ -159,6 +173,7 @@ export function createHostGitWorkflowTool() {
 									action: params.action,
 									intent,
 									repoResolution: repoTarget,
+									nodeSelection,
 									...prResult,
 									note: "Pull request creation is bounded to the current branch into main and derives title/body from the latest commit.",
 								},
@@ -186,6 +201,7 @@ export function createHostGitWorkflowTool() {
 									action: params.action,
 									intent,
 									repoResolution: repoTarget,
+									nodeSelection,
 									...preflight,
 									note: "Host workflow preflight passed for repo access, git/gh availability, origin remote, current branch, and GitHub CLI auth.",
 								},
@@ -220,6 +236,7 @@ export function createHostGitWorkflowTool() {
 								action: params.action,
 								repoPath,
 								repoResolution: repoTarget,
+								nodeSelection,
 								status: "validated",
 								intent,
 								confirmedPlan: validatedPlan,

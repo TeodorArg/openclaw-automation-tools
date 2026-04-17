@@ -66,6 +66,7 @@ Incorrect modeling:
 `host-git-lane/` exists because this repo still needs a stable local place to document:
 - host-vs-container boundary
 - repo resolution on the host
+- host node-selection contract before runtime binding lands
 - GitHub auth and PR finish flow
 - node identity metadata expectations for gateway/UI clarity
 

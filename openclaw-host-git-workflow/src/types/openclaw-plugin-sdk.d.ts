@@ -1,6 +1,7 @@
 declare module "@openclaw/plugin-sdk" {
 	export type AnyAgentTool = unknown;
 	export type OpenClawPluginApi = {
+		pluginConfig?: Record<string, unknown>;
 		registerTool(tool: unknown, opts?: { optional?: boolean }): void;
 	};
 }
