@@ -1,6 +1,6 @@
 ---
 name: openclaw-git-workflow
-description: Выполняет bounded git workflow через единый canonical intent `send_to_git`: планирует git-группы, предлагает ветки и после confirmed plan выполняет только branch + commit. Поддерживает RU и EN пользовательские формулировки как alias layer вокруг одного shipped intent.
+description: Выполняет bounded git workflow через единый canonical intent `send_to_git`: планирует git-группы, предлагает ветки, исполняет confirmed plan, делает bounded push/PR, ждёт required checks, затем bounded merge и sync main. Поддерживает RU и EN пользовательские формулировки как alias layer вокруг одного shipped intent.
 user-invocable: true
 command-dispatch: tool
 command-tool: git_workflow_action
@@ -31,6 +31,11 @@ Shipped runtime canon для этого skill такой:
 1. planning only
 2. branch-aware planning
 3. confirmed execute
+4. push current branch
+5. create PR into `main`
+6. wait for required checks
+7. merge PR
+8. sync local `main`
 
 Это логические режимы workflow, а не отдельные canonical intent id.
 
@@ -60,8 +65,12 @@ Shipped runtime canon для этого skill такой:
 - требуй confirmed plan format, полученный на planning step
 - выполняй только bounded действия branch + commit
 - execution должен оставаться детерминированным по identity и branch base
-- не push в v1
-- не открывай PR
+- после confirmed execute можно делать только bounded finish-step действия shipped contract
+- push возможен только для текущей non-main ветки и только в `origin`
+- PR возможен только из текущей non-main ветки в `main`
+- checks polling читает только required checks текущего PR
+- merge возможен только для текущего PR в `main`
+- sync main делает только `git switch main` и `git pull --ff-only origin main`
 
 ## Жёсткие правила
 
@@ -80,16 +89,19 @@ Shell scripts не должны парсить свободный пользов
 
 ## Текущая v1-реализация
 
-Текущая v1-реализация покрывает:
+Текущая реализация покрывает:
 - skill entrypoint
 - canonical intent normalization через alias layer
 - confirmed plan format
 - minimal execute surface
 - bounded branch/commit execution
+- bounded push текущей ветки
+- bounded PR creation в `main`
+- required checks polling
+- bounded PR merge
+- bounded sync main
 
 Пока не покрывает:
-- push
-- PR creation
 - generic shell passthrough
 - destructive recovery flows
 - always-on macOS helper process

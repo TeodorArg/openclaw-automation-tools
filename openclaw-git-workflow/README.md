@@ -13,7 +13,16 @@ Why this shape:
 
 So the practical public install model for this project is plugin-first, with the user-facing workflow skill shipped inside the plugin package.
 
-This package and repo runtime surface are intentionally limited to planning plus confirmed branch + commit execution. Push, PR creation, and remote checks are outside this package contract and must stay outside the runtime/container path.
+This package and repo runtime surface now covers the bounded workflow from planning through push, PR creation, checks polling, merge, and `main` sync.
+
+Hard boundaries still apply:
+- branch + commit execution remains driven only by an explicit confirmed plan
+- push stays bounded to the current non-`main` branch and remote `origin`
+- PR operations stay bounded to the current branch into `main`
+- checks polling reads required PR checks only
+- merge stays bounded to the current branch PR into `main`
+- `sync_main` switches to local `main` and runs `git pull --ff-only origin main`
+- arbitrary shell, arbitrary `git`, and arbitrary `gh` passthrough remain out of scope
 
 ## Install
 
