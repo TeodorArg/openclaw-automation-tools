@@ -1,18 +1,10 @@
-import path from "node:path";
 import { Type } from "@sinclair/typebox";
 import { createPullRequest, pushCurrentBranch } from "./runtime/host-ops.js";
 import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
 import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
 import { preflightHostOps } from "./runtime/preflight.js";
+import { resolveRepoTarget } from "./runtime/repo-resolution.js";
 import { validateConfirmedPlan } from "./runtime/validate-confirmed-plan.js";
-
-function resolveRepoPath(): string {
-	return path.resolve(
-		process.env.OPENCLAW_HOST_GIT_WORKFLOW_REPO ??
-			process.env.OPENCLAW_PROJECT_DIR ??
-			"/home/node/project",
-	);
-}
 
 const ToolSchema = Type.Object(
 	{
@@ -70,7 +62,8 @@ export function createHostGitWorkflowTool() {
 			"Bounded host git workflow scaffold for planning, confirmed-plan validation, push, and PR creation.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
-			const repoPath = resolveRepoPath();
+			const repoTarget = resolveRepoTarget();
+			const repoPath = repoTarget.repoPath;
 			const intent = resolveWorkflowIntent({
 				commandName: params.commandName,
 				command: params.command,
@@ -104,6 +97,7 @@ export function createHostGitWorkflowTool() {
 									ok: true,
 									action: params.action,
 									repoPath,
+									repoResolution: repoTarget,
 									mode:
 										params.action === "plan"
 											? "plan-only"
@@ -140,6 +134,7 @@ export function createHostGitWorkflowTool() {
 									ok: true,
 									action: params.action,
 									intent,
+									repoResolution: repoTarget,
 									...pushResult,
 									note: "Current branch push completed with bounded origin/current-branch behavior.",
 								},
@@ -163,6 +158,7 @@ export function createHostGitWorkflowTool() {
 									ok: true,
 									action: params.action,
 									intent,
+									repoResolution: repoTarget,
 									...prResult,
 									note: "Pull request creation is bounded to the current branch into main and derives title/body from the latest commit.",
 								},
@@ -189,6 +185,7 @@ export function createHostGitWorkflowTool() {
 									ok: true,
 									action: params.action,
 									intent,
+									repoResolution: repoTarget,
 									...preflight,
 									note: "Host workflow preflight passed for repo access, git/gh availability, origin remote, current branch, and GitHub CLI auth.",
 								},
@@ -222,6 +219,7 @@ export function createHostGitWorkflowTool() {
 								ok: true,
 								action: params.action,
 								repoPath,
+								repoResolution: repoTarget,
 								status: "validated",
 								intent,
 								confirmedPlan: validatedPlan,
