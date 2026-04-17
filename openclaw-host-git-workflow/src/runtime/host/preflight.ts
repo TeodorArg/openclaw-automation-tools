@@ -1,6 +1,7 @@
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
-import type { HostCommandRunner } from "./node-execution.js";
+import type { HostCommandRunner } from "../node/execution.js";
+import { resolveHostGhBin, resolveHostGitBin } from "./binaries.js";
 
 export type HostPreflightOptions = {
 	requireNonMainBranch?: boolean;
@@ -16,14 +17,6 @@ export type HostPreflight = {
 	originUrl: string;
 	ghAuthStatus: "ready" | "skipped";
 };
-
-export function resolveGitBin(): string {
-	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GIT_BIN || "git";
-}
-
-export function resolveGhBin(): string {
-	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN || "gh";
-}
 
 async function assertRepoPathReadable(repoPath: string) {
 	try {
@@ -50,7 +43,9 @@ async function readGit(
 	args: string[],
 	runner: HostCommandRunner,
 ): Promise<string> {
-	const result = await runner.run(resolveGitBin(), args, { cwd: repoPath });
+	const result = await runner.run(resolveHostGitBin(), args, {
+		cwd: repoPath,
+	});
 	return result.stdout;
 }
 
@@ -85,7 +80,9 @@ async function readOriginUrl(
 
 async function assertGhAuthReady(repoPath: string, runner: HostCommandRunner) {
 	try {
-		await runner.run(resolveGhBin(), ["auth", "status"], { cwd: repoPath });
+		await runner.run(resolveHostGhBin(), ["auth", "status"], {
+			cwd: repoPath,
+		});
 	} catch {
 		throw new Error(
 			"GitHub CLI auth is not ready for bounded host workflow actions.",
@@ -101,9 +98,9 @@ export async function preflightHostOps(
 	const { requireGhAuth = true, requireNonMainBranch = false } = options;
 
 	await assertRepoPathReadable(repoPath);
-	await assertBinaryAvailable(resolveGitBin(), repoPath, runner);
+	await assertBinaryAvailable(resolveHostGitBin(), repoPath, runner);
 	if (requireGhAuth) {
-		await assertBinaryAvailable(resolveGhBin(), repoPath, runner);
+		await assertBinaryAvailable(resolveHostGhBin(), repoPath, runner);
 	}
 
 	const repoRoot = (await readRepoRoot(repoPath, runner)).trim();
@@ -131,8 +128,8 @@ export async function preflightHostOps(
 	return {
 		repoPath,
 		repoRoot,
-		gitBin: resolveGitBin(),
-		ghBin: resolveGhBin(),
+		gitBin: resolveHostGitBin(),
+		ghBin: resolveHostGhBin(),
 		currentBranch,
 		originUrl,
 		ghAuthStatus: requireGhAuth ? "ready" : "skipped",

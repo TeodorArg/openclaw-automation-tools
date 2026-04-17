@@ -32,7 +32,7 @@
 		"LICENSE"
 	],
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
+		"build": "rm -rf dist && tsc -p tsconfig.build.json",
 		"format": "biome format --write . --files-ignore-unknown=true",
 		"format:check": "biome format --check . --files-ignore-unknown=true",
 		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
@@ -40,7 +40,7 @@
 		"check": "pnpm lint && pnpm test && pnpm build",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --passWithNoTests",
-		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz | grep -E 'package/(dist/index.js|openclaw.plugin.json|skills/openclaw-host-git-workflow/SKILL.md|README.md|LICENSE)$'"
+		"pack:smoke": "rm -rf .pack && mkdir -p .pack && pnpm pack --pack-destination .pack && tar -tf .pack/*.tgz > .pack/contents.txt && grep -Fx 'package/dist/index.js' .pack/contents.txt && grep -Fx 'package/openclaw.plugin.json' .pack/contents.txt && grep -Fx 'package/skills/openclaw-host-git-workflow/SKILL.md' .pack/contents.txt && grep -Fx 'package/README.md' .pack/contents.txt && grep -Fx 'package/LICENSE' .pack/contents.txt"
 	},
 	"dependencies": {
 		"@sinclair/typebox": "0.34.49"

@@ -1,6 +1,9 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_REPO_PATH, resolveRepoTarget } from "./repo-resolution.js";
+import {
+	DEFAULT_REPO_PATH,
+	resolveRepoTarget,
+} from "../runtime/repo/repo-resolution.js";
 
 describe("repo resolution", () => {
 	it("prefers the explicit host workflow repo override", () => {

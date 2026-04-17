@@ -1,4 +1,8 @@
-import { describeNodeBindingTarget } from "./node-execution.js";
+import {
+	loadOpenClawBrowserSupport,
+	type OpenClawNodeListEntry,
+} from "./browser-support.js";
+import { describeNodeBindingTarget } from "./execution.js";
 
 export const DEFAULT_NODE_SELECTOR_PLACEHOLDER = "auto-select-host-node";
 
@@ -59,21 +63,6 @@ type NormalizedHostNodeSelection = {
 	selectionMode: NodeSelectionMode;
 	usedDefault: boolean;
 };
-
-async function loadBrowserSupport() {
-	return (await import("openclaw/plugin-sdk/browser-support")) as {
-		listNodes(opts?: {
-			gatewayUrl?: string;
-			gatewayToken?: string;
-			timeoutMs?: number;
-		}): Promise<NodeListNode[]>;
-		resolveNodeIdFromList(
-			nodes: NodeListNode[],
-			query?: string,
-			allowDefault?: boolean,
-		): string;
-	};
-}
 
 function resolveNodeIdLocally(
 	nodes: NodeListNode[],
@@ -187,7 +176,11 @@ export async function resolveHostNodeSelection(
 	const normalized = normalizeHostNodeSelection(input);
 	const availableNodes: NodeListNode[] =
 		input.nodes ??
-		(await loadBrowserSupport().then((runtime) => runtime.listNodes({})));
+		(
+			await loadOpenClawBrowserSupport().then((runtime) =>
+				runtime.listNodes({}),
+			)
+		).map((node: OpenClawNodeListEntry) => ({ ...node }));
 
 	if (availableNodes.length === 0) {
 		return {

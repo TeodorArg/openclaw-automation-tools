@@ -5,17 +5,20 @@ import {
 	pushCurrentBranch,
 	syncMainBranch,
 	waitForPullRequestChecks,
-} from "./runtime/host-ops.js";
-import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
+} from "./runtime/host/ops.js";
+import { preflightHostOps } from "./runtime/host/preflight.js";
 import {
 	assertBoundNodeSelection,
 	createNodeHostCommandRunner,
-} from "./runtime/node-execution.js";
-import { resolveHostNodeSelection } from "./runtime/node-selection.js";
-import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
-import { preflightHostOps } from "./runtime/preflight.js";
-import { resolveRepoTarget } from "./runtime/repo-resolution.js";
-import { validateConfirmedPlan } from "./runtime/validate-confirmed-plan.js";
+} from "./runtime/node/execution.js";
+import { resolveHostNodeSelection } from "./runtime/node/selection.js";
+import { resolveWorkflowIntent } from "./runtime/planning/intent-routing.js";
+import {
+	buildPlanResult,
+	collectRepoState,
+} from "./runtime/planning/plan-groups.js";
+import { validateConfirmedPlan } from "./runtime/planning/validate-confirmed-plan.js";
+import { resolveRepoTarget } from "./runtime/repo/repo-resolution.js";
 
 const ToolSchema = Type.Object(
 	{

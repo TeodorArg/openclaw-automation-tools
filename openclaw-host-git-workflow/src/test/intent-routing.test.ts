@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	normalizeWorkflowIntent,
 	resolveWorkflowIntent,
-} from "./intent-routing.js";
+} from "../runtime/planning/intent-routing.js";
 
 describe("normalizeWorkflowIntent", () => {
 	it("normalizes canonical intent ids", () => {
