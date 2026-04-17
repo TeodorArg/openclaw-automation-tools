@@ -13,6 +13,21 @@ export type LatestCommit = {
 
 export type PushPreflight = HostPreflight;
 
+export type EnterBranchResult = HostPreflight & {
+	status: "entered_branch";
+	requestedBranch: string;
+	startingBranch: string;
+	currentBranch: string;
+	branchCreated: boolean;
+	carriedUncommittedChanges: boolean;
+	entryMode:
+		| "created_and_checked_out"
+		| "checked_out_existing"
+		| "already_on_branch";
+	stdout: string;
+	stderr: string;
+};
+
 export type PushResult = PushPreflight & {
 	status: "pushed";
 	stdout: string;
@@ -145,15 +160,21 @@ async function readHeadCommitSha(
 async function assertCleanWorktree(
 	repoPath: string,
 	runner: HostCommandRunner,
+	context: string,
 ) {
+	if (await hasWorktreeChanges(repoPath, runner)) {
+		throw new Error(`Working tree must be clean before ${context}.`);
+	}
+}
+
+async function hasWorktreeChanges(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<boolean> {
 	const status = await runner.run(resolveHostGitBin(), ["status", "--short"], {
 		cwd: repoPath,
 	});
-	if (status.stdout.trim() !== "") {
-		throw new Error(
-			"Working tree must be clean before bounded sync_main can update local main.",
-		);
-	}
+	return status.stdout.trim() !== "";
 }
 
 async function localBranchExists(
@@ -171,6 +192,99 @@ async function localBranchExists(
 	} catch {
 		return false;
 	}
+}
+
+async function assertValidWorkingBranchName(
+	repoPath: string,
+	branchName: string,
+	runner: HostCommandRunner,
+) {
+	const normalizedBranch = branchName.trim();
+
+	if (normalizedBranch === "") {
+		throw new Error("branchName is required for bounded branch entry.");
+	}
+
+	if (normalizedBranch === "main") {
+		throw new Error("Bounded branch entry requires a non-main working branch.");
+	}
+
+	try {
+		await runner.run(
+			resolveHostGitBin(),
+			["check-ref-format", "--branch", normalizedBranch],
+			{ cwd: repoPath },
+		);
+	} catch {
+		throw new Error(`Invalid git branch name: ${normalizedBranch}`);
+	}
+}
+
+export async function enterWorkingBranch(
+	repoPath: string,
+	branchName: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
+): Promise<EnterBranchResult> {
+	await assertValidWorkingBranchName(repoPath, branchName, runner);
+
+	const preflight = await preflightHostOps(
+		repoPath,
+		{
+			requireGhAuth: false,
+			requireNonMainBranch: false,
+		},
+		runner,
+	);
+	const requestedBranch = branchName.trim();
+	const branchExists = await localBranchExists(
+		repoPath,
+		requestedBranch,
+		runner,
+	);
+	const worktreeDirty = await hasWorktreeChanges(repoPath, runner);
+
+	if (preflight.currentBranch === requestedBranch) {
+		return {
+			...preflight,
+			status: "entered_branch",
+			requestedBranch,
+			startingBranch: preflight.currentBranch,
+			currentBranch: requestedBranch,
+			branchCreated: false,
+			carriedUncommittedChanges: false,
+			entryMode: "already_on_branch",
+			stdout: "",
+			stderr: "",
+		};
+	}
+
+	if (worktreeDirty && (preflight.currentBranch !== "main" || branchExists)) {
+		throw new Error(
+			"Working tree must be clean before bounded branch entry can switch branches; only main -> new branch creation may carry uncommitted changes.",
+		);
+	}
+
+	const args = branchExists
+		? ["checkout", requestedBranch]
+		: ["checkout", "-b", requestedBranch];
+	const result = await runner.run(resolveHostGitBin(), args, {
+		cwd: repoPath,
+	});
+
+	return {
+		...preflight,
+		status: "entered_branch",
+		requestedBranch,
+		startingBranch: preflight.currentBranch,
+		currentBranch: requestedBranch,
+		branchCreated: !branchExists,
+		carriedUncommittedChanges: worktreeDirty,
+		entryMode: branchExists
+			? "checked_out_existing"
+			: "created_and_checked_out",
+		stdout: result.stdout,
+		stderr: result.stderr,
+	};
 }
 
 export async function preflightPushPr(
@@ -367,7 +481,11 @@ export async function syncMainBranch(
 		runner,
 	);
 
-	await assertCleanWorktree(repoPath, runner);
+	await assertCleanWorktree(
+		repoPath,
+		runner,
+		"bounded sync_main can update local main",
+	);
 	await runner.run(resolveHostGitBin(), ["fetch", "origin", "main"], {
 		cwd: repoPath,
 	});

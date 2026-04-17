@@ -16,6 +16,7 @@ This package currently ships:
 - repo resolution
 - live host node binding
 - host preflight
+- bounded branch entry from `main` or another clean local branch into a requested non-main working branch
 - confirmed-plan validation
 - bounded push of the current non-main branch
 - bounded PR creation into `main`
@@ -30,6 +31,8 @@ Shell execution now runs on the bound host node through `node.invoke` `system.ru
 - no arbitrary shell passthrough
 - no arbitrary `git` passthrough
 - no arbitrary `gh` passthrough
+- branch entry is bounded to a validated non-main local branch name
+- branch entry may carry uncommitted changes only for `main -> new local branch` creation
 - push is bounded to the current local non-main branch and `origin`
 - PR creation is bounded to the current local non-main branch into `main`
 - checks waiting is bounded to required checks for the current branch PR into `main`

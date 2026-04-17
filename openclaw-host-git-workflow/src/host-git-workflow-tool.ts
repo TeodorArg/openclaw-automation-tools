@@ -1,6 +1,7 @@
 import { Type } from "@sinclair/typebox";
 import {
 	createPullRequest,
+	enterWorkingBranch,
 	mergePullRequest,
 	pushCurrentBranch,
 	syncMainBranch,
@@ -27,6 +28,7 @@ const ToolSchema = Type.Object(
 			Type.Literal("plan_with_branches"),
 			Type.Literal("validate_confirmed_plan"),
 			Type.Literal("preflight"),
+			Type.Literal("enter_branch"),
 			Type.Literal("push_branch"),
 			Type.Literal("create_pr"),
 			Type.Literal("wait_for_checks"),
@@ -36,6 +38,7 @@ const ToolSchema = Type.Object(
 		command: Type.String(),
 		commandName: Type.String(),
 		skillName: Type.String(),
+		branchName: Type.Optional(Type.String()),
 		confirmedPlan: Type.Optional(Type.Unknown()),
 	},
 	{ additionalProperties: false },
@@ -47,6 +50,7 @@ type ToolParams = {
 		| "plan_with_branches"
 		| "validate_confirmed_plan"
 		| "preflight"
+		| "enter_branch"
 		| "push_branch"
 		| "create_pr"
 		| "wait_for_checks"
@@ -55,6 +59,7 @@ type ToolParams = {
 	command: string;
 	commandName: string;
 	skillName: string;
+	branchName?: string;
 	confirmedPlan?: unknown;
 };
 
@@ -91,7 +96,7 @@ export function createHostGitWorkflowTool(
 	return {
 		name: "host_git_workflow_action",
 		description:
-			"Bounded host git workflow scaffold for planning, repo resolution, node selection, host preflight, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
+			"Bounded host git workflow scaffold for planning, repo resolution, node selection, host preflight, branch entry, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoTarget = resolveRepoTarget();
@@ -164,8 +169,41 @@ export function createHostGitWorkflowTool(
 									confirmedPlanCandidate: planResult.confirmedPlanCandidate,
 									note:
 										params.action === "plan_with_branches"
-											? "This package slice supports branch-aware planning now, with repo resolution, node selection, host preflight, bounded push, bounded PR creation, bounded wait_for_checks, bounded merge_pr, and sync_main available as separate runtime actions."
+											? "This package slice supports branch-aware planning now, with repo resolution, node selection, host preflight, bounded branch entry, bounded push, bounded PR creation, bounded wait_for_checks, bounded merge_pr, and sync_main available as separate runtime actions."
 											: "This package slice currently supports planning-only output without execution.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "enter_branch") {
+				if (!params.branchName) {
+					throw new Error("branchName is required for enter_branch action.");
+				}
+
+				const branchResult = await enterWorkingBranch(
+					repoPath,
+					params.branchName,
+					requireNodeRunner(),
+				);
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									repoResolution: repoTarget,
+									nodeSelection,
+									...branchResult,
+									note: "Bounded branch entry can start from main, create or switch the requested local working branch, may carry uncommitted changes only for main -> new branch creation, and keeps later push/pr/merge actions on a non-main branch.",
 								},
 								null,
 								2,

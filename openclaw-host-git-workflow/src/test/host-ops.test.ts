@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
 import {
 	createPullRequest,
+	enterWorkingBranch,
 	mergePullRequest,
 	pushCurrentBranch,
 	syncMainBranch,
@@ -20,7 +21,14 @@ async function makeExecutable(filePath: string, content: string) {
 	await fs.chmod(filePath, 0o755);
 }
 
-async function createRepo() {
+async function createRepo(options?: {
+	workingBranch?: string | null;
+	withFeatureCommit?: boolean;
+}) {
+	const {
+		workingBranch = "feat/host-workflow-test",
+		withFeatureCommit = true,
+	} = options ?? {};
 	const repoPath = await fs.mkdtemp(
 		path.join(os.tmpdir(), "openclaw-host-git-workflow-"),
 	);
@@ -38,9 +46,6 @@ async function createRepo() {
 	await execFileAsync("git", ["commit", "-m", "chore(repo): init"], {
 		cwd: repoPath,
 	});
-	await execFileAsync("git", ["checkout", "-b", "feat/host-workflow-test"], {
-		cwd: repoPath,
-	});
 	const remotePath = await fs.mkdtemp(
 		path.join(os.tmpdir(), "openclaw-host-git-workflow-remote-"),
 	);
@@ -49,25 +54,34 @@ async function createRepo() {
 	await execFileAsync("git", ["remote", "add", "origin", remotePath], {
 		cwd: repoPath,
 	});
-	await fs.writeFile(path.join(repoPath, "notes.md"), "next\n", "utf8");
-	await execFileAsync("git", ["add", "notes.md"], { cwd: repoPath });
-	await execFileAsync(
-		"git",
-		[
-			"commit",
-			"-m",
-			"feat(workflow): add host push and pr slice",
-			"-m",
+
+	if (workingBranch) {
+		await execFileAsync("git", ["checkout", "-b", workingBranch], {
+			cwd: repoPath,
+		});
+	}
+
+	if (withFeatureCommit && workingBranch) {
+		await fs.writeFile(path.join(repoPath, "notes.md"), "next\n", "utf8");
+		await execFileAsync("git", ["add", "notes.md"], { cwd: repoPath });
+		await execFileAsync(
+			"git",
 			[
-				"Add bounded push and PR support to the host workflow package.",
-				"- Keep current branch as the only allowed PR head.",
-				"- Fix PR base to main and derive metadata from the latest commit.",
-				"- Cover the new runtime files with direct unit tests.",
-				"- Preserve bounded behavior without arbitrary gh passthrough.",
-			].join("\n"),
-		],
-		{ cwd: repoPath },
-	);
+				"commit",
+				"-m",
+				"feat(workflow): add host push and pr slice",
+				"-m",
+				[
+					"Add bounded push and PR support to the host workflow package.",
+					"- Keep current branch as the only allowed PR head.",
+					"- Fix PR base to main and derive metadata from the latest commit.",
+					"- Cover the new runtime files with direct unit tests.",
+					"- Preserve bounded behavior without arbitrary gh passthrough.",
+				].join("\n"),
+			],
+			{ cwd: repoPath },
+		);
+	}
 
 	return { repoPath, remotePath };
 }
@@ -155,6 +169,130 @@ afterEach(async () => {
 });
 
 describe("host push and pr ops", () => {
+	it("creates and enters a new working branch from main", async () => {
+		const { repoPath } = await createRepo({
+			workingBranch: null,
+			withFeatureCommit: false,
+		});
+
+		const result = await enterWorkingBranch(
+			repoPath,
+			"feat/branch-entry-from-main",
+		);
+		const currentBranch = await execFileAsync(
+			"git",
+			["rev-parse", "--abbrev-ref", "HEAD"],
+			{ cwd: repoPath },
+		);
+
+		expect(result).toMatchObject({
+			status: "entered_branch",
+			startingBranch: "main",
+			requestedBranch: "feat/branch-entry-from-main",
+			currentBranch: "feat/branch-entry-from-main",
+			branchCreated: true,
+			carriedUncommittedChanges: false,
+			entryMode: "created_and_checked_out",
+		});
+		expect(currentBranch.stdout.trim()).toBe("feat/branch-entry-from-main");
+	});
+
+	it("creates a new working branch from dirty main and carries uncommitted changes", async () => {
+		const { repoPath } = await createRepo({
+			workingBranch: null,
+			withFeatureCommit: false,
+		});
+		await fs.writeFile(path.join(repoPath, "dirty.txt"), "dirty\n", "utf8");
+
+		const result = await enterWorkingBranch(repoPath, "feat/dirty-main-carry");
+		const currentBranch = await execFileAsync(
+			"git",
+			["rev-parse", "--abbrev-ref", "HEAD"],
+			{ cwd: repoPath },
+		);
+		const carriedFile = await fs.readFile(
+			path.join(repoPath, "dirty.txt"),
+			"utf8",
+		);
+		const status = await execFileAsync("git", ["status", "--short"], {
+			cwd: repoPath,
+		});
+
+		expect(result).toMatchObject({
+			status: "entered_branch",
+			startingBranch: "main",
+			requestedBranch: "feat/dirty-main-carry",
+			currentBranch: "feat/dirty-main-carry",
+			branchCreated: true,
+			carriedUncommittedChanges: true,
+			entryMode: "created_and_checked_out",
+		});
+		expect(currentBranch.stdout.trim()).toBe("feat/dirty-main-carry");
+		expect(carriedFile).toBe("dirty\n");
+		expect(status.stdout).toContain("dirty.txt");
+	});
+
+	it("switches from main into an existing local working branch", async () => {
+		const { repoPath } = await createRepo({
+			workingBranch: null,
+			withFeatureCommit: false,
+		});
+		await execFileAsync("git", ["checkout", "-b", "feat/existing-branch"], {
+			cwd: repoPath,
+		});
+		await execFileAsync("git", ["checkout", "main"], { cwd: repoPath });
+
+		const result = await enterWorkingBranch(repoPath, "feat/existing-branch");
+		const currentBranch = await execFileAsync(
+			"git",
+			["rev-parse", "--abbrev-ref", "HEAD"],
+			{ cwd: repoPath },
+		);
+
+		expect(result).toMatchObject({
+			status: "entered_branch",
+			startingBranch: "main",
+			requestedBranch: "feat/existing-branch",
+			currentBranch: "feat/existing-branch",
+			branchCreated: false,
+			carriedUncommittedChanges: false,
+			entryMode: "checked_out_existing",
+		});
+		expect(currentBranch.stdout.trim()).toBe("feat/existing-branch");
+	});
+
+	it("blocks dirty switch into an existing local branch", async () => {
+		const { repoPath } = await createRepo({
+			workingBranch: null,
+			withFeatureCommit: false,
+		});
+		await execFileAsync("git", ["checkout", "-b", "feat/existing-branch"], {
+			cwd: repoPath,
+		});
+		await execFileAsync("git", ["checkout", "main"], { cwd: repoPath });
+		await fs.writeFile(path.join(repoPath, "dirty.txt"), "dirty\n", "utf8");
+
+		await expect(
+			enterWorkingBranch(repoPath, "feat/existing-branch"),
+		).rejects.toThrow(
+			"Working tree must be clean before bounded branch entry can switch branches; only main -> new branch creation may carry uncommitted changes.",
+		);
+	});
+
+	it("rejects invalid bounded branch entry names", async () => {
+		const { repoPath } = await createRepo({
+			workingBranch: null,
+			withFeatureCommit: false,
+		});
+
+		await expect(enterWorkingBranch(repoPath, "main")).rejects.toThrow(
+			"Bounded branch entry requires a non-main working branch.",
+		);
+		await expect(enterWorkingBranch(repoPath, "bad branch")).rejects.toThrow(
+			"Invalid git branch name: bad branch",
+		);
+	});
+
 	it("pushes the current branch to origin with bounded args", async () => {
 		const { repoPath, remotePath } = await createRepo();
 		const { binDir } = await createFakeGh(repoPath);
