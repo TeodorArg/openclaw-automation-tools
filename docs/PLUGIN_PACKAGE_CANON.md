@@ -13,11 +13,15 @@ It is a repo-level policy, not a claim that every rule is mandated by upstream O
 
 This canon is active as repository policy.
 
-Implementation rollout across live package surfaces can lag behind the canon temporarily.
+The active publishable plugin package, `openclaw-host-git-workflow/`, now matches the current package canon for domain-grouped `src/runtime/` code and flat default `src/test/` coverage.
 
-At the moment, the active `openclaw-host-git-workflow/` package still contains pre-canon colocated test files under `src/runtime/`.
+In the live package, the current runtime domains are grouped under:
+- `src/runtime/host/`
+- `src/runtime/node/`
+- `src/runtime/planning/`
+- `src/runtime/repo/`
 
-That current layout is an implementation backlog item, not the target package canon.
+Future plugin packages in this repository should follow the same package-shape baseline unless a narrower canon update replaces it.
 
 ## Boundary Note
 

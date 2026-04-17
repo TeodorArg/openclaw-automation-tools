@@ -8,7 +8,7 @@ Multi-package OpenClaw repository for one active host-backed plugin package, ski
 - [docs/PLUGIN_STYLE_CANON.md](docs/PLUGIN_STYLE_CANON.md)
 
 These documents define the active repo-level canon.
-Implementation rollout across live package surfaces is still incremental.
+The active publishable plugin package now matches the current runtime/test layout canon.
 
 ## Current Repo Map
 
@@ -38,6 +38,8 @@ Its current shipped slice covers:
 - bounded sync of local `main` from `origin/main`
 
 The runtime now binds to a concrete host node and executes shell steps through `node.invoke` `system.run.prepare` / `system.run`, instead of treating node selection as an unbound placeholder.
+
+Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
 
 ## Install
 
@@ -87,4 +89,4 @@ For each skill-only package, verify:
 - `host-git-lane/` remains documentation-only and must not be reshaped into a fake package.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
-- Some live package surfaces may still reflect pre-canon layout details until rollout work is completed.
+- The active `openclaw-host-git-workflow/` package now uses domain-grouped runtime modules under `src/runtime/` and flat default tests under `src/test/`, in line with the tracked package canon.

@@ -1,26 +1,20 @@
-declare module "@openclaw/plugin-sdk" {
-	export type AnyAgentTool = unknown;
-	export type PluginRuntime = unknown;
-	export type OpenClawPluginToolContext = {
-		agentId?: string;
-		sessionKey?: string;
-	};
-	export type OpenClawPluginApi = {
+declare module "openclaw/plugin-sdk/plugin-entry" {
+	type OpenClawPluginApi = {
 		pluginConfig?: Record<string, unknown>;
-		runtime: PluginRuntime;
+		runtime: unknown;
 		registerTool(
-			tool: unknown | ((context: OpenClawPluginToolContext) => unknown),
+			tool:
+				| unknown
+				| ((context: { agentId?: string; sessionKey?: string }) => unknown),
 			opts?: { optional?: boolean },
 		): void;
 	};
-}
 
-declare module "openclaw/plugin-sdk/plugin-entry" {
 	export function definePluginEntry(entry: {
 		id: string;
 		name: string;
 		description: string;
-		register(api: import("@openclaw/plugin-sdk").OpenClawPluginApi): void;
+		register(api: OpenClawPluginApi): void;
 	}): unknown;
 }
 

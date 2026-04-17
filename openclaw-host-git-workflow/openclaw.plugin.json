@@ -9,14 +9,6 @@
 		"type": "object",
 		"additionalProperties": false,
 		"properties": {
-			"repoPath": {
-				"type": "string",
-				"description": "Optional explicit repo path override for workflow planning."
-			},
-			"baseBranch": {
-				"type": "string",
-				"description": "Preferred base branch for later host-backed finish flow."
-			},
 			"nodeSelector": {
 				"type": "string",
 				"description": "Optional host node selector used to bind the bounded workflow to one concrete host node before execution."
