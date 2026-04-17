@@ -12,10 +12,11 @@ function makePlan() {
 		groups: [
 			{
 				id: "group-1",
-				branch: "feat/host-workflow-repo-aware-planning",
+				branch: "feat/openclaw-host-git-workflow-runtime",
 				files: ["openclaw-host-git-workflow/src/host-git-workflow-tool.ts"],
 				commit: {
-					title: "feat(workflow): add host repo-aware planning output",
+					title:
+						"feat(openclaw-host-git-workflow): add repo-aware runtime output",
 					body: [
 						"Add deterministic repo-aware planning output to the host workflow runtime.",
 						"- Inspect git status and classify changed files by repo area.",
@@ -41,7 +42,7 @@ describe("validateConfirmedPlan", () => {
 		const duplicateGroupId = makePlan();
 		duplicateGroupId.groups.push({
 			...duplicateGroupId.groups[0],
-			branch: "feat/host-workflow-confirmed-plan-runtime",
+			branch: "feat/openclaw-host-git-workflow-confirmed-plan-runtime",
 		});
 		expect(() => validateConfirmedPlan(duplicateGroupId, repoPath)).toThrow(
 			"confirmedPlan.groups[1].id must be unique.",

@@ -31,17 +31,18 @@ describe("buildPlanResult", () => {
 		expect(result.groups[0]).toMatchObject({
 			id: "group-1",
 			area: "docs",
-			branch: "docs/update-host-workflow-docs",
+			branch: "docs/repo-docs-openclaw-host-git-workflow-guidance",
 			commit: {
-				title: "docs(workflow): update host workflow docs",
+				title: "docs(repo-docs): update openclaw-host-git-workflow guidance",
 			},
 		});
 		expect(result.groups[1]).toMatchObject({
 			id: "group-2",
 			area: "runtime",
-			branch: "feat/host-workflow-confirmed-plan-runtime",
+			branch: "feat/openclaw-host-git-workflow-confirmed-plan-runtime",
 			commit: {
-				title: "feat(workflow): add confirmed-plan runtime slice",
+				title:
+					"feat(openclaw-host-git-workflow): add confirmed-plan runtime slice",
 			},
 		});
 		expect(result.confirmedPlanCandidate).toMatchObject({
@@ -85,23 +86,24 @@ describe("buildPlanResult", () => {
 			id: "group-1",
 			area: "runtime",
 			label: "Runtime planning logic",
-			branch: "feat/host-workflow-refine-planning",
+			branch: "feat/openclaw-host-git-workflow-planning",
 			files: [
 				"openclaw-host-git-workflow/src/runtime/planning/plan-groups.ts",
 				"openclaw-host-git-workflow/src/test/plan-groups.test.ts",
 			],
 			commit: {
-				title: "feat(workflow): refine host repo-aware planning",
+				title: "feat(openclaw-host-git-workflow): refine repo-aware planning",
 			},
 		});
 		expect(result.groups[1]).toMatchObject({
 			id: "group-2",
 			area: "runtime",
 			label: "Plugin and confirmed-plan runtime",
-			branch: "feat/host-workflow-confirmed-plan-runtime",
+			branch: "feat/openclaw-host-git-workflow-confirmed-plan-runtime",
 			files: ["openclaw-host-git-workflow/src/host-git-workflow-tool.ts"],
 			commit: {
-				title: "feat(workflow): add confirmed-plan runtime slice",
+				title:
+					"feat(openclaw-host-git-workflow): add confirmed-plan runtime slice",
 			},
 		});
 		expect(result.confirmedPlanCandidate?.groups).toHaveLength(2);
@@ -134,9 +136,9 @@ describe("buildPlanResult", () => {
 		expect(result.groups[0]).toMatchObject({
 			area: "runtime",
 			label: "Plugin install and package shape",
-			branch: "fix/host-plugin-install-shape",
+			branch: "fix/openclaw-host-git-workflow-package-shape",
 			commit: {
-				title: "fix(plugin): refine host workflow package shape",
+				title: "fix(openclaw-host-git-workflow): refine package shape",
 			},
 		});
 	});
@@ -165,9 +167,10 @@ describe("buildPlanResult", () => {
 		expect(result.groups[0]).toMatchObject({
 			area: "runtime",
 			label: "Plugin and bounded runtime",
-			branch: "feat/host-workflow-repo-aware-planning",
+			branch: "feat/openclaw-host-git-workflow-runtime",
 			commit: {
-				title: "feat(workflow): add host repo-aware planning output",
+				title:
+					"feat(openclaw-host-git-workflow): add repo-aware runtime output",
 			},
 		});
 	});
@@ -239,12 +242,13 @@ describe("buildPlanResult", () => {
 		expect(result.groups[0]).toMatchObject({
 			area: "skills",
 			label: "Skill UX and command contract",
-			branch: "feat/skills-refine-host-workflow",
+			branch: "feat/openclaw-host-git-workflow-skill-contract",
 			files: [
 				"openclaw-host-git-workflow/skills/openclaw-host-git-workflow/SKILL.md",
 			],
 			commit: {
-				title: "feat(skills): refine host git workflow contract",
+				title:
+					"feat(openclaw-host-git-workflow): refine bundled skill contract",
 			},
 		});
 		expect(result.confirmedPlanCandidate?.groups).toHaveLength(1);

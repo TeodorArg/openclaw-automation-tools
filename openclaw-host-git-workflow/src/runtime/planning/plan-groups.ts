@@ -6,6 +6,8 @@ import type {
 
 const RUNTIME_ROOTS = ["openclaw-host-git-workflow/"];
 const SKILL_ROOTS = ["skills/", "openclaw-host-git-workflow/skills/"];
+const ACTIVE_PACKAGE_SLUG = "openclaw-host-git-workflow";
+const ACTIVE_PACKAGE_SCOPE = "openclaw-host-git-workflow";
 
 type ChangedFile = {
 	path: string;
@@ -207,10 +209,10 @@ function buildGroupForArea(
 		case "docs":
 			return {
 				label: "Docs and repo guidance",
-				branch: "docs/update-host-workflow-docs",
+				branch: "docs/repo-docs-openclaw-host-git-workflow-guidance",
 				files,
 				commit: {
-					title: "docs(workflow): update host workflow docs",
+					title: "docs(repo-docs): update openclaw-host-git-workflow guidance",
 					body: createCommitBody(
 						"Update the host workflow documentation for the next planning slice.",
 						[
@@ -225,10 +227,10 @@ function buildGroupForArea(
 		case "skills":
 			return {
 				label: "Skill UX and command contract",
-				branch: "feat/skills-refine-host-workflow",
+				branch: `feat/${ACTIVE_PACKAGE_SLUG}-skill-contract`,
 				files,
 				commit: {
-					title: "feat(skills): refine host git workflow contract",
+					title: `feat(${ACTIVE_PACKAGE_SCOPE}): refine bundled skill contract`,
 					body: createCommitBody(
 						"Refine the skill-facing planning behavior for host git workflow commands.",
 						[
@@ -243,10 +245,10 @@ function buildGroupForArea(
 		case "repo":
 			return {
 				label: "Repo metadata and support files",
-				branch: "chore/repo-sync-host-workflow-metadata",
+				branch: `chore/repo-${ACTIVE_PACKAGE_SLUG}-metadata`,
 				files,
 				commit: {
-					title: "chore(repo): sync host workflow metadata",
+					title: `chore(repo): sync ${ACTIVE_PACKAGE_SLUG} metadata`,
 					body: createCommitBody(
 						"Sync repo-level metadata for the current host workflow slice.",
 						[
@@ -359,10 +361,10 @@ function buildRuntimeGroupForSubtype(
 		case "planning":
 			return {
 				label: "Runtime planning logic",
-				branch: "feat/host-workflow-refine-planning",
+				branch: `feat/${ACTIVE_PACKAGE_SLUG}-planning`,
 				files,
 				commit: {
-					title: "feat(workflow): refine host repo-aware planning",
+					title: `feat(${ACTIVE_PACKAGE_SCOPE}): refine repo-aware planning`,
 					body: createCommitBody(
 						"Refine deterministic repo-aware planning in the host workflow runtime.",
 						[
@@ -377,10 +379,10 @@ function buildRuntimeGroupForSubtype(
 		case "execute":
 			return {
 				label: "Plugin and confirmed-plan runtime",
-				branch: "feat/host-workflow-confirmed-plan-runtime",
+				branch: `feat/${ACTIVE_PACKAGE_SLUG}-confirmed-plan-runtime`,
 				files,
 				commit: {
-					title: "feat(workflow): add confirmed-plan runtime slice",
+					title: `feat(${ACTIVE_PACKAGE_SCOPE}): add confirmed-plan runtime slice`,
 					body: createCommitBody(
 						"Add the confirmed-plan runtime slice for the host workflow package.",
 						[
@@ -395,10 +397,10 @@ function buildRuntimeGroupForSubtype(
 		case "install":
 			return {
 				label: "Plugin install and package shape",
-				branch: "fix/host-plugin-install-shape",
+				branch: `fix/${ACTIVE_PACKAGE_SLUG}-package-shape`,
 				files,
 				commit: {
-					title: "fix(plugin): refine host workflow package shape",
+					title: `fix(${ACTIVE_PACKAGE_SCOPE}): refine package shape`,
 					body: createCommitBody(
 						"Refine the plugin install and package shape for the host workflow runtime.",
 						[
@@ -413,10 +415,10 @@ function buildRuntimeGroupForSubtype(
 		case "mixed":
 			return {
 				label: "Plugin and bounded runtime",
-				branch: "feat/host-workflow-repo-aware-planning",
+				branch: `feat/${ACTIVE_PACKAGE_SLUG}-runtime`,
 				files,
 				commit: {
-					title: "feat(workflow): add host repo-aware planning output",
+					title: `feat(${ACTIVE_PACKAGE_SCOPE}): add repo-aware runtime output`,
 					body: createCommitBody(
 						"Add deterministic repo-aware planning output to the host workflow runtime.",
 						[
