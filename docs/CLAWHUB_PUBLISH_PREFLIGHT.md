@@ -8,14 +8,15 @@ Status: current baseline after migration cleanup
 Plugin package:
 - `openclaw-host-git-workflow/`
 
+Primary package entrypoint:
+- `send_to_git` / `отправь в гит`
+
 Skill-only packages:
 - `memory-hygiene/`
 - `source-of-truth-fix/`
 
 Non-publishable companion docs:
 - `host-git-lane/`
-
-Legacy repo inputs `openclaw-git-workflow/` and `openclaw-host-git-pr/` are no longer publishable surfaces in this repo because they were physically removed after migration closure.
 
 ## Plugin Checks
 
