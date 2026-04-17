@@ -30,6 +30,7 @@ Its current shipped slice covers:
 - repo resolution
 - live host node binding
 - host preflight
+- bounded branch entry from `main` or another clean local branch into a requested non-main working branch
 - confirmed-plan validation
 - bounded push of the current non-main branch to `origin`
 - bounded PR creation into `main`
@@ -38,6 +39,7 @@ Its current shipped slice covers:
 - bounded sync of local `main` from `origin/main`
 
 The runtime now binds to a concrete host node and executes shell steps through `node.invoke` `system.run.prepare` / `system.run`, instead of treating node selection as an unbound placeholder.
+Branch-aware planning output now emits package-aware branch suggestions and commit titles, so merge-visible PR titles identify the owning package or explicit repo surface instead of a generic workflow label.
 
 Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
 
