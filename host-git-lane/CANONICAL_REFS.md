@@ -2,26 +2,19 @@
 
 This file records the upstream canonical docs used to define the companion host git lane.
 
-Path placeholders used below:
-- `<OPENCLAW_PROJECT_ROOT>`: host checkout of the main OpenClaw product repo
-
 ## Product-Level Canon
 
-- `<OPENCLAW_PROJECT_ROOT>/GIT_GUIDANCE.md`
-  - host-backed git flow, commit/branch rules, GitHub auth and PR flow
-- `<OPENCLAW_PROJECT_ROOT>/WORKSPACE_ARCHITECTURE.md`
-  - host vs container path mapping and repo/config/workspace separation
 - `<OPENCLAW_PROJECT_ROOT>/README.md`
-  - product-level runtime boundary and host-backed finish guidance
-- `<OPENCLAW_PROJECT_ROOT>/templates/openclaw/OPENCLAW_BOOTSTRAP_BASELINE.jsonc`
-  - installed plugin metadata evidence and runtime/config baseline
+- `<OPENCLAW_PROJECT_ROOT>/GIT_GUIDANCE.md`
+- `<OPENCLAW_PROJECT_ROOT>/WORKSPACE_ARCHITECTURE.md`
+- official `openclaw/openclaw` docs for nodes, plugins, and exec routing
 
 ## Repo-Level Canon
 
 - `README.md`
-- `openclaw-git-workflow/README.md`
+- `openclaw-host-git-workflow/README.md`
+- `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md`
 
 ## Interpretation Rule
 
-If a future standalone host git package manifest appears in canonical source, this companion-layer classification may need revision.
-Until that happens, this folder remains documentation-only.
+This folder remains documentation-only unless a real canonical standalone host-lane package appears in upstream source.
