@@ -63,23 +63,28 @@ For each active skill package:
 
 ## Commands
 
+Plugin publish preflight:
+
+```bash
+clawhub package publish ./openclaw-host-git-workflow --dry-run
+```
+
 Plugin publish:
 
 ```bash
-clawhub package publish ./openclaw-host-git-workflow \
-  --family code-plugin \
-  --name @openclaw/openclaw-host-git-workflow \
-  --display-name "OpenClaw Host Git Workflow" \
-  --version 0.1.0 \
-  --changelog "Bounded host-backed git workflow with live node binding" \
-  --tags latest,git,workflow,host
+clawhub package publish ./openclaw-host-git-workflow
 ```
+
+Notes:
+- official ClawHub plugin publish accepts a `<source>` such as a local folder, `owner/repo`, `owner/repo@ref`, or a GitHub URL
+- plugin identity and compatibility metadata must already be present in `package.json` / `openclaw.plugin.json`; do not rely on ad hoc publish flags for canonical package metadata
+- prefer `--dry-run` on the current machine before the first real publish
 
 Skill publish examples:
 
 ```bash
-clawhub publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
-clawhub publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
+clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
+clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
 ```
 
 ## Blockers

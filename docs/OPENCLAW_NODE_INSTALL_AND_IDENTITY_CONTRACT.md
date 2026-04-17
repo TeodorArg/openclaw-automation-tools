@@ -16,6 +16,7 @@ For this repo:
 
 ```bash
 openclaw node install --host <gateway-host> --port 18789 --display-name "Build Node"
+openclaw node status
 openclaw node restart
 ```
 
@@ -25,14 +26,28 @@ Foreground mode:
 openclaw node run --host <gateway-host> --port 18789 --display-name "Build Node"
 ```
 
-Related commands:
+Official pairing + identity commands:
 
 ```bash
-openclaw nodes pending
-openclaw nodes approve <requestId>
-openclaw nodes reject <requestId>
+openclaw devices list
+openclaw devices approve <requestId>
+openclaw devices reject <requestId>
 openclaw nodes status
+openclaw nodes describe --node <id|name|ip>
 openclaw nodes rename --node <id|name|ip> --name "Living Room iPad"
+```
+
+Notes:
+- repo-local docs standardize on `openclaw devices list|approve|reject` for gateway-side pairing approval
+- official OpenClaw CLI docs also still expose `openclaw nodes pending|approve|reject`; treat those as an alternate product CLI surface, not as a separate repo-owned node package
+
+Service-management commands:
+
+```bash
+openclaw node status
+openclaw node stop
+openclaw node restart
+openclaw node uninstall
 ```
 
 ## Repo Interpretation
@@ -49,7 +64,7 @@ Incorrect modeling:
 
 ## Required Identity Metadata
 
-For any host-backed node or client visible in gateway/UI, the lane should expose:
+For any host-backed node or client visible in gateway/UI, the repo-local lane model should preserve:
 - stable instance id
 - stable node id when applicable
 - display name
