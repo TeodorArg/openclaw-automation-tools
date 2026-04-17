@@ -12,9 +12,14 @@ export default definePluginEntry({
 		"Host-backed git workflow scaffold for repo-aware planning, repo resolution, node selection, host preflight, bounded push, bounded PR creation, checks wait, merge, and sync-main.",
 	register(api: OpenClawPluginApi) {
 		api.registerTool(
-			createHostGitWorkflowTool({
-				pluginConfig: api.pluginConfig,
-			}) as unknown as AnyAgentTool,
+			(toolContext: { agentId?: string; sessionKey?: string }) =>
+				createHostGitWorkflowTool({
+					pluginConfig: api.pluginConfig,
+					toolContext: {
+						agentId: toolContext.agentId,
+						sessionKey: toolContext.sessionKey,
+					},
+				}) as unknown as AnyAgentTool,
 			{
 				optional: true,
 			},
