@@ -17,6 +17,8 @@ Primary user-facing entrypoint:
 - `отправь в гит`
 - `send_to_git`
 
+Все supported aliases должны нормализоваться к одному canonical intent `send_to_git`.
+
 ## Current Package Slice
 
 Этот package slice сейчас покрывает:

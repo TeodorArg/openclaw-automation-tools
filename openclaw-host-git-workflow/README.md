@@ -2,6 +2,12 @@
 
 Publishable OpenClaw plugin package for the active bounded host-backed git/GitHub workflow.
 
+## Primary UX
+
+The bundled skill surface is intentionally collapsed to one primary user-facing entrypoint:
+- `send_to_git`
+- `отправь в гит`
+
 ## Current Runtime Coverage
 
 This package currently ships:
@@ -17,7 +23,7 @@ This package currently ships:
 - bounded merge of the current branch PR into `main`
 - bounded sync of local `main` from `origin/main`
 
-Shell execution now runs on the bound host node through `node.invoke` `system.run.prepare` / `system.run`, not through an unbound placeholder selector and not through repo-local helper scripts outside the package.
+Shell execution now runs on the bound host node through `node.invoke` `system.run.prepare` / `system.run`, not through an unbound selector placeholder and not through repo-local helper scripts outside the package.
 
 ## Hard Boundaries
 
@@ -50,6 +56,7 @@ openclaw plugins install -l ./openclaw-host-git-workflow
 ## Verify
 
 ```bash
+cd openclaw-host-git-workflow
 pnpm lint
 pnpm typecheck
 pnpm build
