@@ -26,6 +26,8 @@ This package currently ships:
 
 Shell execution now runs on the bound host node through `node.invoke` `system.run.prepare` / `system.run`, not through an unbound selector placeholder and not through repo-local helper scripts outside the package.
 
+Branch-aware planning output now generates branch suggestions and commit titles that identify the owning package or repo surface, so downstream PR titles derived from the latest commit stay informative at merge time.
+
 ## Hard Boundaries
 
 - no arbitrary shell passthrough

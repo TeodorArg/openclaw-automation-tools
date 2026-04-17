@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-host-git-workflow",
 	"version": "0.1.0",
-	"description": "Host-backed git workflow plugin for OpenClaw with bundled skill, single send_to_git entrypoint, and bounded runtime slices for planning, repo resolution, live host node binding, preflight, push, PR creation, checks wait, merge, and sync-main.",
+	"description": "Host-backed git workflow plugin for OpenClaw with bundled skill, single send_to_git entrypoint, and bounded runtime slices for planning, repo resolution, live host node binding, preflight, branch entry, push, PR creation, checks wait, merge, and sync-main.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
@@ -37,7 +37,7 @@
 		"format:check": "biome format --check . --files-ignore-unknown=true",
 		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
 		"lint:fix": "biome check --write index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
-		"check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm pack:smoke",
+		"check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm pack:smoke",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --passWithNoTests",
 		"pack:smoke": "rm -rf .pack .npm-cache && mkdir -p .pack .npm-cache && npm_config_cache=.npm-cache npm pack --dry-run --json > .pack/pack.json && node --input-type=module -e \"import { readFileSync } from 'node:fs'; const pack = JSON.parse(readFileSync('.pack/pack.json', 'utf8'))[0]; const paths = new Set(pack.files.map((file) => file.path)); for (const required of ['dist/index.js', 'openclaw.plugin.json', 'skills/openclaw-host-git-workflow/SKILL.md', 'README.md', 'LICENSE']) { if (!paths.has(required)) { throw new Error('Missing packed artifact: ' + required); } }\""
