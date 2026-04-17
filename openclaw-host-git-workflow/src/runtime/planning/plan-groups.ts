@@ -5,6 +5,7 @@ import type {
 } from "./validate-confirmed-plan.js";
 
 const RUNTIME_ROOTS = ["openclaw-host-git-workflow/"];
+const SKILL_ROOTS = ["skills/", "openclaw-host-git-workflow/skills/"];
 
 type ChangedFile = {
 	path: string;
@@ -135,7 +136,7 @@ function classifyRepoArea(filePath: string): RepoArea {
 		return "docs";
 	}
 
-	if (filePath.startsWith("skills/")) {
+	if (SKILL_ROOTS.some((root) => filePath.startsWith(root))) {
 		return "skills";
 	}
 
