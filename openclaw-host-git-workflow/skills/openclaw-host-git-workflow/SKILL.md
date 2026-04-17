@@ -1,6 +1,6 @@
 ---
 name: openclaw-host-git-workflow
-description: Выполняет bounded host git workflow через единый canonical intent `send_to_git`: нормализует intent, строит repo-aware план, предлагает ветки, валидирует confirmed plan, делает bounded push текущей ветки и открывает bounded PR в `main`.
+description: Выполняет bounded host git workflow через единый canonical intent `send_to_git`: нормализует intent, строит repo-aware план, нормализует repo resolution и node selection, делает host preflight, валидирует confirmed plan, делает bounded push текущей ветки и открывает bounded PR в `main`.
 user-invocable: true
 command-dispatch: tool
 command-tool: host_git_workflow_action
@@ -24,16 +24,19 @@ Shipped runtime canon для этого skill такой:
 
 1. planning only
 2. branch-aware planning
-3. confirmed-plan validation
-4. push current branch to `origin`
-5. create PR from current branch into `main`
+3. repo resolution
+4. node selection с precedence `pluginConfig -> env -> default placeholder`
+5. host preflight
+6. confirmed-plan validation
+7. push current branch to `origin`
+8. create PR from current branch into `main`
 
 Текущий slice не выполняет:
 
 - host-backed branch/commit execution
-- checks polling
-- merge
-- sync main
+- `sync-main`
+- `wait_for_checks`
+- `merge_pr`
 
 ## Жёсткие правила
 
@@ -43,4 +46,5 @@ Shipped runtime canon для этого skill такой:
 - Если confirmed plan отсутствует или невалиден, validation должна остановиться с понятной ошибкой.
 - Push должен работать только для текущей non-main ветки и только в `origin`.
 - PR должен открываться только из текущей non-main ветки в `main` и только через bounded `gh pr create`.
+- Node selection должен оставаться явно `not_bound`, пока runtime не подключён к `node.invoke`.
 - Finish-flow шаги сверх shipped slice не должны заявляться как implemented, пока соответствующий runtime не реализован внутри этого package.

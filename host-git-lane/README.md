@@ -37,7 +37,7 @@ It exists to keep the host-backed lane explicit without inventing a fake package
 
 ## Relation To Other Units
 
-- `openclaw-host-git-workflow/` is the materialized standalone plugin package that already owns bounded planning, push, and PR runtime behavior and should absorb the remaining host-backed runtime/tool ownership over successive slices
+- `openclaw-host-git-workflow/` is the materialized standalone plugin package that already owns bounded planning, repo resolution, node selection, host preflight, push, and PR runtime behavior and should absorb the remaining host-backed runtime/tool ownership over successive slices
 - `openclaw-git-workflow/` remains the current materialized plugin package and a legacy prototype/reference for planning/runtime modules
 - `openclaw-host-git-pr/` remains a skill-only package until its bounded PR contract is folded into the new plugin package
 - this folder documents the host-backed finish lane those units depend on during and after that migration
