@@ -45,8 +45,8 @@ Current status:
 
 - this package direction is accepted in repo canon
 - the package root now exists in the live tree
-- the currently shipped slice covers planning, branch-aware planning, repo resolution, node selection, host preflight, confirmed-plan validation, bounded push, and bounded PR creation
-- `sync-main`, `wait_for_checks`, and `merge_pr` still remain future runtime work
+- the currently shipped slice covers planning, branch-aware planning, repo resolution, node selection, host preflight, confirmed-plan validation, bounded push, bounded PR creation, and bounded `sync-main`
+- `wait_for_checks` and `merge_pr` still remain future runtime work
 
 ## Root-Level Facts
 
@@ -68,7 +68,7 @@ Current materialized publishable plugin packages are:
 Current host-backed plugin package:
 - `openclaw-host-git-workflow/`
 - purpose: self-contained host-backed git workflow plugin with bundled skills and bounded host-flow ownership
-- current state: materialized package root with shipped planning, repo-resolution, node-selection, preflight, validation, push, and PR slice
+- current state: materialized package root with shipped planning, repo-resolution, node-selection, preflight, validation, push, PR, and sync-main slice
 
 Install from a local checkout:
 
@@ -183,7 +183,7 @@ For `host-git-lane/`, CI verifies:
 
 - The repo should be documented as an evolving collection repo, not as a permanently fixed package lineup.
 - `openclaw-git-workflow/` is one package inside this repo, not the meaning of the whole repo.
-- `openclaw-host-git-workflow/` is now materialized as the main standalone host-backed package direction, and its shipped runtime slice currently covers planning, branch-aware planning, repo resolution, node selection, host preflight, confirmed-plan validation, bounded push, and bounded PR creation.
+- `openclaw-host-git-workflow/` is now materialized as the main standalone host-backed package direction, and its shipped runtime slice currently covers planning, branch-aware planning, repo resolution, node selection, host preflight, confirmed-plan validation, bounded push, bounded PR creation, and bounded `sync-main`.
 - `openclaw-git-workflow/` remains in the repo as a legacy prototype/reference package and migration source for reusable runtime modules.
 - `openclaw-host-git-pr/` is no longer the preferred final public surface for this workflow; its bounded PR contract should migrate into the new plugin package as bundled skill/runtime behavior.
 - `host-git-lane/` remains companion documentation for that external lane and is not publishable.
