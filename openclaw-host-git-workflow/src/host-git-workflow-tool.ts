@@ -96,7 +96,7 @@ export function createHostGitWorkflowTool(
 	return {
 		name: "host_git_workflow_action",
 		description:
-			"Bounded host git workflow scaffold for planning, repo resolution, node selection, host preflight, branch entry, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
+			"Bounded host git workflow for repo-aware planning, branch-aware planning, repo resolution, node selection, host preflight, branch entry, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoTarget = resolveRepoTarget();
@@ -169,8 +169,8 @@ export function createHostGitWorkflowTool(
 									confirmedPlanCandidate: planResult.confirmedPlanCandidate,
 									note:
 										params.action === "plan_with_branches"
-											? "This package slice supports branch-aware planning now, with repo resolution, node selection, host preflight, bounded branch entry, bounded push, bounded PR creation, bounded wait_for_checks, bounded merge_pr, and sync_main available as separate runtime actions."
-											: "This package slice currently supports planning-only output without execution.",
+											? "This action returns branch-aware planning output with package-aware branch and commit metadata; separate bounded actions in the same package handle confirmed-plan validation, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync."
+											: "This action returns repo-aware planning output; separate bounded actions in the same package handle confirmed-plan validation, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync.",
 								},
 								null,
 								2,
@@ -406,7 +406,7 @@ export function createHostGitWorkflowTool(
 								status: "validated",
 								intent,
 								confirmedPlan: validatedPlan,
-								note: "Confirmed plan validation passed. Host-backed execution orchestration is not implemented in this package slice yet.",
+								note: "Confirmed plan validation passed. The validated plan can now drive the package's separate bounded preflight, branch-entry, push, PR, checks, merge, and local main sync actions.",
 							},
 							null,
 							2,

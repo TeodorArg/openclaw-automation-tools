@@ -40,8 +40,10 @@ Primary user-facing entrypoint:
 - Не принимай произвольный `git <anything>` как supported input.
 - Не прокидывай пользовательский текст в shell.
 - Planning и execution должны оставаться bounded и typed.
+- Не аутентифицируй `git` или GitHub внутри runtime/container surface.
 - Branch entry должен работать с валидным non-main branch name.
 - Незакоммиченные изменения можно bounded-переносить только в сценарии `main -> новая local branch`.
 - Push работает только для текущей non-main ветки и только в `origin`.
 - PR открывается только из текущей non-main ветки в `main`.
 - Runtime должен использовать уже связанный host node, а не unbound selector placeholder.
+- Repo path должен резолвиться из canonical host/project path, а не из installed output или неявного cwd.

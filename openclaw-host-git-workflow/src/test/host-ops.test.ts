@@ -69,7 +69,7 @@ async function createRepo(options?: {
 			[
 				"commit",
 				"-m",
-				"feat(workflow): add host push and pr slice",
+				"feat(openclaw-host-git-workflow): add host push and pr slice",
 				"-m",
 				[
 					"Add bounded push and PR support to the host workflow package.",
@@ -327,7 +327,7 @@ describe("host push and pr ops", () => {
 			status: "pr_opened",
 			baseBranch: "main",
 			currentBranch: "feat/host-workflow-test",
-			prTitle: "feat(workflow): add host push and pr slice",
+			prTitle: "feat(openclaw-host-git-workflow): add host push and pr slice",
 		});
 		expect(ghLog).toContain("pr");
 		expect(ghLog).toContain("create");

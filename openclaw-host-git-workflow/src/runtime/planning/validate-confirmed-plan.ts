@@ -24,6 +24,11 @@ const BRANCH_RE =
 	/^(feat|fix|docs|refactor|chore|test|build|ci)\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const COMMIT_TITLE_RE =
 	/^(feat|fix|docs|refactor|chore|test|build|ci)\([a-z0-9-]+\): [^\s].+$/;
+const ALLOWED_SCOPE_PREFIXES = [
+	"openclaw-host-git-workflow",
+	"repo",
+	"repo-docs",
+] as const;
 
 function assertNonEmptyString(
 	value: unknown,
@@ -71,6 +76,30 @@ function validateRepoRelativeFile(repoPath: string, file: string): void {
 	const relative = path.relative(repoPath, resolved);
 	if (relative.startsWith("..") || path.isAbsolute(relative)) {
 		throw new Error(`group file '${file}' escapes repo root.`);
+	}
+}
+
+function hasAllowedScopePrefix(value: string): boolean {
+	return ALLOWED_SCOPE_PREFIXES.some(
+		(prefix) => value === prefix || value.startsWith(`${prefix}-`),
+	);
+}
+
+function validateBranchScope(branch: string, field: string): void {
+	const [, scope] = branch.split("/", 2);
+	if (!scope || !hasAllowedScopePrefix(scope)) {
+		throw new Error(
+			`${field} must identify the owning package slug or an explicit repo surface.`,
+		);
+	}
+}
+
+function validateCommitScope(title: string, field: string): void {
+	const commitScope = title.slice(title.indexOf("(") + 1, title.indexOf(")"));
+	if (!hasAllowedScopePrefix(commitScope)) {
+		throw new Error(
+			`${field} must identify the owning package slug or an explicit repo surface.`,
+		);
 	}
 }
 
@@ -130,6 +159,7 @@ export function validateConfirmedPlan(
 		if (!BRANCH_RE.test(group.branch)) {
 			throw new Error(`${prefix}.branch is malformed or unsafe.`);
 		}
+		validateBranchScope(group.branch, `${prefix}.branch`);
 
 		if (!Array.isArray(group.files) || group.files.length < 1) {
 			throw new Error(`${prefix}.files must be a non-empty array.`);
@@ -159,6 +189,7 @@ export function validateConfirmedPlan(
 		if (!COMMIT_TITLE_RE.test(group.commit.title)) {
 			throw new Error(`${prefix}.commit.title is malformed.`);
 		}
+		validateCommitScope(group.commit.title, `${prefix}.commit.title`);
 
 		validateCommitBody(group.commit.body);
 	}

@@ -214,12 +214,12 @@ function buildGroupForArea(
 				commit: {
 					title: "docs(repo-docs): update openclaw-host-git-workflow guidance",
 					body: createCommitBody(
-						"Update the host workflow documentation for the next planning slice.",
+						"Update the host workflow documentation for the active bounded package surface.",
 						[
-							"Align docs with the self-contained host workflow package direction.",
-							"Keep confirmed-plan handoff explicit for later runtime slices.",
+							"Align docs with the shipped host workflow package direction.",
+							"Keep confirmed-plan validation and bounded execution steps explicit.",
 							`Cover the changed docs set: ${summarizeFiles(files)}.`,
-							"Keep finish-flow claims aligned with the currently shipped code.",
+							"Keep finish-flow claims aligned with the currently shipped bounded workflow.",
 						],
 					),
 				},
@@ -232,12 +232,12 @@ function buildGroupForArea(
 				commit: {
 					title: `feat(${ACTIVE_PACKAGE_SCOPE}): refine bundled skill contract`,
 					body: createCommitBody(
-						"Refine the skill-facing planning behavior for host git workflow commands.",
+						"Refine the skill-facing bounded workflow contract for host git commands.",
 						[
-							"Keep plan-only and later host-execute paths separate.",
-							"Tighten how the skill describes the planning contract.",
+							"Keep planning, validation, and bounded execution steps aligned.",
+							"Tighten how the skill describes the active workflow contract.",
 							`Cover the changed skill files: ${summarizeFiles(files)}.`,
-							"Preserve the bounded no-host-execute state of this package slice.",
+							"Preserve the bounded host-backed workflow contract of this package.",
 						],
 					),
 				},
@@ -250,12 +250,12 @@ function buildGroupForArea(
 				commit: {
 					title: `chore(repo): sync ${ACTIVE_PACKAGE_SLUG} metadata`,
 					body: createCommitBody(
-						"Sync repo-level metadata for the current host workflow slice.",
+						"Sync repo-level metadata for the current host workflow surface.",
 						[
-							"Keep repo support files aligned with the new package direction.",
-							"Avoid widening the workflow contract beyond the shipped package slice.",
+							"Keep repo support files aligned with the shipped package direction.",
+							"Keep branch-aware planning and confirmed-plan validation explicit.",
 							`Cover the changed repo files: ${summarizeFiles(files)}.`,
-							"Keep host-backed finish flow claims separate until the runtime is implemented.",
+							"Keep host-backed finish-flow claims aligned with the live bounded package.",
 						],
 					),
 				},
@@ -339,6 +339,8 @@ function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 	}
 
 	if (
+		filePath === "openclaw-host-git-workflow/.npmignore" ||
+		filePath === "openclaw-host-git-workflow/README.md" ||
 		filePath === "openclaw-host-git-workflow/openclaw.plugin.json" ||
 		filePath === "openclaw-host-git-workflow/package.json" ||
 		filePath === "openclaw-host-git-workflow/pnpm-lock.yaml" ||
@@ -369,9 +371,9 @@ function buildRuntimeGroupForSubtype(
 						"Refine deterministic repo-aware planning in the host workflow runtime.",
 						[
 							"Keep planning groups deterministic and path-based.",
-							"Preserve confirmed-plan handoff for later host execution.",
+							"Preserve confirmed-plan handoff across the shipped bounded workflow.",
 							`Cover the changed planning files: ${summarizeFiles(files)}.`,
-							"Avoid widening the shipped workflow surface beyond planning and validation.",
+							"Keep the shipped workflow surface and planning metadata aligned.",
 						],
 					),
 				},
@@ -386,10 +388,10 @@ function buildRuntimeGroupForSubtype(
 					body: createCommitBody(
 						"Add the confirmed-plan runtime slice for the host workflow package.",
 						[
-							"Keep runtime behavior bounded to shipped validation logic.",
+							"Keep runtime behavior bounded to the shipped validation contract.",
 							"Preserve deterministic commit metadata and safe confirmed-plan checks.",
 							`Cover the changed runtime files: ${summarizeFiles(files)}.`,
-							"Leave host-backed push and PR orchestration for later slices.",
+							"Keep validation and bounded execution orchestration aligned in one package surface.",
 						],
 					),
 				},
@@ -425,7 +427,7 @@ function buildRuntimeGroupForSubtype(
 							"Inspect git status and classify changed files by repo area.",
 							"Generate stable groups, commit metadata, and branch suggestions.",
 							`Cover the changed runtime files: ${summarizeFiles(files)}.`,
-							"Keep execution limited to shipped validation-only behavior in this slice.",
+							"Keep planning output aligned with the shipped bounded workflow actions.",
 						],
 					),
 				},
