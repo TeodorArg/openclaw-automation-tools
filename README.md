@@ -11,11 +11,10 @@ Multi-package OpenClaw repository for one active host-backed plugin package, ski
 | [source-of-truth-fix/README.md](source-of-truth-fix/README.md) | skill-only package | Source-of-truth repair skill package |
 | [host-git-lane/README.md](host-git-lane/README.md) | companion docs only | Canonical docs for the external host lane and product boundary |
 
-Legacy repo inputs `openclaw-git-workflow/` and `openclaw-host-git-pr/` were removed after their useful runtime/skill semantics were folded into `openclaw-host-git-workflow/`.
-
 ## Active Package Direction
 
 `openclaw-host-git-workflow/` is the only active plugin package in this repo.
+Its bundled skill surface is intentionally collapsed to one primary user-facing entrypoint: `send_to_git` / `отправь в гит`.
 
 Its current shipped slice covers:
 - repo-aware planning
