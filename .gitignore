@@ -14,6 +14,7 @@
 .codex/
 memory.jsonl
 AGENTS.md
+.local-planning/
 # Vim / generic temp editor files
 *.swp
 *.swo
