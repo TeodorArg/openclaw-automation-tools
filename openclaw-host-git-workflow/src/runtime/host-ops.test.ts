@@ -180,7 +180,7 @@ describe("host push and pr ops", () => {
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
 		await expect(pushCurrentBranch(repoPath)).rejects.toThrow(
-			"Push and PR flow require a non-main working branch.",
+			"This host workflow action requires a non-main working branch.",
 		);
 	});
 });

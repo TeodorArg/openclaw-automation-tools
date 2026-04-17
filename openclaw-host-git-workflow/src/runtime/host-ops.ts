@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { type HostPreflight, preflightHostOps } from "./preflight.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -8,11 +9,7 @@ export type LatestCommit = {
 	body: string;
 };
 
-export type PushPreflight = {
-	repoPath: string;
-	currentBranch: string;
-	originUrl: string;
-};
+export type PushPreflight = HostPreflight;
 
 export type PushResult = PushPreflight & {
 	status: "pushed";
@@ -53,32 +50,9 @@ async function runBinary(
 	};
 }
 
-async function assertBinaryAvailable(command: string, repoPath: string) {
-	try {
-		await execFileAsync(command, ["--version"], {
-			cwd: repoPath,
-			env: process.env,
-		});
-	} catch {
-		throw new Error(`Required binary '${command}' is not available.`);
-	}
-}
-
 async function readGit(repoPath: string, args: string[]): Promise<string> {
 	const result = await runBinary(resolveGitBin(), args, repoPath);
 	return result.stdout;
-}
-
-async function readCurrentBranch(repoPath: string): Promise<string> {
-	return readGit(repoPath, ["rev-parse", "--abbrev-ref", "HEAD"]);
-}
-
-async function readOriginUrl(repoPath: string): Promise<string> {
-	try {
-		return await readGit(repoPath, ["remote", "get-url", "origin"]);
-	} catch {
-		throw new Error("Git remote 'origin' is not configured.");
-	}
 }
 
 async function readLatestCommit(repoPath: string): Promise<LatestCommit> {
@@ -100,34 +74,10 @@ async function readLatestCommit(repoPath: string): Promise<LatestCommit> {
 export async function preflightPushPr(
 	repoPath: string,
 ): Promise<PushPreflight> {
-	await assertBinaryAvailable(resolveGitBin(), repoPath);
-	await assertBinaryAvailable(resolveGhBin(), repoPath);
-
-	const currentBranch = (await readCurrentBranch(repoPath)).trim();
-	if (currentBranch === "" || currentBranch === "HEAD") {
-		throw new Error("Current branch is not a named local branch.");
-	}
-
-	if (currentBranch === "main") {
-		throw new Error("Push and PR flow require a non-main working branch.");
-	}
-
-	const originUrl = (await readOriginUrl(repoPath)).trim();
-	if (originUrl === "") {
-		throw new Error("Git remote 'origin' is not configured.");
-	}
-
-	try {
-		await runBinary(resolveGhBin(), ["auth", "status"], repoPath);
-	} catch {
-		throw new Error("GitHub CLI auth is not ready for bounded PR creation.");
-	}
-
-	return {
-		repoPath,
-		currentBranch,
-		originUrl,
-	};
+	return preflightHostOps(repoPath, {
+		requireGhAuth: true,
+		requireNonMainBranch: true,
+	});
 }
 
 export async function pushCurrentBranch(repoPath: string): Promise<PushResult> {
