@@ -1,12 +1,10 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import type { HostCommandRunner } from "./node-execution.js";
 import type {
 	ConfirmedGroup,
 	ConfirmedPlan,
 } from "./validate-confirmed-plan.js";
 
-const execFileAsync = promisify(execFile);
-const RUNTIME_ROOTS = ["openclaw-host-git-workflow/", "openclaw-git-workflow/"];
+const RUNTIME_ROOTS = ["openclaw-host-git-workflow/"];
 
 type ChangedFile = {
 	path: string;
@@ -46,16 +44,19 @@ export type PlanResult = {
 	confirmedPlanCandidate: ConfirmedPlan | null;
 };
 
-export async function collectRepoState(repoPath: string): Promise<RepoState> {
-	const branchResult = await execFileAsync(
+export async function collectRepoState(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<RepoState> {
+	const branchResult = await runner.run(
 		"git",
 		["rev-parse", "--abbrev-ref", "HEAD"],
 		{ cwd: repoPath },
 	);
-	const headResult = await execFileAsync("git", ["rev-parse", "HEAD"], {
+	const headResult = await runner.run("git", ["rev-parse", "HEAD"], {
 		cwd: repoPath,
 	});
-	const statusResult = await execFileAsync(
+	const statusResult = await runner.run(
 		"git",
 		["status", "--porcelain=v1", "-z"],
 		{ cwd: repoPath },
@@ -318,9 +319,7 @@ function splitRuntimeFilesIntoBuckets(
 function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 	if (
 		filePath === "openclaw-host-git-workflow/src/runtime/plan-groups.ts" ||
-		filePath === "openclaw-host-git-workflow/src/runtime/plan-groups.test.ts" ||
-		filePath === "openclaw-git-workflow/src/runtime/plan-groups.ts" ||
-		filePath === "openclaw-git-workflow/src/runtime/plan-groups.test.ts"
+		filePath === "openclaw-host-git-workflow/src/runtime/plan-groups.test.ts"
 	) {
 		return "planning";
 	}
@@ -330,13 +329,7 @@ function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 			"openclaw-host-git-workflow/src/runtime/validate-confirmed-plan.ts" ||
 		filePath ===
 			"openclaw-host-git-workflow/src/runtime/validate-confirmed-plan.test.ts" ||
-		filePath === "openclaw-host-git-workflow/src/host-git-workflow-tool.ts" ||
-		filePath ===
-			"openclaw-git-workflow/src/runtime/validate-confirmed-plan.ts" ||
-		filePath ===
-			"openclaw-git-workflow/src/runtime/validate-confirmed-plan.test.ts" ||
-		filePath === "openclaw-git-workflow/src/git-workflow-tool.ts" ||
-		filePath.startsWith("openclaw-git-workflow/scripts/")
+		filePath === "openclaw-host-git-workflow/src/host-git-workflow-tool.ts"
 	) {
 		return "execute";
 	}
@@ -348,15 +341,7 @@ function classifyRuntimeSubtype(filePath: string): RuntimeSubtype {
 		filePath === "openclaw-host-git-workflow/tsconfig.json" ||
 		filePath === "openclaw-host-git-workflow/tsconfig.build.json" ||
 		filePath === "openclaw-host-git-workflow/index.ts" ||
-		filePath === "openclaw-host-git-workflow/api.ts" ||
-		filePath === "openclaw-git-workflow/openclaw.plugin.json" ||
-		filePath === "openclaw-git-workflow/package.json" ||
-		filePath === "openclaw-git-workflow/package-lock.json" ||
-		filePath === "openclaw-git-workflow/pnpm-lock.yaml" ||
-		filePath === "openclaw-git-workflow/tsconfig.json" ||
-		filePath === "openclaw-git-workflow/tsconfig.build.json" ||
-		filePath === "openclaw-git-workflow/index.ts" ||
-		filePath === "openclaw-git-workflow/api.ts"
+		filePath === "openclaw-host-git-workflow/api.ts"
 	) {
 		return "install";
 	}

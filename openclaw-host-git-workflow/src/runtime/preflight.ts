@@ -1,9 +1,6 @@
-import { execFile } from "node:child_process";
 import { constants } from "node:fs";
 import { access } from "node:fs/promises";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
+import type { HostCommandRunner } from "./node-execution.js";
 
 export type HostPreflightOptions = {
 	requireNonMainBranch?: boolean;
@@ -28,22 +25,6 @@ export function resolveGhBin(): string {
 	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN || "gh";
 }
 
-async function runBinary(
-	command: string,
-	args: string[],
-	repoPath: string,
-): Promise<{ stdout: string; stderr: string }> {
-	const result = await execFileAsync(command, args, {
-		cwd: repoPath,
-		env: process.env,
-	});
-
-	return {
-		stdout: result.stdout?.trim() ?? "",
-		stderr: result.stderr?.trim() ?? "",
-	};
-}
-
 async function assertRepoPathReadable(repoPath: string) {
 	try {
 		await access(repoPath, constants.R_OK | constants.X_OK);
@@ -52,45 +33,59 @@ async function assertRepoPathReadable(repoPath: string) {
 	}
 }
 
-async function assertBinaryAvailable(command: string, repoPath: string) {
+async function assertBinaryAvailable(
+	command: string,
+	repoPath: string,
+	runner: HostCommandRunner,
+) {
 	try {
-		await execFileAsync(command, ["--version"], {
-			cwd: repoPath,
-			env: process.env,
-		});
+		await runner.run(command, ["--version"], { cwd: repoPath });
 	} catch {
 		throw new Error(`Required binary '${command}' is not available.`);
 	}
 }
 
-async function readGit(repoPath: string, args: string[]): Promise<string> {
-	const result = await runBinary(resolveGitBin(), args, repoPath);
+async function readGit(
+	repoPath: string,
+	args: string[],
+	runner: HostCommandRunner,
+): Promise<string> {
+	const result = await runner.run(resolveGitBin(), args, { cwd: repoPath });
 	return result.stdout;
 }
 
-async function readRepoRoot(repoPath: string): Promise<string> {
+async function readRepoRoot(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<string> {
 	try {
-		return await readGit(repoPath, ["rev-parse", "--show-toplevel"]);
+		return await readGit(repoPath, ["rev-parse", "--show-toplevel"], runner);
 	} catch {
 		throw new Error("Repository path is not inside a git work tree.");
 	}
 }
 
-async function readCurrentBranch(repoPath: string): Promise<string> {
-	return readGit(repoPath, ["rev-parse", "--abbrev-ref", "HEAD"]);
+async function readCurrentBranch(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<string> {
+	return readGit(repoPath, ["rev-parse", "--abbrev-ref", "HEAD"], runner);
 }
 
-async function readOriginUrl(repoPath: string): Promise<string> {
+async function readOriginUrl(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<string> {
 	try {
-		return await readGit(repoPath, ["remote", "get-url", "origin"]);
+		return await readGit(repoPath, ["remote", "get-url", "origin"], runner);
 	} catch {
 		throw new Error("Git remote 'origin' is not configured.");
 	}
 }
 
-async function assertGhAuthReady(repoPath: string) {
+async function assertGhAuthReady(repoPath: string, runner: HostCommandRunner) {
 	try {
-		await runBinary(resolveGhBin(), ["auth", "status"], repoPath);
+		await runner.run(resolveGhBin(), ["auth", "status"], { cwd: repoPath });
 	} catch {
 		throw new Error(
 			"GitHub CLI auth is not ready for bounded host workflow actions.",
@@ -101,17 +96,18 @@ async function assertGhAuthReady(repoPath: string) {
 export async function preflightHostOps(
 	repoPath: string,
 	options: HostPreflightOptions = {},
+	runner: HostCommandRunner,
 ): Promise<HostPreflight> {
 	const { requireGhAuth = true, requireNonMainBranch = false } = options;
 
 	await assertRepoPathReadable(repoPath);
-	await assertBinaryAvailable(resolveGitBin(), repoPath);
+	await assertBinaryAvailable(resolveGitBin(), repoPath, runner);
 	if (requireGhAuth) {
-		await assertBinaryAvailable(resolveGhBin(), repoPath);
+		await assertBinaryAvailable(resolveGhBin(), repoPath, runner);
 	}
 
-	const repoRoot = (await readRepoRoot(repoPath)).trim();
-	const currentBranch = (await readCurrentBranch(repoPath)).trim();
+	const repoRoot = (await readRepoRoot(repoPath, runner)).trim();
+	const currentBranch = (await readCurrentBranch(repoPath, runner)).trim();
 
 	if (currentBranch === "" || currentBranch === "HEAD") {
 		throw new Error("Current branch is not a named local branch.");
@@ -123,13 +119,13 @@ export async function preflightHostOps(
 		);
 	}
 
-	const originUrl = (await readOriginUrl(repoPath)).trim();
+	const originUrl = (await readOriginUrl(repoPath, runner)).trim();
 	if (originUrl === "") {
 		throw new Error("Git remote 'origin' is not configured.");
 	}
 
 	if (requireGhAuth) {
-		await assertGhAuthReady(repoPath);
+		await assertGhAuthReady(repoPath, runner);
 	}
 
 	return {

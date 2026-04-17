@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import type { HostCommandRunner } from "./node-execution.js";
 import { type HostPreflight, preflightHostOps } from "./preflight.js";
 
 const execFileAsync = promisify(execFile);
@@ -94,40 +95,64 @@ async function runBinary(
 	};
 }
 
-async function readGit(repoPath: string, args: string[]): Promise<string> {
-	const result = await runBinary(resolveGitBin(), args, repoPath);
-	return result.stdout;
+function createLocalCommandRunner(): HostCommandRunner {
+	return {
+		run(command, args, options) {
+			return runBinary(command, args, options.cwd);
+		},
+	};
 }
 
-async function readLatestCommit(repoPath: string): Promise<LatestCommit> {
-	const title = await readGit(repoPath, ["log", "-1", "--pretty=%s"]);
-	const body = await readGit(repoPath, ["log", "-1", "--pretty=%b"]);
+async function readLatestCommit(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<LatestCommit> {
+	const title = await runner.run(
+		resolveGitBin(),
+		["log", "-1", "--pretty=%s"],
+		{
+			cwd: repoPath,
+		},
+	);
+	const body = await runner.run(resolveGitBin(), ["log", "-1", "--pretty=%b"], {
+		cwd: repoPath,
+	});
 
-	if (title.trim() === "") {
+	if (title.stdout.trim() === "") {
 		throw new Error(
 			"Latest commit title is empty; cannot create a bounded PR.",
 		);
 	}
 
 	return {
-		title: title.trim(),
-		body: body.trim(),
+		title: title.stdout.trim(),
+		body: body.stdout.trim(),
 	};
 }
 
-async function readHeadCommitSha(repoPath: string): Promise<string> {
-	const sha = await readGit(repoPath, ["rev-parse", "HEAD"]);
+async function readHeadCommitSha(
+	repoPath: string,
+	runner: HostCommandRunner,
+): Promise<string> {
+	const sha = await runner.run(resolveGitBin(), ["rev-parse", "HEAD"], {
+		cwd: repoPath,
+	});
 
-	if (sha.trim() === "") {
+	if (sha.stdout.trim() === "") {
 		throw new Error("Failed to resolve HEAD commit SHA for bounded PR merge.");
 	}
 
-	return sha.trim();
+	return sha.stdout.trim();
 }
 
-async function assertCleanWorktree(repoPath: string) {
-	const status = await readGit(repoPath, ["status", "--short"]);
-	if (status.trim() !== "") {
+async function assertCleanWorktree(
+	repoPath: string,
+	runner: HostCommandRunner,
+) {
+	const status = await runner.run(resolveGitBin(), ["status", "--short"], {
+		cwd: repoPath,
+	});
+	if (status.stdout.trim() !== "") {
 		throw new Error(
 			"Working tree must be clean before bounded sync_main can update local main.",
 		);
@@ -137,13 +162,14 @@ async function assertCleanWorktree(repoPath: string) {
 async function localBranchExists(
 	repoPath: string,
 	branchName: string,
+	runner: HostCommandRunner,
 ): Promise<boolean> {
 	try {
-		await readGit(repoPath, [
-			"rev-parse",
-			"--verify",
-			`refs/heads/${branchName}`,
-		]);
+		await runner.run(
+			resolveGitBin(),
+			["rev-parse", "--verify", `refs/heads/${branchName}`],
+			{ cwd: repoPath },
+		);
 		return true;
 	} catch {
 		return false;
@@ -152,19 +178,27 @@ async function localBranchExists(
 
 export async function preflightPushPr(
 	repoPath: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
 ): Promise<PushPreflight> {
-	return preflightHostOps(repoPath, {
-		requireGhAuth: true,
-		requireNonMainBranch: true,
-	});
+	return preflightHostOps(
+		repoPath,
+		{
+			requireGhAuth: true,
+			requireNonMainBranch: true,
+		},
+		runner,
+	);
 }
 
-export async function pushCurrentBranch(repoPath: string): Promise<PushResult> {
-	const preflight = await preflightPushPr(repoPath);
-	const result = await runBinary(
+export async function pushCurrentBranch(
+	repoPath: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
+): Promise<PushResult> {
+	const preflight = await preflightPushPr(repoPath, runner);
+	const result = await runner.run(
 		resolveGitBin(),
 		["push", "--set-upstream", "origin", preflight.currentBranch],
-		repoPath,
+		{ cwd: repoPath },
 	);
 
 	return {
@@ -177,10 +211,11 @@ export async function pushCurrentBranch(repoPath: string): Promise<PushResult> {
 
 export async function createPullRequest(
 	repoPath: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
 ): Promise<CreatePrResult> {
-	const preflight = await preflightPushPr(repoPath);
-	const latestCommit = await readLatestCommit(repoPath);
-	const result = await runBinary(
+	const preflight = await preflightPushPr(repoPath, runner);
+	const latestCommit = await readLatestCommit(repoPath, runner);
+	const result = await runner.run(
 		resolveGhBin(),
 		[
 			"pr",
@@ -194,7 +229,7 @@ export async function createPullRequest(
 			"--body",
 			latestCommit.body || latestCommit.title,
 		],
-		repoPath,
+		{ cwd: repoPath },
 	);
 
 	return {
@@ -211,8 +246,9 @@ export async function createPullRequest(
 async function readCurrentPullRequest(
 	repoPath: string,
 	currentBranch: string,
+	runner: HostCommandRunner,
 ): Promise<CurrentPullRequest> {
-	const result = await runBinary(
+	const result = await runner.run(
 		resolveGhBin(),
 		[
 			"pr",
@@ -221,7 +257,7 @@ async function readCurrentPullRequest(
 			"--json",
 			"number,url,headRefName,baseRefName,state",
 		],
-		repoPath,
+		{ cwd: repoPath },
 	);
 	const pr = JSON.parse(result.stdout) as CurrentPullRequest;
 
@@ -248,13 +284,15 @@ async function readCurrentPullRequest(
 
 export async function waitForPullRequestChecks(
 	repoPath: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
 ): Promise<WaitForChecksResult> {
-	const preflight = await preflightPushPr(repoPath);
+	const preflight = await preflightPushPr(repoPath, runner);
 	const pullRequest = await readCurrentPullRequest(
 		repoPath,
 		preflight.currentBranch,
+		runner,
 	);
-	const result = await runBinary(
+	const result = await runner.run(
 		resolveGhBin(),
 		[
 			"pr",
@@ -265,7 +303,7 @@ export async function waitForPullRequestChecks(
 			"--interval",
 			String(CHECKS_WATCH_INTERVAL_SECONDS),
 		],
-		repoPath,
+		{ cwd: repoPath },
 	);
 
 	return {
@@ -284,14 +322,16 @@ export async function waitForPullRequestChecks(
 
 export async function mergePullRequest(
 	repoPath: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
 ): Promise<MergePrResult> {
-	const preflight = await preflightPushPr(repoPath);
+	const preflight = await preflightPushPr(repoPath, runner);
 	const pullRequest = await readCurrentPullRequest(
 		repoPath,
 		preflight.currentBranch,
+		runner,
 	);
-	const headCommitSha = await readHeadCommitSha(repoPath);
-	const result = await runBinary(
+	const headCommitSha = await readHeadCommitSha(repoPath, runner);
+	const result = await runner.run(
 		resolveGhBin(),
 		[
 			"pr",
@@ -301,7 +341,7 @@ export async function mergePullRequest(
 			"--match-head-commit",
 			headCommitSha,
 		],
-		repoPath,
+		{ cwd: repoPath },
 	);
 
 	return {
@@ -319,21 +359,28 @@ export async function mergePullRequest(
 
 export async function syncMainBranch(
 	repoPath: string,
+	runner: HostCommandRunner = createLocalCommandRunner(),
 ): Promise<SyncMainResult> {
-	const preflight = await preflightHostOps(repoPath, {
-		requireGhAuth: false,
-		requireNonMainBranch: false,
+	const preflight = await preflightHostOps(
+		repoPath,
+		{
+			requireGhAuth: false,
+			requireNonMainBranch: false,
+		},
+		runner,
+	);
+
+	await assertCleanWorktree(repoPath, runner);
+	await runner.run(resolveGitBin(), ["fetch", "origin", "main"], {
+		cwd: repoPath,
 	});
 
-	await assertCleanWorktree(repoPath);
-	await runBinary(resolveGitBin(), ["fetch", "origin", "main"], repoPath);
-
-	const mainExists = await localBranchExists(repoPath, "main");
+	const mainExists = await localBranchExists(repoPath, "main", runner);
 	if (!mainExists) {
-		const createResult = await runBinary(
+		const createResult = await runner.run(
 			resolveGitBin(),
 			["checkout", "-b", "main", "--track", "origin/main"],
-			repoPath,
+			{ cwd: repoPath },
 		);
 
 		return {
@@ -349,15 +396,15 @@ export async function syncMainBranch(
 		};
 	}
 
-	const checkoutResult = await runBinary(
+	const checkoutResult = await runner.run(
 		resolveGitBin(),
 		["checkout", "main"],
-		repoPath,
+		{ cwd: repoPath },
 	);
-	const mergeResult = await runBinary(
+	const mergeResult = await runner.run(
 		resolveGitBin(),
 		["merge", "--ff-only", "origin/main"],
-		repoPath,
+		{ cwd: repoPath },
 	);
 
 	return {

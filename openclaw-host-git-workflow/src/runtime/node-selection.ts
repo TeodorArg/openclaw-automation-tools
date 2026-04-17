@@ -1,5 +1,6 @@
-export const DEFAULT_NODE_SELECTOR_PLACEHOLDER =
-	"pending-host-node-runtime-binding";
+import { describeNodeBindingTarget } from "./node-execution.js";
+
+export const DEFAULT_NODE_SELECTOR_PLACEHOLDER = "auto-select-host-node";
 
 export type NodeSelectionSource =
 	| "pluginConfig.nodeSelector"
@@ -14,12 +15,17 @@ export type NodeSelectionMode =
 
 export type HostNodeSelection = {
 	requestedSelector: string;
-	normalizedSelector: string;
+	normalizedSelector: string | null;
 	selectionSource: NodeSelectionSource;
 	selectionMode: NodeSelectionMode;
 	usedDefault: boolean;
-	runtimeBindingStatus: "not_bound";
-	runtimeBindingTarget: null;
+	runtimeBindingStatus:
+		| "bound"
+		| "selection_required"
+		| "selector_unresolved"
+		| "no_node_available"
+		| "unsupported_system_run";
+	runtimeBindingTarget: ReturnType<typeof describeNodeBindingTarget> | null;
 	note: string;
 };
 
@@ -35,7 +41,73 @@ type HostNodeSelectionEnv = {
 type NodeSelectionInput = {
 	pluginConfig?: HostNodeSelectionConfig;
 	env?: HostNodeSelectionEnv;
+	nodes?: NodeListNode[];
 };
+
+export type NodeListNode = {
+	nodeId: string;
+	displayName?: string;
+	platform?: string;
+	commands?: string[];
+	connected?: boolean;
+};
+
+type NormalizedHostNodeSelection = {
+	requestedSelector: string;
+	normalizedSelector: string | null;
+	selectionSource: NodeSelectionSource;
+	selectionMode: NodeSelectionMode;
+	usedDefault: boolean;
+};
+
+async function loadBrowserSupport() {
+	return (await import("openclaw/plugin-sdk/browser-support")) as {
+		listNodes(opts?: {
+			gatewayUrl?: string;
+			gatewayToken?: string;
+			timeoutMs?: number;
+		}): Promise<NodeListNode[]>;
+		resolveNodeIdFromList(
+			nodes: NodeListNode[],
+			query?: string,
+			allowDefault?: boolean,
+		): string;
+	};
+}
+
+function resolveNodeIdLocally(
+	nodes: NodeListNode[],
+	query?: string,
+	allowDefault?: boolean,
+): string {
+	if (query) {
+		const normalizedQuery = query.trim().toLowerCase();
+		const matches = nodes.filter((node) => {
+			return (
+				node.nodeId.toLowerCase() === normalizedQuery ||
+				node.displayName?.trim().toLowerCase() === normalizedQuery
+			);
+		});
+
+		if (matches.length === 1) {
+			return matches[0].nodeId;
+		}
+
+		if (matches.length === 0) {
+			throw new Error(`No node matches selector '${query}'.`);
+		}
+
+		throw new Error(`Selector '${query}' matches multiple nodes.`);
+	}
+
+	if (allowDefault && nodes.length === 1) {
+		return nodes[0].nodeId;
+	}
+
+	throw new Error(
+		"Node selector is required when multiple nodes are available.",
+	);
+}
 
 function readConfiguredSelector(
 	pluginConfig: HostNodeSelectionConfig | undefined,
@@ -75,9 +147,9 @@ function readEnvSelector(env: HostNodeSelectionEnv): {
 	return null;
 }
 
-export function resolveHostNodeSelection(
+function normalizeHostNodeSelection(
 	input: NodeSelectionInput = {},
-): HostNodeSelection {
+): NormalizedHostNodeSelection {
 	const configuredSelector = readConfiguredSelector(input.pluginConfig);
 	if (configuredSelector) {
 		return {
@@ -86,9 +158,6 @@ export function resolveHostNodeSelection(
 			selectionSource: "pluginConfig.nodeSelector",
 			selectionMode: "configured",
 			usedDefault: false,
-			runtimeBindingStatus: "not_bound",
-			runtimeBindingTarget: null,
-			note: "Node selector is configured, but this package slice is not yet bound to runtime node.invoke.",
 		};
 	}
 
@@ -100,20 +169,89 @@ export function resolveHostNodeSelection(
 			selectionSource: envSelector.source,
 			selectionMode: "environment",
 			usedDefault: false,
-			runtimeBindingStatus: "not_bound",
-			runtimeBindingTarget: null,
-			note: "Node selector came from environment fallback, but this package slice is not yet bound to runtime node.invoke.",
 		};
 	}
 
 	return {
 		requestedSelector: DEFAULT_NODE_SELECTOR_PLACEHOLDER,
-		normalizedSelector: DEFAULT_NODE_SELECTOR_PLACEHOLDER,
+		normalizedSelector: null,
 		selectionSource: "default",
 		selectionMode: "default_placeholder",
 		usedDefault: true,
-		runtimeBindingStatus: "not_bound",
-		runtimeBindingTarget: null,
-		note: "Node selection falls back to a placeholder contract until runtime node.invoke binding lands in a later slice.",
 	};
+}
+
+export async function resolveHostNodeSelection(
+	input: NodeSelectionInput = {},
+): Promise<HostNodeSelection> {
+	const normalized = normalizeHostNodeSelection(input);
+	const availableNodes: NodeListNode[] =
+		input.nodes ??
+		(await loadBrowserSupport().then((runtime) => runtime.listNodes({})));
+
+	if (availableNodes.length === 0) {
+		return {
+			...normalized,
+			runtimeBindingStatus: "no_node_available",
+			runtimeBindingTarget: null,
+			note: "No paired host node is available for the bounded host workflow runtime.",
+		};
+	}
+
+	const requestedSelector = normalized.normalizedSelector ?? undefined;
+
+	try {
+		const nodeId = resolveNodeIdLocally(
+			availableNodes,
+			requestedSelector,
+			requestedSelector === undefined,
+		);
+		const node = availableNodes.find(
+			(candidate) => candidate.nodeId === nodeId,
+		);
+
+		if (!node) {
+			return {
+				...normalized,
+				runtimeBindingStatus: "selector_unresolved",
+				runtimeBindingTarget: null,
+				note: `Node selector resolved to ${nodeId}, but that node is no longer present in the gateway node list.`,
+			};
+		}
+
+		if (!node.commands?.includes("system.run")) {
+			return {
+				...normalized,
+				runtimeBindingStatus: "unsupported_system_run",
+				runtimeBindingTarget: describeNodeBindingTarget(
+					node,
+					requestedSelector ? "selector" : "implicit_singleton",
+				),
+				note: `Resolved node ${node.nodeId} does not advertise system.run, so host-backed git execution cannot continue on that node.`,
+			};
+		}
+
+		return {
+			...normalized,
+			runtimeBindingStatus: "bound",
+			runtimeBindingTarget: describeNodeBindingTarget(
+				node,
+				requestedSelector ? "selector" : "implicit_singleton",
+			),
+			note: requestedSelector
+				? `Host workflow is bound to node ${node.nodeId} via the configured selector and executes shell commands through node.invoke system.run.`
+				: `Host workflow is bound to the only available node ${node.nodeId} and executes shell commands through node.invoke system.run.`,
+		};
+	} catch (error) {
+		return {
+			...normalized,
+			runtimeBindingStatus: normalized.usedDefault
+				? "selection_required"
+				: "selector_unresolved",
+			runtimeBindingTarget: null,
+			note: normalized.usedDefault
+				? "Multiple host nodes are available; configure nodeSelector so the bounded workflow can bind to one concrete host."
+				: `Configured node selector could not be resolved against the current gateway node list: ${error instanceof Error ? error.message : String(error)}`,
+		};
+	}
 }

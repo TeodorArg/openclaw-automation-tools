@@ -4,10 +4,21 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
+import type { HostCommandRunner } from "./node-execution.js";
 import { preflightHostOps } from "./preflight.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
+
+const localRunner: HostCommandRunner = {
+	async run(command, args, options) {
+		const result = await execFileAsync(command, args, { cwd: options.cwd });
+		return {
+			stdout: result.stdout?.trim() ?? "",
+			stderr: result.stderr?.trim() ?? "",
+		};
+	},
+};
 
 async function makeExecutable(filePath: string, content: string) {
 	await fs.writeFile(filePath, content, "utf8");
@@ -91,10 +102,14 @@ describe("host preflight", () => {
 
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
-		const result = await preflightHostOps(repoPath, {
-			requireGhAuth: true,
-			requireNonMainBranch: true,
-		});
+		const result = await preflightHostOps(
+			repoPath,
+			{
+				requireGhAuth: true,
+				requireNonMainBranch: true,
+			},
+			localRunner,
+		);
 
 		expect(result).toMatchObject({
 			repoPath,
@@ -111,10 +126,14 @@ describe("host preflight", () => {
 
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
-		const result = await preflightHostOps(repoPath, {
-			requireGhAuth: true,
-			requireNonMainBranch: false,
-		});
+		const result = await preflightHostOps(
+			repoPath,
+			{
+				requireGhAuth: true,
+				requireNonMainBranch: false,
+			},
+			localRunner,
+		);
 
 		expect(result.currentBranch).toBe("main");
 	});
@@ -126,10 +145,14 @@ describe("host preflight", () => {
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
 		await expect(
-			preflightHostOps(repoPath, {
-				requireGhAuth: true,
-				requireNonMainBranch: false,
-			}),
+			preflightHostOps(
+				repoPath,
+				{
+					requireGhAuth: true,
+					requireNonMainBranch: false,
+				},
+				localRunner,
+			),
 		).rejects.toThrow(
 			"GitHub CLI auth is not ready for bounded host workflow actions.",
 		);

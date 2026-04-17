@@ -19,7 +19,7 @@
 			},
 			"nodeSelector": {
 				"type": "string",
-				"description": "Host node selector input with config precedence now normalized by the package, but not yet bound to runtime node.invoke."
+				"description": "Optional host node selector used to bind the bounded workflow to one concrete node before host-backed execution."
 			}
 		}
 	}

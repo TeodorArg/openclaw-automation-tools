@@ -7,6 +7,10 @@ import {
 	waitForPullRequestChecks,
 } from "./runtime/host-ops.js";
 import { resolveWorkflowIntent } from "./runtime/intent-routing.js";
+import {
+	assertBoundNodeSelection,
+	createNodeHostCommandRunner,
+} from "./runtime/node-execution.js";
 import { resolveHostNodeSelection } from "./runtime/node-selection.js";
 import { buildPlanResult, collectRepoState } from "./runtime/plan-groups.js";
 import { preflightHostOps } from "./runtime/preflight.js";
@@ -55,6 +59,10 @@ type HostGitWorkflowToolOptions = {
 	pluginConfig?: {
 		nodeSelector?: unknown;
 	};
+	toolContext?: {
+		agentId?: string;
+		sessionKey?: string;
+	};
 };
 
 function normalizeConfirmedPlanInput(raw: unknown): unknown {
@@ -84,9 +92,26 @@ export function createHostGitWorkflowTool(
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoTarget = resolveRepoTarget();
-			const nodeSelection = resolveHostNodeSelection({
+			const nodeSelection = await resolveHostNodeSelection({
 				pluginConfig: options.pluginConfig,
 			});
+			const nodeRunner =
+				nodeSelection.runtimeBindingStatus === "bound"
+					? createNodeHostCommandRunner({
+							nodeSelection,
+							agentId: options.toolContext?.agentId,
+							sessionKey: options.toolContext?.sessionKey,
+						})
+					: null;
+			const requireNodeRunner = () => {
+				assertBoundNodeSelection(nodeSelection);
+				if (!nodeRunner) {
+					throw new Error(
+						"Host node runner was not initialized after successful node binding.",
+					);
+				}
+				return nodeRunner;
+			};
 			const repoPath = repoTarget.repoPath;
 			const intent = resolveWorkflowIntent({
 				commandName: params.commandName,
@@ -106,7 +131,7 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "plan" || params.action === "plan_with_branches") {
-				const repoState = await collectRepoState(repoPath);
+				const repoState = await collectRepoState(repoPath, requireNodeRunner());
 				const planResult = buildPlanResult(repoState, {
 					includeBranches: params.action === "plan_with_branches",
 					sourceCommand: intent,
@@ -148,7 +173,10 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "push_branch") {
-				const pushResult = await pushCurrentBranch(repoPath);
+				const pushResult = await pushCurrentBranch(
+					repoPath,
+					requireNodeRunner(),
+				);
 
 				return {
 					content: [
@@ -173,7 +201,7 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "create_pr") {
-				const prResult = await createPullRequest(repoPath);
+				const prResult = await createPullRequest(repoPath, requireNodeRunner());
 
 				return {
 					content: [
@@ -198,7 +226,7 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "sync_main") {
-				const syncResult = await syncMainBranch(repoPath);
+				const syncResult = await syncMainBranch(repoPath, requireNodeRunner());
 
 				return {
 					content: [
@@ -223,7 +251,10 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "wait_for_checks") {
-				const checksResult = await waitForPullRequestChecks(repoPath);
+				const checksResult = await waitForPullRequestChecks(
+					repoPath,
+					requireNodeRunner(),
+				);
 
 				return {
 					content: [
@@ -248,7 +279,10 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "merge_pr") {
-				const mergeResult = await mergePullRequest(repoPath);
+				const mergeResult = await mergePullRequest(
+					repoPath,
+					requireNodeRunner(),
+				);
 
 				return {
 					content: [
@@ -273,10 +307,14 @@ export function createHostGitWorkflowTool(
 			}
 
 			if (params.action === "preflight") {
-				const preflight = await preflightHostOps(repoPath, {
-					requireGhAuth: true,
-					requireNonMainBranch: false,
-				});
+				const preflight = await preflightHostOps(
+					repoPath,
+					{
+						requireGhAuth: true,
+						requireNonMainBranch: false,
+					},
+					requireNodeRunner(),
+				);
 
 				return {
 					content: [
