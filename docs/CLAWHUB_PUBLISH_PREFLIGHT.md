@@ -135,7 +135,7 @@ clawhub package publish ./openclaw-host-git-workflow \
 - `clawhub whoami` currently returns `Not logged in`
 - current local CLI does not expose `package publish --dry-run`
 - first external install verification is still not recorded
-- `wait_for_checks`, `merge_pr`, and `sync-main` are not yet implemented inside the new package runtime
+- `wait_for_checks` and `merge_pr` are not yet implemented inside the new package runtime
 
 Current shipped runtime coverage inside `openclaw-host-git-workflow/` now includes:
 - planning
@@ -146,6 +146,7 @@ Current shipped runtime coverage inside `openclaw-host-git-workflow/` now includ
 - host preflight
 - bounded push of the current non-main branch to `origin`
 - bounded PR creation from the current non-main branch into `main`
+- bounded clean-worktree sync of local `main` from `origin/main`
 
 ## Host Git Lane
 

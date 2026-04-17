@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-host-git-workflow",
 	"name": "OpenClaw Host Git Workflow",
-	"description": "Host-backed git workflow scaffold with bundled skill and bounded runtime slices for planning, repo resolution, node selection, preflight, push, and PR creation.",
+	"description": "Host-backed git workflow scaffold with bundled skill and bounded runtime slices for planning, repo resolution, node selection, preflight, push, PR creation, and sync-main.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
 	"entry": "./dist/index.js",

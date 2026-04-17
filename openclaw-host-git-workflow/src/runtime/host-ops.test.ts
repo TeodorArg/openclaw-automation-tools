@@ -4,7 +4,11 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
-import { createPullRequest, pushCurrentBranch } from "./host-ops.js";
+import {
+	createPullRequest,
+	pushCurrentBranch,
+	syncMainBranch,
+} from "./host-ops.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
@@ -64,6 +68,38 @@ async function createRepo() {
 	);
 
 	return { repoPath, remotePath };
+}
+
+async function cloneAndAdvanceMain(remotePath: string) {
+	const clonePath = await fs.mkdtemp(
+		path.join(os.tmpdir(), "openclaw-host-git-workflow-sync-main-clone-"),
+	);
+	tempDirs.push(clonePath);
+
+	await execFileAsync("git", ["clone", remotePath, clonePath]);
+	await execFileAsync(
+		"git",
+		["checkout", "-b", "main", "--track", "origin/main"],
+		{
+			cwd: clonePath,
+		},
+	);
+	await execFileAsync("git", ["config", "user.name", "Remote User"], {
+		cwd: clonePath,
+	});
+	await execFileAsync("git", ["config", "user.email", "remote@example.com"], {
+		cwd: clonePath,
+	});
+	await fs.writeFile(
+		path.join(clonePath, "REMOTE.md"),
+		"remote main advance\n",
+		"utf8",
+	);
+	await execFileAsync("git", ["add", "REMOTE.md"], { cwd: clonePath });
+	await execFileAsync("git", ["commit", "-m", "chore(repo): advance main"], {
+		cwd: clonePath,
+	});
+	await execFileAsync("git", ["push", "origin", "main"], { cwd: clonePath });
 }
 
 async function createFakeGh(repoPath: string) {
@@ -181,6 +217,57 @@ describe("host push and pr ops", () => {
 
 		await expect(pushCurrentBranch(repoPath)).rejects.toThrow(
 			"This host workflow action requires a non-main working branch.",
+		);
+	});
+
+	it("syncs local main from origin/main with fast-forward-only behavior", async () => {
+		const { repoPath, remotePath } = await createRepo();
+
+		await execFileAsync(
+			"git",
+			["push", "--set-upstream", "origin", "HEAD~1:refs/heads/main"],
+			{
+				cwd: repoPath,
+			},
+		);
+		await cloneAndAdvanceMain(remotePath);
+
+		const result = await syncMainBranch(repoPath);
+		const currentBranch = await execFileAsync(
+			"git",
+			["rev-parse", "--abbrev-ref", "HEAD"],
+			{ cwd: repoPath },
+		);
+		const localMainHead = await execFileAsync(
+			"git",
+			["rev-parse", "refs/heads/main"],
+			{ cwd: repoPath },
+		);
+		const remoteMainHead = await execFileAsync(
+			"git",
+			["rev-parse", "refs/heads/main"],
+			{ cwd: remotePath },
+		);
+
+		expect(result).toMatchObject({
+			status: "synced_main",
+			baseBranch: "main",
+			startingBranch: "feat/host-workflow-test",
+			currentBranch: "main",
+			localBranchCreated: false,
+			syncMode: "checkout_and_fast_forward",
+		});
+		expect(currentBranch.stdout.trim()).toBe("main");
+		expect(localMainHead.stdout.trim()).toBe(remoteMainHead.stdout.trim());
+	});
+
+	it("blocks sync_main when the working tree is dirty", async () => {
+		const { repoPath } = await createRepo();
+
+		await fs.writeFile(path.join(repoPath, "dirty.txt"), "dirty\n", "utf8");
+
+		await expect(syncMainBranch(repoPath)).rejects.toThrow(
+			"Working tree must be clean before bounded sync_main can update local main.",
 		);
 	});
 });

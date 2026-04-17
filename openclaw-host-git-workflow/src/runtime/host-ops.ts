@@ -26,6 +26,17 @@ export type CreatePrResult = PushPreflight & {
 	stderr: string;
 };
 
+export type SyncMainResult = HostPreflight & {
+	status: "synced_main";
+	baseBranch: "main";
+	startingBranch: string;
+	currentBranch: "main";
+	localBranchCreated: boolean;
+	syncMode: "checkout_and_fast_forward" | "create_and_track";
+	stdout: string;
+	stderr: string;
+};
+
 function resolveGitBin(): string {
 	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GIT_BIN || "git";
 }
@@ -69,6 +80,31 @@ async function readLatestCommit(repoPath: string): Promise<LatestCommit> {
 		title: title.trim(),
 		body: body.trim(),
 	};
+}
+
+async function assertCleanWorktree(repoPath: string) {
+	const status = await readGit(repoPath, ["status", "--short"]);
+	if (status.trim() !== "") {
+		throw new Error(
+			"Working tree must be clean before bounded sync_main can update local main.",
+		);
+	}
+}
+
+async function localBranchExists(
+	repoPath: string,
+	branchName: string,
+): Promise<boolean> {
+	try {
+		await readGit(repoPath, [
+			"rev-parse",
+			"--verify",
+			`refs/heads/${branchName}`,
+		]);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 export async function preflightPushPr(
@@ -126,5 +162,67 @@ export async function createPullRequest(
 		prBody: latestCommit.body || latestCommit.title,
 		stdout: result.stdout,
 		stderr: result.stderr,
+	};
+}
+
+export async function syncMainBranch(
+	repoPath: string,
+): Promise<SyncMainResult> {
+	const preflight = await preflightHostOps(repoPath, {
+		requireGhAuth: false,
+		requireNonMainBranch: false,
+	});
+
+	await assertCleanWorktree(repoPath);
+	await runBinary(resolveGitBin(), ["fetch", "origin", "main"], repoPath);
+
+	const mainExists = await localBranchExists(repoPath, "main");
+	if (!mainExists) {
+		const createResult = await runBinary(
+			resolveGitBin(),
+			["checkout", "-b", "main", "--track", "origin/main"],
+			repoPath,
+		);
+
+		return {
+			...preflight,
+			status: "synced_main",
+			baseBranch: "main",
+			startingBranch: preflight.currentBranch,
+			currentBranch: "main",
+			localBranchCreated: true,
+			syncMode: "create_and_track",
+			stdout: createResult.stdout,
+			stderr: createResult.stderr,
+		};
+	}
+
+	const checkoutResult = await runBinary(
+		resolveGitBin(),
+		["checkout", "main"],
+		repoPath,
+	);
+	const mergeResult = await runBinary(
+		resolveGitBin(),
+		["merge", "--ff-only", "origin/main"],
+		repoPath,
+	);
+
+	return {
+		...preflight,
+		status: "synced_main",
+		baseBranch: "main",
+		startingBranch: preflight.currentBranch,
+		currentBranch: "main",
+		localBranchCreated: false,
+		syncMode: "checkout_and_fast_forward",
+		stdout: [checkoutResult.stdout, mergeResult.stdout]
+			.filter((value) => value !== "")
+			.join("\n")
+			.trim(),
+		stderr: [checkoutResult.stderr, mergeResult.stderr]
+			.filter((value) => value !== "")
+			.join("\n")
+			.trim(),
 	};
 }

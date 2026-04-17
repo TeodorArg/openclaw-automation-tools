@@ -9,7 +9,7 @@ export default definePluginEntry({
 	id: "openclaw-host-git-workflow",
 	name: "OpenClaw Host Git Workflow",
 	description:
-		"Host-backed git workflow scaffold for repo-aware planning, repo resolution, node selection, host preflight, bounded push, and bounded PR creation.",
+		"Host-backed git workflow scaffold for repo-aware planning, repo resolution, node selection, host preflight, bounded push, bounded PR creation, and sync-main.",
 	register(api: OpenClawPluginApi) {
 		api.registerTool(
 			createHostGitWorkflowTool({

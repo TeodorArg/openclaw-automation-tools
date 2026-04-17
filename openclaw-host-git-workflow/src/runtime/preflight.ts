@@ -106,7 +106,9 @@ export async function preflightHostOps(
 
 	await assertRepoPathReadable(repoPath);
 	await assertBinaryAvailable(resolveGitBin(), repoPath);
-	await assertBinaryAvailable(resolveGhBin(), repoPath);
+	if (requireGhAuth) {
+		await assertBinaryAvailable(resolveGhBin(), repoPath);
+	}
 
 	const repoRoot = (await readRepoRoot(repoPath)).trim();
 	const currentBranch = (await readCurrentBranch(repoPath)).trim();
