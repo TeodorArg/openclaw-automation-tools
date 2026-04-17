@@ -17,7 +17,7 @@ Companion documentation for the external host lane used by `openclaw-host-git-wo
 
 ## Relation To Other Units
 
-- `openclaw-host-git-workflow/` is the active standalone plugin package that owns bounded planning and the bounded host-backed finish flow
+- `openclaw-host-git-workflow/` is the active standalone plugin package that owns bounded planning, bounded branch entry, and the bounded host-backed finish flow
 - the package exposes that bounded workflow through the single primary user-facing entrypoint `send_to_git` / `отправь в гит`
 - `memory-hygiene/` and `source-of-truth-fix/` remain active skill-only packages unrelated to host execution runtime
 

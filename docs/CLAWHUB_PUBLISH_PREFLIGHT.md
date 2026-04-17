@@ -45,11 +45,17 @@ Current runtime coverage to publish:
 - live host node binding
 - confirmed-plan validation
 - host preflight
+- bounded branch entry
 - bounded push
 - bounded PR creation
 - bounded wait for required checks
 - bounded merge
 - bounded sync of local `main`
+
+Current planning metadata to publish:
+- branch suggestions identify the owning package slug or explicit repo surface
+- commit titles identify the owning package slug or explicit repo surface
+- PR titles remain informative because bounded PR creation reuses the latest commit subject
 
 ## Skill Checks
 
