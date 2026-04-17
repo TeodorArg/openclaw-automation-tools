@@ -6,8 +6,10 @@ import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
 import {
 	createPullRequest,
+	mergePullRequest,
 	pushCurrentBranch,
 	syncMainBranch,
+	waitForPullRequestChecks,
 } from "./host-ops.js";
 
 const execFileAsync = promisify(execFile);
@@ -118,8 +120,20 @@ printf '%s\\n' "$@" >> "${ghLogPath}"
 if [ "$1" = "auth" ] && [ "$2" = "status" ]; then
   exit 0
 fi
+if [ "$1" = "pr" ] && [ "$2" = "view" ]; then
+  echo '{"number":123,"url":"https://github.com/test/repo/pull/123","headRefName":"feat/host-workflow-test","baseRefName":"main","state":"OPEN"}'
+  exit 0
+fi
+if [ "$1" = "pr" ] && [ "$2" = "checks" ]; then
+  echo "required checks passed"
+  exit 0
+fi
 if [ "$1" = "pr" ] && [ "$2" = "create" ]; then
   echo "https://github.com/test/repo/pull/123"
+  exit 0
+fi
+if [ "$1" = "pr" ] && [ "$2" = "merge" ]; then
+  echo "merged"
   exit 0
 fi
 exit 0
@@ -183,6 +197,62 @@ describe("host push and pr ops", () => {
 		expect(ghLog).toContain("main");
 		expect(ghLog).toContain("--head");
 		expect(ghLog).toContain("feat/host-workflow-test");
+	});
+
+	it("waits for required checks on the bounded current-branch PR", async () => {
+		const { repoPath } = await createRepo();
+		const { binDir, ghLogPath } = await createFakeGh(repoPath);
+
+		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
+
+		const result = await waitForPullRequestChecks(repoPath);
+		const ghLog = await fs.readFile(ghLogPath, "utf8");
+
+		expect(result).toMatchObject({
+			status: "checks_passed",
+			currentBranch: "feat/host-workflow-test",
+			prNumber: 123,
+			baseBranch: "main",
+			checkScope: "required",
+			watchMode: "poll_until_complete",
+			watchIntervalSeconds: 10,
+		});
+		expect(ghLog).toContain("pr");
+		expect(ghLog).toContain("view");
+		expect(ghLog).toContain("--json");
+		expect(ghLog).toContain("number,url,headRefName,baseRefName,state");
+		expect(ghLog).toContain("checks");
+		expect(ghLog).toContain("--required");
+		expect(ghLog).toContain("--watch");
+		expect(ghLog).toContain("--interval");
+	});
+
+	it("merges the bounded current-branch PR with head SHA matching", async () => {
+		const { repoPath } = await createRepo();
+		const { binDir, ghLogPath } = await createFakeGh(repoPath);
+
+		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
+
+		const result = await mergePullRequest(repoPath);
+		const ghLog = await fs.readFile(ghLogPath, "utf8");
+		const headSha = await execFileAsync("git", ["rev-parse", "HEAD"], {
+			cwd: repoPath,
+		});
+
+		expect(result).toMatchObject({
+			status: "merged",
+			currentBranch: "feat/host-workflow-test",
+			prNumber: 123,
+			baseBranch: "main",
+			mergeMethod: "merge",
+			headCommitSha: headSha.stdout.trim(),
+		});
+		expect(ghLog).toContain("pr");
+		expect(ghLog).toContain("view");
+		expect(ghLog).toContain("merge");
+		expect(ghLog).toContain("--merge");
+		expect(ghLog).toContain("--match-head-commit");
+		expect(ghLog).toContain(headSha.stdout.trim());
 	});
 
 	it("blocks push and pr flow on main", async () => {

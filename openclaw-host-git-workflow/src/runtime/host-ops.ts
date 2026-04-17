@@ -26,6 +26,37 @@ export type CreatePrResult = PushPreflight & {
 	stderr: string;
 };
 
+export type CurrentPullRequest = {
+	number: number;
+	url: string;
+	headRefName: string;
+	baseRefName: string;
+	state: "OPEN" | "CLOSED" | "MERGED";
+};
+
+export type WaitForChecksResult = PushPreflight & {
+	status: "checks_passed";
+	prNumber: number;
+	prUrl: string;
+	baseBranch: "main";
+	checkScope: "required";
+	watchMode: "poll_until_complete";
+	watchIntervalSeconds: number;
+	stdout: string;
+	stderr: string;
+};
+
+export type MergePrResult = PushPreflight & {
+	status: "merged";
+	prNumber: number;
+	prUrl: string;
+	baseBranch: "main";
+	mergeMethod: "merge";
+	headCommitSha: string;
+	stdout: string;
+	stderr: string;
+};
+
 export type SyncMainResult = HostPreflight & {
 	status: "synced_main";
 	baseBranch: "main";
@@ -44,6 +75,8 @@ function resolveGitBin(): string {
 function resolveGhBin(): string {
 	return process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN || "gh";
 }
+
+const CHECKS_WATCH_INTERVAL_SECONDS = 10;
 
 async function runBinary(
 	command: string,
@@ -80,6 +113,16 @@ async function readLatestCommit(repoPath: string): Promise<LatestCommit> {
 		title: title.trim(),
 		body: body.trim(),
 	};
+}
+
+async function readHeadCommitSha(repoPath: string): Promise<string> {
+	const sha = await readGit(repoPath, ["rev-parse", "HEAD"]);
+
+	if (sha.trim() === "") {
+		throw new Error("Failed to resolve HEAD commit SHA for bounded PR merge.");
+	}
+
+	return sha.trim();
 }
 
 async function assertCleanWorktree(repoPath: string) {
@@ -160,6 +203,115 @@ export async function createPullRequest(
 		baseBranch: "main",
 		prTitle: latestCommit.title,
 		prBody: latestCommit.body || latestCommit.title,
+		stdout: result.stdout,
+		stderr: result.stderr,
+	};
+}
+
+async function readCurrentPullRequest(
+	repoPath: string,
+	currentBranch: string,
+): Promise<CurrentPullRequest> {
+	const result = await runBinary(
+		resolveGhBin(),
+		[
+			"pr",
+			"view",
+			currentBranch,
+			"--json",
+			"number,url,headRefName,baseRefName,state",
+		],
+		repoPath,
+	);
+	const pr = JSON.parse(result.stdout) as CurrentPullRequest;
+
+	if (pr.headRefName !== currentBranch) {
+		throw new Error(
+			`Bounded PR lookup resolved head ${pr.headRefName} instead of current branch ${currentBranch}.`,
+		);
+	}
+
+	if (pr.baseRefName !== "main") {
+		throw new Error(
+			`Bounded PR actions require base branch main, received ${pr.baseRefName}.`,
+		);
+	}
+
+	if (pr.state !== "OPEN") {
+		throw new Error(
+			`Bounded PR actions require an open pull request, received state ${pr.state}.`,
+		);
+	}
+
+	return pr;
+}
+
+export async function waitForPullRequestChecks(
+	repoPath: string,
+): Promise<WaitForChecksResult> {
+	const preflight = await preflightPushPr(repoPath);
+	const pullRequest = await readCurrentPullRequest(
+		repoPath,
+		preflight.currentBranch,
+	);
+	const result = await runBinary(
+		resolveGhBin(),
+		[
+			"pr",
+			"checks",
+			String(pullRequest.number),
+			"--required",
+			"--watch",
+			"--interval",
+			String(CHECKS_WATCH_INTERVAL_SECONDS),
+		],
+		repoPath,
+	);
+
+	return {
+		...preflight,
+		status: "checks_passed",
+		prNumber: pullRequest.number,
+		prUrl: pullRequest.url,
+		baseBranch: "main",
+		checkScope: "required",
+		watchMode: "poll_until_complete",
+		watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
+		stdout: result.stdout,
+		stderr: result.stderr,
+	};
+}
+
+export async function mergePullRequest(
+	repoPath: string,
+): Promise<MergePrResult> {
+	const preflight = await preflightPushPr(repoPath);
+	const pullRequest = await readCurrentPullRequest(
+		repoPath,
+		preflight.currentBranch,
+	);
+	const headCommitSha = await readHeadCommitSha(repoPath);
+	const result = await runBinary(
+		resolveGhBin(),
+		[
+			"pr",
+			"merge",
+			String(pullRequest.number),
+			"--merge",
+			"--match-head-commit",
+			headCommitSha,
+		],
+		repoPath,
+	);
+
+	return {
+		...preflight,
+		status: "merged",
+		prNumber: pullRequest.number,
+		prUrl: pullRequest.url,
+		baseBranch: "main",
+		mergeMethod: "merge",
+		headCommitSha,
 		stdout: result.stdout,
 		stderr: result.stderr,
 	};
