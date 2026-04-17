@@ -2,6 +2,14 @@
 
 Multi-package OpenClaw repository for one active host-backed plugin package, skill-only packages, and companion documentation.
 
+## Canon Docs
+
+- [docs/PLUGIN_PACKAGE_CANON.md](docs/PLUGIN_PACKAGE_CANON.md)
+- [docs/PLUGIN_STYLE_CANON.md](docs/PLUGIN_STYLE_CANON.md)
+
+These documents define the active repo-level canon.
+Implementation rollout across live package surfaces is still incremental.
+
 ## Current Repo Map
 
 | Path | Current shape | Purpose |
@@ -78,3 +86,5 @@ For each skill-only package, verify:
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
 - `host-git-lane/` remains documentation-only and must not be reshaped into a fake package.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
+- Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
+- Some live package surfaces may still reflect pre-canon layout details until rollout work is completed.
