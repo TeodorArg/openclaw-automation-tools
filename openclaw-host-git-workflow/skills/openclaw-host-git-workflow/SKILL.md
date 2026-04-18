@@ -1,6 +1,6 @@
 ---
 name: openclaw-host-git-workflow
-description: Выполняет bounded host git workflow через единый intent `send_to_git`: даёт setup doctor, строит repo-aware и branch-aware план, делает explicit commit prep, резолвит repo path, делает live host node binding, выполняет host preflight, умеет bounded branch entry в non-main рабочую ветку, валидирует confirmed plan, делает bounded push, bounded PR create, ждёт required checks, bounded merge и bounded sync `main`.
+description: Use when the user needs the bounded host git workflow behind `send_to_git`: setup doctor, repo-aware and branch-aware planning, explicit commit prep, repo resolution, live host node binding, preflight, branch entry, confirmed-plan validation, push, PR creation, checks wait, merge, and sync-main.
 user-invocable: true
 command-dispatch: tool
 command-tool: host_git_workflow_action

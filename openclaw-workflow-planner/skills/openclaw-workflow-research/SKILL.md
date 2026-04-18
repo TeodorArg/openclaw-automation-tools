@@ -1,6 +1,6 @@
 ---
 name: openclaw-workflow-research
-description: Используй этот skill, когда перед Idea Gate нужно собрать и прикрепить typed research для planner idea: насколько идея полезна, опасна, дублирует existing surface или уже имеет близкие аналоги.
+description: Use when a planner idea needs typed research before Idea Gate: value, risk, overlap with existing surface, and nearby prior solutions.
 ---
 
 # OpenClaw Workflow Research

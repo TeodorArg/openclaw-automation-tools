@@ -1,6 +1,6 @@
 ---
 name: openclaw-workflow-implementer
-description: Используй этот skill, когда Idea Gate уже пройден, accepted plan живёт в WORKFLOW_PLAN.md и нужен узкий implementation handoff по текущему slice, а не общий план на весь проект.
+description: Use when Idea Gate is already passed, the accepted plan lives in WORKFLOW_PLAN.md, and the current slice needs a narrow implementation handoff rather than a new whole-project plan.
 ---
 
 # OpenClaw Workflow Implementer

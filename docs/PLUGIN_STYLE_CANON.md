@@ -114,6 +114,13 @@ Avoid:
 - treating container-local `node_modules` ownership drift as harmless if plugin safety scans or linked install checks consume that tree
 - fixing repeated ownership failures by broad unsafe overrides when the real problem is a copied host dependency tree
 
+## Skill Metadata Language
+
+Rules:
+- `SKILL.md` frontmatter `description:` is canonical operator-facing metadata and should default to English across shipped plugin packages
+- do not rely on OpenClaw admin UI to auto-localize skill metadata by operator locale unless that support is explicitly implemented and documented
+- localized guidance may exist in the skill body, examples, or runtime copy, but the default metadata line should stay stable and language-consistent across packages
+
 ## Error And Result Canon
 
 Rules:
