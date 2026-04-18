@@ -1,0 +1,67 @@
+{
+	"name": "@openclaw/openclaw-session-bloat-warning",
+	"version": "0.1.0",
+	"description": "Compaction-surface warning plugin for OpenClaw with calm pre/post compaction notices plus bundled session-bloat-warning guidance.",
+	"license": "MIT",
+	"author": "TeodorArg",
+	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
+	"bugs": {
+		"url": "https://github.com/TeodorArg/openclaw-automation-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/TeodorArg/openclaw-automation-tools.git"
+	},
+	"keywords": [
+		"openclaw",
+		"plugin",
+		"compaction",
+		"hooks",
+		"warning"
+	],
+	"type": "module",
+	"engines": {
+		"node": ">=20.19.0 || >=22.12.0"
+	},
+	"main": "./dist/index.js",
+	"files": [
+		"dist",
+		"openclaw.plugin.json",
+		"skills",
+		"README.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "rm -rf dist && tsc -p tsconfig.build.json",
+		"format": "biome format --write . --files-ignore-unknown=true",
+		"format:check": "biome format --check . --files-ignore-unknown=true",
+		"lint": "biome check index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
+		"lint:fix": "biome check --write index.ts api.ts openclaw.plugin.json package.json tsconfig.json tsconfig.build.json src skills --files-ignore-unknown=true",
+		"check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm pack:smoke",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "vitest run --passWithNoTests",
+		"pack:smoke": "sh -c 'rm -rf .pack .npm-cache && mkdir -p .pack .npm-cache && trap \"rm -rf .npm-cache\" EXIT && npm_config_cache=.npm-cache npm pack --dry-run --json > .pack/pack.json && node --input-type=module -e \"import { readFileSync } from \\\"node:fs\\\"; const pack = JSON.parse(readFileSync(\\\".pack/pack.json\\\", \\\"utf8\\\"))[0]; const paths = new Set(pack.files.map((file) => file.path)); for (const required of [\\\"dist/index.js\\\", \\\"openclaw.plugin.json\\\", \\\"skills/session-bloat-warning/SKILL.md\\\", \\\"README.md\\\", \\\"LICENSE\\\"]) { if (!paths.has(required)) { throw new Error(\\\"Missing packed artifact: \\\" + required); } }\"'"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.11",
+		"@types/node": "^24.0.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.1.2"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"openclaw": {
+		"extensions": [
+			"./dist/index.js"
+		],
+		"compat": {
+			"pluginApi": ">=2026.3.24-beta.2",
+			"minGatewayVersion": ">=2026.3.24-beta.2"
+		},
+		"build": {
+			"openclawVersion": "2026.3.24-beta.2",
+			"pluginSdkVersion": "2026.3.24-beta.2"
+		}
+	}
+}
