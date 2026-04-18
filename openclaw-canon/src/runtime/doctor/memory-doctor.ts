@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import type { CanonFinding } from "../report/canon-contract.js";
 import { resolveMemoryFilePath } from "../state/plugin-paths.js";
+import { scanMemoryFileContent } from "./memory-record-scan.js";
 
 type CanonPluginConfig = {
 	memoryFilePath?: unknown;
@@ -10,56 +11,23 @@ type MemoryDoctorFinding = {
 	findings: CanonFinding[];
 };
 
-type MemoryRecordShape = {
-	entityName: string;
-	entityType: string;
-	observation: string;
-	updatedAt: string;
-	source: string;
-};
-
-function isMemoryRecordShape(value: unknown): value is MemoryRecordShape {
-	if (!value || typeof value !== "object") {
-		return false;
-	}
-
-	const record = value as Record<string, unknown>;
-	return (
-		typeof record.entityName === "string" &&
-		typeof record.entityType === "string" &&
-		typeof record.observation === "string" &&
-		typeof record.updatedAt === "string" &&
-		typeof record.source === "string"
-	);
-}
-
-export function parseJsonlLines(raw: string): string[] {
-	return raw.split("\n").filter((line) => line.trim().length > 0);
-}
-
 export async function auditMemoryFile(
 	pluginConfig?: CanonPluginConfig,
 ): Promise<MemoryDoctorFinding> {
 	const memoryFilePath = resolveMemoryFilePath(pluginConfig);
 	const raw = await readFile(memoryFilePath, "utf8");
-	const lines = parseJsonlLines(raw);
 	const findings: CanonFinding[] = [];
-	const seenLinePayloads = new Map<string, number>();
 
-	lines.forEach((line, index) => {
-		let parsed: unknown;
-
-		try {
-			parsed = JSON.parse(line);
-		} catch {
+	for (const entry of scanMemoryFileContent(raw)) {
+		if (entry.parseError) {
 			findings.push({
-				id: `memory-invalid-json-${index + 1}`,
+				id: `memory-invalid-json-${entry.lineNumber}`,
 				kind: "memory_drift",
 				severity: "warning",
 				evidence: [
 					{
 						kind: "memory",
-						ref: `${memoryFilePath}:${index + 1}`,
+						ref: `${memoryFilePath}:${entry.lineNumber}`,
 						detail: "Line is not valid JSON.",
 					},
 				],
@@ -74,18 +42,18 @@ export async function auditMemoryFile(
 				requiresConfirmation: true,
 				fixDisposition: "safe_apply",
 			});
-			return;
+			continue;
 		}
 
-		if (!isMemoryRecordShape(parsed)) {
+		if (entry.invalidShape) {
 			findings.push({
-				id: `memory-invalid-shape-${index + 1}`,
+				id: `memory-invalid-shape-${entry.lineNumber}`,
 				kind: "memory_drift",
 				severity: "warning",
 				evidence: [
 					{
 						kind: "memory",
-						ref: `${memoryFilePath}:${index + 1}`,
+						ref: `${memoryFilePath}:${entry.lineNumber}`,
 						detail: "Line does not match the required memory record shape.",
 					},
 				],
@@ -95,24 +63,24 @@ export async function auditMemoryFile(
 					note: "Records require entityName, entityType, observation, updatedAt, and source.",
 				},
 				recommendedAction:
-					"Preview and remove or normalize the malformed memory record.",
+					"Preview and remove the malformed-shape memory record.",
 				canAutoFix: true,
 				requiresConfirmation: true,
 				fixDisposition: "safe_apply",
 			});
-			return;
+			continue;
 		}
 
-		if (Number.isNaN(Date.parse(parsed.updatedAt))) {
+		if (entry.invalidDate) {
 			findings.push({
-				id: `memory-invalid-date-${index + 1}`,
+				id: `memory-invalid-date-${entry.lineNumber}`,
 				kind: "memory_drift",
 				severity: "warning",
 				evidence: [
 					{
 						kind: "memory",
-						ref: `${memoryFilePath}:${index + 1}`,
-						detail: `updatedAt is not a valid date: ${parsed.updatedAt}`,
+						ref: `${memoryFilePath}:${entry.lineNumber}`,
+						detail: `updatedAt is not a valid date: ${(entry.parsed as { updatedAt: string }).updatedAt}`,
 					},
 				],
 				sourceOfTruth: {
@@ -125,25 +93,21 @@ export async function auditMemoryFile(
 				requiresConfirmation: false,
 				fixDisposition: "manual_only",
 			});
-		}
-
-		const previousLine = seenLinePayloads.get(line);
-
-		if (previousLine) {
+		} else if (entry.duplicateOfLine) {
 			findings.push({
-				id: `memory-duplicate-${previousLine}-${index + 1}`,
+				id: `memory-duplicate-${entry.duplicateOfLine}-${entry.lineNumber}`,
 				kind: "memory_drift",
 				severity: "info",
 				evidence: [
 					{
 						kind: "memory",
-						ref: `${memoryFilePath}:${previousLine}`,
+						ref: `${memoryFilePath}:${entry.duplicateOfLine}`,
 						detail:
 							"Byte-identical memory record already exists earlier in the file.",
 					},
 					{
 						kind: "memory",
-						ref: `${memoryFilePath}:${index + 1}`,
+						ref: `${memoryFilePath}:${entry.lineNumber}`,
 						detail:
 							"Later line duplicates the earlier canonical record exactly.",
 					},
@@ -158,10 +122,8 @@ export async function auditMemoryFile(
 				requiresConfirmation: true,
 				fixDisposition: "safe_apply",
 			});
-		} else {
-			seenLinePayloads.set(line, index + 1);
 		}
-	});
+	}
 
 	return { findings };
 }

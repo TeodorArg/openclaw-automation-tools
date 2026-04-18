@@ -234,7 +234,9 @@ describe("openclaw-canon tools", () => {
 		await writeFile(
 			fixture.pluginConfig.memoryFilePath,
 			[
+				"",
 				'{"entityName":"A","entityType":"project","observation":"one","updatedAt":"2026-04-18","source":"manual-sync"}',
+				'{"entityName":"B","entityType":"project","observation":"two","updatedAt":"2026-04-18"}',
 				'{"entityName":"A","entityType":"project","observation":"one","updatedAt":"2026-04-18","source":"manual-sync"}',
 				"not json",
 				'{"entityName":"B","entityType":"project","observation":"two","updatedAt":"2026-04-18"}',
@@ -253,7 +255,7 @@ describe("openclaw-canon tools", () => {
 
 		expect(previewPayload.status).toBe("warning");
 		expect(previewPayload.confirmToken).toBeTruthy();
-		expect(previewPayload.proposals).toHaveLength(3);
+		expect(previewPayload.proposals).toHaveLength(4);
 
 		await fixTool.execute("call-4b", {
 			scope: "memory",
@@ -269,5 +271,60 @@ describe("openclaw-canon tools", () => {
 			.filter((line) => line.trim().length > 0);
 
 		expect(nonEmptyLines).toHaveLength(1);
+	});
+
+	it("keeps memory doctor findings aligned with preview targetIds across blank lines", async () => {
+		const fixture = await createFixtureRepo();
+		await writeFile(
+			fixture.pluginConfig.memoryFilePath,
+			[
+				"",
+				'{"entityName":"A","entityType":"project","observation":"one","updatedAt":"2026-04-18","source":"manual-sync"}',
+				"",
+				'{"entityName":"B","entityType":"project","observation":"two","updatedAt":"2026-04-18"}',
+				"not json",
+				'{"entityName":"A","entityType":"project","observation":"one","updatedAt":"2026-04-18","source":"manual-sync"}',
+				"",
+			].join("\n"),
+			"utf8",
+		);
+
+		const doctorTool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const fixTool = createCanonFixTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+
+		const doctorResult = await doctorTool.execute("call-5a", {
+			scope: "memory",
+			execution: "inline",
+		});
+		const doctorPayload = JSON.parse(doctorResult.content[0].text);
+		const safeTargetIds = doctorPayload.findings
+			.filter(
+				(finding: { canAutoFix: boolean; targetIds?: string[]; id: string }) =>
+					finding.canAutoFix,
+			)
+			.map((finding: { id: string }) => finding.id)
+			.sort();
+
+		expect(safeTargetIds).toEqual([
+			"memory-duplicate-2-6",
+			"memory-invalid-json-5",
+			"memory-invalid-shape-4",
+		]);
+
+		const previewResult = await fixTool.execute("call-5b", {
+			scope: "memory",
+			mode: "preview",
+			targetIds: safeTargetIds,
+		});
+		const previewPayload = JSON.parse(previewResult.content[0].text);
+		const previewTargetIds = previewPayload.proposals
+			.map((proposal: { targetIds: string[] }) => proposal.targetIds[0])
+			.sort();
+
+		expect(previewTargetIds).toEqual(safeTargetIds);
 	});
 });

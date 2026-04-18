@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
+import { scanMemoryFileContent } from "../doctor/memory-record-scan.js";
 import type {
 	CanonChange,
 	CanonFixResult,
@@ -15,14 +16,6 @@ type CanonPluginConfig = {
 type MemoryFixPlan = {
 	changes: CanonChange[];
 	proposals: CanonProposal[];
-};
-
-type MemoryRecordShape = {
-	entityName: string;
-	entityType: string;
-	observation: string;
-	updatedAt: string;
-	source: string;
 };
 
 function buildProposal(
@@ -50,73 +43,23 @@ function buildProposal(
 	};
 }
 
-function isMemoryRecordShape(value: unknown): value is MemoryRecordShape {
-	if (!value || typeof value !== "object") {
-		return false;
-	}
-
-	const record = value as Record<string, unknown>;
-	return (
-		typeof record.entityName === "string" &&
-		typeof record.entityType === "string" &&
-		typeof record.observation === "string" &&
-		typeof record.updatedAt === "string" &&
-		typeof record.source === "string"
-	);
-}
-
 export async function buildMemoryFixPlan(
 	pluginConfig?: CanonPluginConfig,
 	targetIds?: string[],
 ): Promise<MemoryFixPlan> {
 	const memoryFilePath = resolveMemoryFilePath(pluginConfig);
 	const raw = await readFile(memoryFilePath, "utf8");
-	const lines = raw.split("\n");
 	const changes: CanonChange[] = [];
 	const proposals: CanonProposal[] = [];
-	const seenPayloads = new Map<string, number>();
 
-	lines.forEach((line, index) => {
-		const lineNumber = index + 1;
-		const trimmedLine = line.trim();
-
-		if (trimmedLine.length === 0) {
-			return;
-		}
-
-		try {
-			const parsed = JSON.parse(trimmedLine);
-
-			if (!isMemoryRecordShape(parsed)) {
-				const targetId = `memory-invalid-shape-${lineNumber}`;
-				if (!targetIds || targetIds.includes(targetId)) {
-					changes.push({
-						kind: "delete_line",
-						targetId,
-						ref: `${memoryFilePath}:${lineNumber}`,
-						detail:
-							"Delete valid JSON memory record that does not match the required shape.",
-					});
-					proposals.push(
-						buildProposal(
-							`proposal-${targetId}`,
-							"Remove malformed memory record",
-							targetId,
-							`${memoryFilePath}:${lineNumber}`,
-							"Line parses as JSON but does not include the required memory fields.",
-						),
-					);
-				}
-
-				return;
-			}
-		} catch {
-			const targetId = `memory-invalid-json-${lineNumber}`;
+	for (const entry of scanMemoryFileContent(raw)) {
+		if (entry.parseError) {
+			const targetId = `memory-invalid-json-${entry.lineNumber}`;
 			if (!targetIds || targetIds.includes(targetId)) {
 				changes.push({
 					kind: "delete_line",
 					targetId,
-					ref: `${memoryFilePath}:${lineNumber}`,
+					ref: `${memoryFilePath}:${entry.lineNumber}`,
 					detail: "Delete malformed JSON line from memory.jsonl.",
 				});
 				proposals.push(
@@ -124,22 +67,44 @@ export async function buildMemoryFixPlan(
 						`proposal-${targetId}`,
 						"Remove malformed memory line",
 						targetId,
-						`${memoryFilePath}:${lineNumber}`,
+						`${memoryFilePath}:${entry.lineNumber}`,
 						"Line is not valid JSON and can be removed safely after preview.",
 					),
 				);
 			}
-			return;
+			continue;
 		}
 
-		const previousLine = seenPayloads.get(trimmedLine);
-		if (previousLine) {
-			const targetId = `memory-duplicate-${previousLine}-${lineNumber}`;
+		if (entry.invalidShape) {
+			const targetId = `memory-invalid-shape-${entry.lineNumber}`;
 			if (!targetIds || targetIds.includes(targetId)) {
 				changes.push({
 					kind: "delete_line",
 					targetId,
-					ref: `${memoryFilePath}:${lineNumber}`,
+					ref: `${memoryFilePath}:${entry.lineNumber}`,
+					detail:
+						"Delete valid JSON memory record that does not match the required shape.",
+				});
+				proposals.push(
+					buildProposal(
+						`proposal-${targetId}`,
+						"Remove malformed-shape memory record",
+						targetId,
+						`${memoryFilePath}:${entry.lineNumber}`,
+						"Line parses as JSON but does not include the required memory fields.",
+					),
+				);
+			}
+			continue;
+		}
+
+		if (entry.duplicateOfLine) {
+			const targetId = `memory-duplicate-${entry.duplicateOfLine}-${entry.lineNumber}`;
+			if (!targetIds || targetIds.includes(targetId)) {
+				changes.push({
+					kind: "delete_line",
+					targetId,
+					ref: `${memoryFilePath}:${entry.lineNumber}`,
 					detail: "Remove byte-identical duplicate memory record.",
 				});
 				proposals.push(
@@ -147,15 +112,13 @@ export async function buildMemoryFixPlan(
 						`proposal-${targetId}`,
 						"Remove duplicate memory line",
 						targetId,
-						`${memoryFilePath}:${lineNumber}`,
+						`${memoryFilePath}:${entry.lineNumber}`,
 						"Later line is byte-identical to an earlier canonical record.",
 					),
 				);
 			}
-		} else {
-			seenPayloads.set(trimmedLine, lineNumber);
 		}
-	});
+	}
 
 	return {
 		changes,
