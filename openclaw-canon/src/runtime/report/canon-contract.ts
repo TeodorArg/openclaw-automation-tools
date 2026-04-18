@@ -99,16 +99,24 @@ export type CanonDoctorResult = {
 
 export type CanonFixMode = "preview" | "apply";
 
-export type CanonChange = {
-	kind: "delete_line" | "rewrite_line";
-	targetId: string;
-	ref?: string;
-	detail: string;
-};
+export type CanonChange =
+	| {
+			kind: "delete_line";
+			targetId: string;
+			ref?: string;
+			detail: string;
+	  }
+	| {
+			kind: "rewrite_block";
+			targetId: string;
+			ref?: string;
+			detail: string;
+			content: string;
+	  };
 
 export type CanonFixResult = {
 	status: CanonStatus;
-	scope: "memory";
+	scope: CanonScope;
 	mode: CanonFixMode;
 	generatedAt: string;
 	changes?: CanonChange[];
