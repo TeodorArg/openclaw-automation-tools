@@ -39,6 +39,23 @@ const REQUIRED_PACKAGE_PATHS = [
 	"tsconfig.build.json",
 ] as const;
 
+const REQUIRED_NPMIGNORE_ALLOWLIST = [
+	"!dist/**",
+	"!openclaw.plugin.json",
+	"!skills/**",
+	"!README.md",
+	"!LICENSE",
+	"!package.json",
+] as const;
+
+const REQUIRED_CI_COMMANDS = [
+	"pnpm lint",
+	"pnpm typecheck",
+	"pnpm build",
+	"pnpm test",
+	"pnpm pack:smoke",
+] as const;
+
 async function pathExists(targetPath: string): Promise<boolean> {
 	try {
 		await access(targetPath, constants.F_OK);
@@ -55,6 +72,16 @@ export function parsePackageList(markdown: string): string[] {
 		.filter((line) => line.startsWith("- `") && line.endsWith("/`"))
 		.map((line) => line.replace(/^- `/, "").replace(/\/`$/, ""))
 		.filter((entry) => entry.startsWith("openclaw-"));
+}
+
+function hasRequiredNpmignoreAllowlist(content: string): boolean {
+	return REQUIRED_NPMIGNORE_ALLOWLIST.every((entry) => content.includes(entry));
+}
+
+function hasRequiredCiCommandSet(content: string): boolean {
+	return REQUIRED_CI_COMMANDS.every((command) =>
+		content.includes(`- run: ${command}`),
+	);
 }
 
 function buildDocEvidence(ref: string, detail: string): CanonEvidence {
@@ -107,6 +134,37 @@ export async function auditPackageCanon(
 						note: "Required package shape for live publishable plugins.",
 					},
 					recommendedAction: `Restore ${requiredPath} inside ${packageSlug}.`,
+					canAutoFix: false,
+					requiresConfirmation: false,
+					fixDisposition: "manual_only",
+				});
+			}
+		}
+
+		const npmignorePath = resolve(packageRoot, ".npmignore");
+		if (await pathExists(npmignorePath)) {
+			const npmignoreContent = await readFile(npmignorePath, "utf8");
+			if (!hasRequiredNpmignoreAllowlist(npmignoreContent)) {
+				findings.push({
+					id: `template-npmignore-policy-${packageSlug}`,
+					kind: "template_drift",
+					severity: "warning",
+					evidence: [
+						buildDocEvidence(
+							packageCanonPath,
+							"docs/PLUGIN_PACKAGE_CANON.md requires package-local .npmignore to allow the shipped dist output and other packed artifacts.",
+						),
+						buildDocEvidence(
+							npmignorePath,
+							`${packageSlug} is missing one or more required shipped-artifact allowlist entries.`,
+						),
+					],
+					sourceOfTruth: {
+						kind: "doc",
+						ref: packageCanonPath,
+						note: "Package-local .npmignore policy for live publishable plugins.",
+					},
+					recommendedAction: `Restore the required shipped-artifact allowlist in ${packageSlug}/.npmignore.`,
 					canAutoFix: false,
 					requiresConfirmation: false,
 					fixDisposition: "manual_only",
@@ -185,6 +243,34 @@ export async function auditPackageCanon(
 				});
 			}
 		}
+	}
+
+	if (!hasRequiredCiCommandSet(ciWorkflowYaml)) {
+		findings.push({
+			id: "source-ci-verification-minimum",
+			kind: "source_drift",
+			severity: "critical",
+			evidence: [
+				buildDocEvidence(
+					packageCanonPath,
+					"docs/PLUGIN_PACKAGE_CANON.md requires CI to run the full plugin verification minimum for each live publishable package.",
+				),
+				buildDocEvidence(
+					ciWorkflowPath,
+					"CI is missing one or more required verification commands for the live plugin package job.",
+				),
+			],
+			sourceOfTruth: {
+				kind: "doc",
+				ref: packageCanonPath,
+				note: "CI must cover pnpm lint, pnpm typecheck, pnpm build, pnpm test, and pnpm pack:smoke.",
+			},
+			recommendedAction:
+				"Restore pnpm lint, pnpm typecheck, pnpm build, pnpm test, and pnpm pack:smoke in the plugin package CI job.",
+			canAutoFix: false,
+			requiresConfirmation: false,
+			fixDisposition: "manual_only",
+		});
 	}
 
 	const linkedDocuments = [
