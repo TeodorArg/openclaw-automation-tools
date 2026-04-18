@@ -115,30 +115,28 @@ async function readLatestCommit(
 	repoPath: string,
 	runner: HostCommandRunner,
 ): Promise<LatestCommit> {
-	const title = await runner.run(
+	const commit = await runner.run(
 		resolveHostGitBin(),
-		["log", "-1", "--pretty=%s"],
+		["cat-file", "-p", "HEAD"],
 		{
 			cwd: repoPath,
 		},
 	);
-	const body = await runner.run(
-		resolveHostGitBin(),
-		["log", "-1", "--pretty=%b"],
-		{
-			cwd: repoPath,
-		},
-	);
+	const raw = commit.stdout.replace(/\r\n/g, "\n");
+	const message = raw.includes("\n\n") ? raw.slice(raw.indexOf("\n\n") + 2) : "";
+	const [titleLine = "", ...bodyLines] = message.split("\n");
+	const title = titleLine.trim();
+	const body = bodyLines.join("\n").trim();
 
-	if (title.stdout.trim() === "") {
+	if (title === "") {
 		throw new Error(
 			"Latest commit title is empty; cannot create a bounded PR.",
 		);
 	}
 
 	return {
-		title: title.stdout.trim(),
-		body: body.stdout.trim(),
+		title,
+		body,
 	};
 }
 
