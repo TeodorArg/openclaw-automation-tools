@@ -1,6 +1,6 @@
 # openclaw-automation-tools
 
-Multi-package OpenClaw repository for one active host-backed plugin package and skill-only packages.
+Multi-package OpenClaw repository for two active publishable plugin packages plus skill-only packages.
 
 ## Canon Docs
 
@@ -8,19 +8,20 @@ Multi-package OpenClaw repository for one active host-backed plugin package and 
 - [docs/PLUGIN_STYLE_CANON.md](docs/PLUGIN_STYLE_CANON.md)
 
 These documents define the active repo-level canon.
-The active publishable plugin package now matches the current runtime/test layout canon.
+The live plugin packages now match the current runtime/test layout canon.
 
 ## Current Repo Map
 
 | Path | Current shape | Purpose |
 | --- | --- | --- |
 | [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
+| [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea and plan lifecycle |
 | [memory-hygiene/README.md](memory-hygiene/README.md) | skill-only package | Memory maintenance skill package |
 | [source-of-truth-fix/README.md](source-of-truth-fix/README.md) | skill-only package | Source-of-truth repair skill package |
 
-## Active Package Direction
+## Plugin Packages
 
-`openclaw-host-git-workflow/` is the only active plugin package in this repo.
+`openclaw-host-git-workflow/` is the active host-backed execution package in this repo.
 Its bundled skill surface is intentionally collapsed to one primary user-facing entrypoint: `send_to_git` / `отправь в гит`.
 
 Its current shipped slice covers:
@@ -44,6 +45,19 @@ Branch-aware planning output now emits package-aware branch suggestions and comm
 The package now also exposes a recommended short-session choreography of `doctor -> plan_with_branches -> commit_prep -> execution kernel`, leaving docs sync as a separate follow-up when shipped truth changed instead of hiding everything in one giant run.
 
 Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
+
+`openclaw-workflow-planner/` is the active planning-first plugin package in this repo.
+Its shipped surface centers on file-backed `WORKFLOW_PLAN.md` state plus typed planner actions for:
+- idea creation and listing
+- typed research attachment
+- explicit `Idea Gate` decisions
+- accepted-plan creation and refresh
+- persisted plan snapshots and idea reads
+- manual task add / done tracking
+- bounded implementation brief generation
+- explicit idea closure
+
+Its runtime layout is currently grouped under `src/runtime/planning/` and `src/runtime/state/`, with flat default tests under `src/test/`.
 
 ## Gateway Vs Node Host
 
@@ -119,6 +133,17 @@ pnpm test
 pnpm pack:smoke
 ```
 
+For `openclaw-workflow-planner/`:
+
+```bash
+cd openclaw-workflow-planner
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
 For each skill-only package, verify:
 - `SKILL.md` exists
 - `README.md` exists
@@ -132,9 +157,10 @@ For each skill-only package, verify:
 - The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
 - Local development is pinned to Node `24.13.0` via `.nvmrc`.
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
+- The repo currently ships two publishable plugin packages: `openclaw-host-git-workflow/` and `openclaw-workflow-planner/`.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
-- Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the active package docs.
-- The active `openclaw-host-git-workflow/` package now uses domain-grouped runtime modules under `src/runtime/` and flat default tests under `src/test/`, in line with the tracked package canon.
+- Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.
+- The live plugin packages use domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, and package-local `.npmignore` files so packed tarballs keep built `dist/**` artifacts despite the repo-root `dist/` ignore.
 - In Docker-gateway setups, gateway token configuration and device pairing are separate gates; a valid `gateway.remote.token` does not replace CLI/operator pairing approval.
 - On macOS, config hardening can reduce browser-related node surface, but a generic `node` host can still trigger unrelated TCC prompts unless you isolate it by user/session/VM/host.

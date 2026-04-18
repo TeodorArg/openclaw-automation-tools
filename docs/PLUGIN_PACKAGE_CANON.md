@@ -13,13 +13,25 @@ It is a repo-level policy, not a claim that every rule is mandated by upstream O
 
 This canon is active as repository policy.
 
-The active publishable plugin package, `openclaw-host-git-workflow/`, now matches the current package canon for domain-grouped `src/runtime/` code and flat default `src/test/` coverage.
+The live publishable plugin package list for this repository is defined here.
 
-In the live package, the current runtime domains are grouped under:
+Current live publishable plugin packages:
+- `openclaw-host-git-workflow/`
+- `openclaw-workflow-planner/`
+
+CI package matrices, publish/preflight docs, and local governance must stay in lockstep with this list.
+
+These live publishable plugin packages now match the current package canon for domain-grouped `src/runtime/` code and flat default `src/test/` coverage.
+
+In the live host-backed package, the current runtime domains are grouped under:
 - `src/runtime/host/`
 - `src/runtime/node/`
 - `src/runtime/planning/`
 - `src/runtime/repo/`
+
+In the live planner package, the current runtime domains are grouped under:
+- `src/runtime/planning/`
+- `src/runtime/state/`
 
 Future plugin packages in this repository should follow the same package-shape baseline unless a narrower canon update replaces it.
 
@@ -43,12 +55,20 @@ Plugin packages should use this baseline layout:
 - `skills/`
 - `README.md`
 - `LICENSE`
+- `.npmignore`
 - `openclaw.plugin.json`
 - `package.json`
 - `tsconfig.json`
 - `tsconfig.build.json`
 
 `src/index.ts` and package entrypoints are allowed when they reflect the real shipped contract.
+
+For publishable plugin packages in this repo, package-local `.npmignore` should explicitly allow the shipped `dist/**` output and other packed artifacts so repo-root ignores do not strip built files from npm or ClawHub tarballs.
+
+For every live publishable plugin package in the canonical list above:
+- CI must run the full plugin verification minimum, including `pnpm pack:smoke`
+- repo-level publish/preflight docs must enumerate that package as a live publish surface
+- if package canon, CI coverage, and publish docs drift apart, treat that as packaging drift rather than docs-only drift
 
 ## Test Layout Canon
 

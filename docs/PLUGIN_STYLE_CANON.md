@@ -15,7 +15,7 @@ Repo-wide machine enforcement is still partial.
 
 Until a shared repo-level Biome configuration is materialized, enforcement remains split between existing package scripts, TypeScript strict mode, review, and follow-up canon rollout work.
 
-The active `openclaw-host-git-workflow/` package already reflects the current domain-subdirectory runtime canon; remaining convergence is primarily about broader repo-level machine enforcement rather than that package's baseline layout.
+The live plugin packages already reflect the current domain-subdirectory runtime canon; remaining convergence is primarily about broader repo-level machine enforcement rather than those packages' baseline layout.
 
 ## Naming Canon
 

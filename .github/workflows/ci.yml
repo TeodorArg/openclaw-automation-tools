@@ -8,11 +8,18 @@ on:
   pull_request:
 
 jobs:
-  host-workflow-package:
+  plugin-packages:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Keep this matrix in lockstep with the live publishable plugin package list
+        # defined in docs/PLUGIN_PACKAGE_CANON.md.
+        package:
+          - openclaw-host-git-workflow
+          - openclaw-workflow-planner
     defaults:
       run:
-        working-directory: openclaw-host-git-workflow
+        working-directory: ${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,7 +29,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: openclaw-host-git-workflow/pnpm-lock.yaml
+          cache-dependency-path: ${{ matrix.package }}/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck

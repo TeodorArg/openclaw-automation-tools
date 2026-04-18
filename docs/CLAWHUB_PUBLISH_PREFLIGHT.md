@@ -5,11 +5,18 @@ Status: current baseline after migration cleanup
 
 ## Active Publish Surfaces
 
-Plugin package:
-- `openclaw-host-git-workflow/`
+The source of truth for the live publishable plugin package list is `docs/PLUGIN_PACKAGE_CANON.md`.
 
-Primary package entrypoint:
+Plugin packages listed there and currently expected here in lockstep:
+- `openclaw-host-git-workflow/`
+- `openclaw-workflow-planner/`
+
+Primary host-backed package entrypoint:
 - `send_to_git` / `отправь в гит`
+
+Planner package entrypoints:
+- bundled skills `openclaw-workflow-planner`, `openclaw-workflow-research`, and `openclaw-workflow-implementer`
+- typed tool `workflow_planner_action`
 
 Skill-only packages:
 - `memory-hygiene/`
@@ -22,10 +29,23 @@ Non-publishable repo docs:
 
 ## Plugin Checks
 
-Run:
+Before publishing, verify that CI covers every live publishable plugin package from `docs/PLUGIN_PACKAGE_CANON.md` and that each one runs the full plugin verification minimum through `pnpm pack:smoke`.
+
+Run for `openclaw-host-git-workflow/`:
 
 ```bash
 cd openclaw-host-git-workflow
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
+Run for `openclaw-workflow-planner/`:
+
+```bash
+cd openclaw-workflow-planner
 pnpm lint
 pnpm typecheck
 pnpm build
@@ -37,6 +57,7 @@ Then verify:
 - `package.json` and `openclaw.plugin.json` versions match
 - manifest id/name/entry match the built package
 - package `files` match the intended shipped artifact
+- packed tarball contains the built `dist/**` artifacts required by the package entry surface
 - no secrets or host-local paths leak into shipped files
 - source provenance is ready
 
@@ -61,6 +82,17 @@ Current planning metadata to publish:
 - commit titles identify the owning package slug or explicit repo surface
 - PR titles remain informative because bounded PR creation reuses the latest commit subject
 
+Current planner package coverage to publish:
+- file-backed `WORKFLOW_PLAN.md` planner state
+- idea creation and listing
+- typed research attachment
+- explicit `Idea Gate`
+- accepted plan create and refresh
+- plan snapshot and idea retrieval
+- manual task tracking
+- bounded implementation brief handoff
+- idea closure
+
 ## Skill Checks
 
 For each active skill package:
@@ -77,12 +109,14 @@ Plugin publish preflight:
 
 ```bash
 clawhub package publish ./openclaw-host-git-workflow --dry-run
+clawhub package publish ./openclaw-workflow-planner --dry-run
 ```
 
 Plugin publish:
 
 ```bash
 clawhub package publish ./openclaw-host-git-workflow
+clawhub package publish ./openclaw-workflow-planner
 ```
 
 Notes:

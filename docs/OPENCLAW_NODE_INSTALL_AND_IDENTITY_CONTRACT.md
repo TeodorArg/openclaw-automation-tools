@@ -9,6 +9,7 @@ Status: repo-local consolidation of the product-level node contract
 
 For this repo:
 - `openclaw-host-git-workflow/` is the active host-backed plugin package
+- `openclaw-workflow-planner/` is a separate planning-first plugin package and does not own node runtime implementation
 - skill-only packages in this repo do not own node runtime implementation
 
 ## Gateway Vs Node Host
@@ -163,7 +164,7 @@ Correct current modeling:
 - repo-local packages may depend on the host-backed lane
 - `openclaw-host-git-workflow/` owns the plugin-side dependency boundary
 - host-backed git and GitHub steps run on the bound host node, not inside an invented container-runtime lane
-- repo-local host-lane boundary and source-of-truth notes live directly in this document plus the active package docs
+- repo-local host-lane boundary and source-of-truth notes live directly in this document plus the relevant live package docs
 
 Incorrect modeling:
 - inventing a fake node package in this repo

@@ -64,3 +64,31 @@ This package currently focuses on planning and handoff.
 Follow-up slices may add stronger template export, richer plan lifecycle
 closure rules, and executable workflow chaining, but this package already
 models the core user-visible planner flow instead of only draft generation.
+
+## Install
+
+```bash
+openclaw plugins install clawhub:@openclaw/openclaw-workflow-planner
+```
+
+Local development:
+
+```bash
+nvm use || nvm install
+cd openclaw-workflow-planner
+pnpm install
+pnpm build
+cd ..
+openclaw plugins install -l ./openclaw-workflow-planner
+```
+
+## Verify
+
+```bash
+cd openclaw-workflow-planner
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
