@@ -123,7 +123,9 @@ async function readLatestCommit(
 		},
 	);
 	const raw = commit.stdout.replace(/\r\n/g, "\n");
-	const message = raw.includes("\n\n") ? raw.slice(raw.indexOf("\n\n") + 2) : "";
+	const message = raw.includes("\n\n")
+		? raw.slice(raw.indexOf("\n\n") + 2)
+		: "";
 	const [titleLine = "", ...bodyLines] = message.split("\n");
 	const title = titleLine.trim();
 	const body = bodyLines.join("\n").trim();
@@ -367,7 +369,8 @@ export async function createPullRequest(
 			prTitle: latestCommit.title,
 			prBody: latestCommit.body || latestCommit.title,
 			stdout: existingPr.url,
-			stderr: "Pull request already existed; returned the current bounded branch PR.",
+			stderr:
+				"Pull request already existed; returned the current bounded branch PR.",
 		};
 	}
 }
@@ -472,7 +475,8 @@ export async function waitForPullRequestChecks(
 			watchMode: "poll_until_complete",
 			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
 			stdout: "No required checks were configured for this PR.",
-			stderr: "gh pr checks reported no required checks, so bounded wait completed without blocking.",
+			stderr:
+				"gh pr checks reported no required checks, so bounded wait completed without blocking.",
 		};
 	}
 }

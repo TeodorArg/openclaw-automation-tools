@@ -105,7 +105,10 @@ describe("host preflight", () => {
 					return { stdout: "/Users/tester/repo", stderr: "" };
 				}
 				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
-					return { stdout: "feat/openclaw-host-git-workflow-live-check", stderr: "" };
+					return {
+						stdout: "feat/openclaw-host-git-workflow-live-check",
+						stderr: "",
+					};
 				}
 				if (args[0] === "remote" && args[1] === "get-url") {
 					return {
