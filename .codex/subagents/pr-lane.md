@@ -16,6 +16,7 @@ Allowed work:
 - do not auto-delete the branch during PR merge unless the user explicitly requests branch deletion
 - pull updated `main` after merge on the host-backed lane
 - treat merge plus local `main` sync as the completion boundary for a dependent execution slice
+- when refreshing local `main`, prefer `fetch` plus `merge --ff-only` or an explicit `pull --ff-only`; do not depend on an unset host pull strategy
 
 Not allowed:
 

@@ -40,3 +40,4 @@ This file is meant for short operational entries, not shipped docs.
 
 - Extended repo-local planning canon from a single-file default into a two-scale model: ordinary work stays in one task file, while larger accepted work now uses one master plan plus linked child checklist files under `.local-planning/`.
 - Added local planning templates `TEMPLATE_LOCAL_TASK_PLAN_RU.md`, `TEMPLATE_LOCAL_MASTER_PLAN_RU.md`, and `TEMPLATE_LOCAL_CHILD_CHECKLIST_RU.md`, and synced `AGENTS.md`, `.codex/subagents/README.md`, `planning-reporting.md`, `planning-reporting.toml`, `README.md`, MCP memory, and local `memory.jsonl` to that wording.
+- Added local host-shell safety canon so repo governance now avoids double-quoted shell commands with Markdown backticks or other shell-significant body text, and prefers fast-forward-safe local `main` refresh instead of bare `git pull` with unset strategy.

@@ -96,6 +96,8 @@ Current repo canon:
 - do not auto-delete the branch during PR merge unless the user explicitly requests branch deletion
 - do not authenticate git or GitHub inside runtime/container
 - push and PR actions happen on the host-backed lane only
+- for local `main` sync, prefer `git fetch origin main` plus `git merge --ff-only origin/main`, or an explicit `git pull --ff-only`; do not rely on bare `git pull` with unset host pull strategy
+- when passing shell commands directly through a host shell, do not embed Markdown backticks or other shell-significant text inside double-quoted command strings; prefer argv-safe execution, single-quoted heredocs, or file-based bodies
 - after opening a PR against `main`, check status once after 15 seconds; if checks are still `IN_PROGRESS`, poll every 10 seconds until they are green or a failing check needs a fix
 - before any `git push` for a migration slice, verify the resulting skill or plugin package shape against official OpenClaw docs and the current live repo canon
 
