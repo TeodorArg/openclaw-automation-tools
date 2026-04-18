@@ -377,18 +377,26 @@ async function readCurrentPullRequest(
 	currentBranch: string,
 	runner: HostCommandRunner,
 ): Promise<CurrentPullRequest> {
-	const result = await runner.run(
-		resolveHostGhBin(),
-		[
-			"pr",
-			"view",
-			currentBranch,
-			"--json",
-			"number,url,headRefName,baseRefName,state",
-		],
-		{ cwd: repoPath },
-	);
-	const pr = JSON.parse(result.stdout) as CurrentPullRequest;
+	const readField = async <T>(field: string): Promise<T> => {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			["pr", "view", currentBranch, "--json", field],
+			{ cwd: repoPath },
+		);
+		const payload = JSON.parse(result.stdout) as Record<string, T>;
+		if (!(field in payload)) {
+			throw new Error(`Bounded PR lookup missing field '${field}'.`);
+		}
+		return payload[field] as T;
+	};
+
+	const pr: CurrentPullRequest = {
+		number: await readField<number>("number"),
+		url: await readField<string>("url"),
+		headRefName: await readField<string>("headRefName"),
+		baseRefName: await readField<string>("baseRefName"),
+		state: await readField<CurrentPullRequest["state"]>("state"),
+	};
 
 	if (pr.headRefName !== currentBranch) {
 		throw new Error(
