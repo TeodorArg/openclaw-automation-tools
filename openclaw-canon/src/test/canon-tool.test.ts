@@ -6,6 +6,13 @@ import { createCanonDoctorTool } from "../canon-doctor-tool.js";
 import { createCanonFixTool } from "../canon-fix-tool.js";
 import { createCanonStatusTool } from "../canon-status-tool.js";
 
+const LIVE_PACKAGE_SLUGS = [
+	"openclaw-host-git-workflow",
+	"openclaw-workflow-planner",
+	"openclaw-canon",
+	"openclaw-session-bloat-warning",
+] as const;
+
 async function createFixtureRepo() {
 	const root = await mkdtemp(join(tmpdir(), "openclaw-canon-test-"));
 	const docsDir = join(root, "docs");
@@ -23,7 +30,20 @@ async function createFixtureRepo() {
 		await mkdir(join(packageDir, "skills"), { recursive: true });
 		await writeFile(join(packageDir, "README.md"), "# package\n", "utf8");
 		await writeFile(join(packageDir, "LICENSE"), "MIT\n", "utf8");
-		await writeFile(join(packageDir, ".npmignore"), "*\n", "utf8");
+		await writeFile(
+			join(packageDir, ".npmignore"),
+			[
+				"*",
+				"!dist/**",
+				"!openclaw.plugin.json",
+				"!skills/**",
+				"!README.md",
+				"!LICENSE",
+				"!package.json",
+				"",
+			].join("\n"),
+			"utf8",
+		);
 		await writeFile(join(packageDir, "tsconfig.json"), "{}\n", "utf8");
 		await writeFile(join(packageDir, "tsconfig.build.json"), "{}\n", "utf8");
 		await writeFile(
@@ -33,7 +53,7 @@ async function createFixtureRepo() {
 		);
 		await writeFile(
 			join(packageDir, "openclaw.plugin.json"),
-			`{"id":"${packageName}","version":"0.1.0","entry":"./dist/index.js"}\n`,
+			`{"id":"${packageName}","version":"0.1.0"}\n`,
 			"utf8",
 		);
 		await writeFile(join(packageDir, "src", "runtime", ".gitkeep"), "", "utf8");
@@ -42,18 +62,16 @@ async function createFixtureRepo() {
 		await writeFile(join(packageDir, "skills", ".gitkeep"), "", "utf8");
 	}
 
-	await writePackageFixture("openclaw-host-git-workflow");
-	await writePackageFixture("openclaw-workflow-planner");
-	await writePackageFixture("openclaw-canon");
+	for (const packageSlug of LIVE_PACKAGE_SLUGS) {
+		await writePackageFixture(packageSlug);
+	}
 	await writeFile(
 		join(docsDir, "PLUGIN_PACKAGE_CANON.md"),
 		[
 			"# Plugin Package Canon",
 			"",
 			"Current live publishable plugin packages:",
-			"- `openclaw-host-git-workflow/`",
-			"- `openclaw-workflow-planner/`",
-			"- `openclaw-canon/`",
+			...LIVE_PACKAGE_SLUGS.map((packageSlug) => `- \`${packageSlug}/\``),
 			"",
 		].join("\n"),
 		"utf8",
@@ -94,10 +112,16 @@ async function createFixtureRepo() {
 			"    strategy:",
 			"      matrix:",
 			"        package:",
-			"          - openclaw-canon",
+			...LIVE_PACKAGE_SLUGS.map((packageSlug) => `          - ${packageSlug}`),
 			"    defaults:",
 			"      run:",
 			"        working-directory: $" + "{{ matrix.package }}",
+			"    steps:",
+			"      - run: pnpm lint",
+			"      - run: pnpm typecheck",
+			"      - run: pnpm build",
+			"      - run: pnpm test",
+			"      - run: pnpm pack:smoke",
 			"",
 		].join("\n"),
 		"utf8",
@@ -136,7 +160,7 @@ describe("openclaw-canon tools", () => {
 		const fixture = await createFixtureRepo();
 		await writeFile(
 			join(fixture.root, "openclaw-canon", "openclaw.plugin.json"),
-			'{"id":"wrong-id","version":"0.1.0","entry":"./dist/index.js"}\n',
+			'{"id":"wrong-id","version":"0.1.0"}\n',
 			"utf8",
 		);
 		const tool = createCanonDoctorTool({
@@ -153,6 +177,66 @@ describe("openclaw-canon tools", () => {
 			payload.findings.some(
 				(finding: { id: string }) =>
 					finding.id === "source-id-mismatch-openclaw-canon",
+			),
+		).toBe(true);
+	});
+
+	it("detects .npmignore policy drift through canon_doctor source", async () => {
+		const fixture = await createFixtureRepo();
+		await writeFile(
+			join(fixture.root, "openclaw-canon", ".npmignore"),
+			"*\n",
+			"utf8",
+		);
+		const tool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const result = await tool.execute("call-2b", {
+			scope: "source",
+			execution: "inline",
+		});
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "template-npmignore-policy-openclaw-canon",
+			),
+		).toBe(true);
+	});
+
+	it("detects CI verification-minimum drift through canon_doctor source", async () => {
+		const fixture = await createFixtureRepo();
+		await writeFile(
+			fixture.pluginConfig.ciWorkflowPath,
+			[
+				"name: ci",
+				"",
+				"jobs:",
+				"  plugin-packages:",
+				"    strategy:",
+				"      matrix:",
+				"        package:",
+				"          - openclaw-canon",
+				"    steps:",
+				"      - run: pnpm lint",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+		const tool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const result = await tool.execute("call-2c", {
+			scope: "source",
+			execution: "inline",
+		});
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "source-ci-verification-minimum",
 			),
 		).toBe(true);
 	});
@@ -191,8 +275,8 @@ describe("openclaw-canon tools", () => {
 
 		expect(previewPayload.status).toBe("warning");
 		expect(previewPayload.confirmToken).toBeTruthy();
-		expect(previewPayload.changes).toHaveLength(3);
-		expect(previewPayload.proposals).toHaveLength(3);
+		expect(previewPayload.changes).toHaveLength(2);
+		expect(previewPayload.proposals).toHaveLength(2);
 
 		await expect(
 			fixTool.execute("call-4b", {
@@ -221,12 +305,16 @@ describe("openclaw-canon tools", () => {
 		);
 
 		expect(readmeAfterApply).toContain(
-			"`openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, and `openclaw-canon/`",
+			"`openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, and `openclaw-session-bloat-warning/`",
 		);
 		expect(preflightAfterApply).toContain("- `openclaw-host-git-workflow/`");
 		expect(preflightAfterApply).toContain("- `openclaw-workflow-planner/`");
+		expect(preflightAfterApply).toContain(
+			"- `openclaw-session-bloat-warning/`",
+		);
 		expect(ciAfterApply).toContain("openclaw-host-git-workflow");
 		expect(ciAfterApply).toContain("openclaw-workflow-planner");
+		expect(ciAfterApply).toContain("openclaw-session-bloat-warning");
 	});
 
 	it("previews and applies safe memory fixes with confirmToken", async () => {

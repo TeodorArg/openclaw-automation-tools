@@ -4,7 +4,6 @@
 	"description": "Operational canon plugin with typed status, doctor, and preview-first memory and bounded sync fix tools plus bundled memory-hygiene and source-of-truth-fix skills.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
-	"entry": "./dist/index.js",
 	"configSchema": {
 		"type": "object",
 		"additionalProperties": false,
