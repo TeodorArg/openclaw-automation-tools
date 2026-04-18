@@ -1,0 +1,36 @@
+{
+	"id": "openclaw-session-bloat-warning",
+	"name": "OpenClaw Session Bloat Warning",
+	"description": "Compaction-surface warning plugin for OpenClaw with calm pre/post compaction notices and bundled session-bloat-warning guidance.",
+	"version": "0.1.0",
+	"skills": ["./skills"],
+	"entry": "./dist/index.js",
+	"configSchema": {
+		"type": "object",
+		"additionalProperties": false,
+		"properties": {
+			"stateFilePath": {
+				"type": "string",
+				"description": "Optional path to the plugin-owned warning state JSON file. Defaults to ./.openclaw-session-bloat-warning-state.json in the current working directory."
+			},
+			"defaultLanguage": {
+				"type": "string",
+				"enum": ["en", "ru"],
+				"description": "Language for user-facing warning copy. Defaults to en."
+			},
+			"enablePreCompactionWarning": {
+				"type": "boolean",
+				"description": "Whether to emit a short warning on session:compact:before. Defaults to true."
+			},
+			"enablePostCompactionNote": {
+				"type": "boolean",
+				"description": "Whether to emit a short continuation note on session:compact:after. Defaults to true."
+			},
+			"maxWarningsPerSession": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Maximum number of pre-compaction warnings and post-compaction notes per session key. Defaults to 2."
+			}
+		}
+	}
+}
