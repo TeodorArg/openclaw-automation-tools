@@ -2,7 +2,9 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { createWorkflowPlannerTool } from "../workflow-planner-tool.js";
+import { evaluateIdeaGate } from "../runtime/planning/idea-gate.js";
+import { createWorkflowPlannerTool } from "../runtime/planning/workflow-planner-tool.js";
+import { parsePlannerMarkdown } from "../runtime/state/planner-file.js";
 
 async function createTool() {
 	const tempDir = await mkdtemp(join(tmpdir(), "workflow-planner-test-"));
@@ -55,6 +57,21 @@ async function seedAcceptedIdea(
 }
 
 describe("createWorkflowPlannerTool", () => {
+	it("rejects unsupported skill names before planner state is touched", async () => {
+		const { tool } = await createTool();
+
+		await expect(
+			tool.execute("call-0", {
+				action: "idea_list",
+				command: "list ideas",
+				commandName: "plan_workflow",
+				skillName: "unsupported-skill",
+			}),
+		).rejects.toThrow(
+			"workflow_planner_action only accepts requests from bundled openclaw-workflow-planner skills.",
+		);
+	});
+
 	it("creates an idea before research begins", async () => {
 		const { tool } = await createTool();
 		const result = await tool.execute("call-1", {
@@ -368,5 +385,39 @@ describe("createWorkflowPlannerTool", () => {
 		).rejects.toThrow(
 			"openclaw-workflow-research does not support action implementation_brief",
 		);
+	});
+
+	it("returns rejected idea-gate decisions for unsafe research", () => {
+		const result = evaluateIdeaGate({
+			ideaName: "workflow planner",
+			problem: "Planning flow is not productized yet.",
+			requestedOutcome:
+				"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+			research: {
+				summary: "The idea currently has unacceptable operational risk.",
+				valueAssessment: "high",
+				riskAssessment: "unsafe",
+				existingCoverage: "partial",
+				fitAssessment: "The desired surface is plausible, but not yet safe.",
+				sourcesChecked: ["repo canon"],
+			},
+		});
+
+		expect(result.decision).toBe("rejected");
+		expect(result.nextSuggestedAction).toBe("stop");
+	});
+
+	it("rejects malformed planner markdown state", () => {
+		expect(() =>
+			parsePlannerMarkdown(
+				[
+					"<!-- openclaw-workflow-planner-state",
+					"{bad json",
+					"-->",
+					"",
+					"# Workflow Planner",
+				].join("\n"),
+			),
+		).toThrow();
 	});
 });

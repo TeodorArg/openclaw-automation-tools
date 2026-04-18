@@ -3,7 +3,7 @@ import {
 	definePluginEntry,
 	type OpenClawPluginApi,
 } from "../api.js";
-import { createWorkflowPlannerTool } from "./workflow-planner-tool.js";
+import { createWorkflowPlannerTool } from "./runtime/planning/workflow-planner-tool.js";
 
 export default definePluginEntry({
 	id: "openclaw-workflow-planner",
