@@ -132,8 +132,6 @@ For each skill-only package, verify:
 - The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
 - Local development is pinned to Node `24.13.0` via `.nvmrc`.
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
-- Repo-local planning now has two accepted scales: ordinary work stays in one Markdown task file, while larger accepted work uses one master plan plus linked child checklist files under `.local-planning/`.
-- The accepted local planning templates are `.local-planning/TEMPLATE_LOCAL_TASK_PLAN_RU.md`, `.local-planning/TEMPLATE_LOCAL_MASTER_PLAN_RU.md`, and `.local-planning/TEMPLATE_LOCAL_CHILD_CHECKLIST_RU.md`.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the active package docs.
