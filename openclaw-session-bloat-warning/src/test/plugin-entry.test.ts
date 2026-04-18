@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const registerHook = vi.fn();
+const on = vi.fn();
 
 vi.mock("openclaw/plugin-sdk/plugin-entry", () => ({
 	definePluginEntry(entry: unknown) {
@@ -10,7 +10,7 @@ vi.mock("openclaw/plugin-sdk/plugin-entry", () => ({
 
 describe("plugin entry", () => {
 	beforeEach(() => {
-		registerHook.mockReset();
+		on.mockReset();
 	});
 
 	it("registers the official compaction hook names", async () => {
@@ -19,7 +19,7 @@ describe("plugin entry", () => {
 				register(api: {
 					pluginConfig?: Record<string, unknown>;
 					runtime: unknown;
-					registerHook: typeof registerHook;
+					on: typeof on;
 				}): void;
 			};
 		};
@@ -27,18 +27,18 @@ describe("plugin entry", () => {
 		pluginModule.default.register({
 			pluginConfig: undefined,
 			runtime: {},
-			registerHook,
+			on,
 		});
 
-		expect(registerHook).toHaveBeenCalledTimes(2);
-		expect(registerHook).toHaveBeenNthCalledWith(
+		expect(on).toHaveBeenCalledTimes(2);
+		expect(on).toHaveBeenNthCalledWith(
 			1,
-			"session:compact:before",
+			"before_compaction",
 			expect.any(Function),
 		);
-		expect(registerHook).toHaveBeenNthCalledWith(
+		expect(on).toHaveBeenNthCalledWith(
 			2,
-			"session:compact:after",
+			"after_compaction",
 			expect.any(Function),
 		);
 	});

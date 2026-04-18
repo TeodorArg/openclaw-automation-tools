@@ -8,8 +8,8 @@ lifecycle surface.
 This first implementation slice is intentionally bounded to the upstream
 compaction events confirmed in official OpenClaw docs:
 
-- `session:compact:before`
-- `session:compact:after`
+- `before_compaction`
+- `after_compaction`
 
 The package currently ships:
 
@@ -84,6 +84,8 @@ Supported config keys:
   they do not outnumber prior pre-compaction warnings for the same session
 - if the hook event does not expose a mutable `messages` array, the package
   safely does nothing instead of forcing output
+- session identity is taken from the hook context rather than from a custom
+  event-local `sessionKey` field
 
 ## Current Limits
 

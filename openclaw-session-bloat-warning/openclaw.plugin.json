@@ -4,7 +4,6 @@
 	"description": "Compaction-surface warning plugin for OpenClaw with calm pre/post compaction notices and bundled session-bloat-warning guidance.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
-	"entry": "./dist/index.js",
 	"configSchema": {
 		"type": "object",
 		"additionalProperties": false,
@@ -20,11 +19,11 @@
 			},
 			"enablePreCompactionWarning": {
 				"type": "boolean",
-				"description": "Whether to emit a short warning on session:compact:before. Defaults to true."
+				"description": "Whether to emit a short warning on before_compaction. Defaults to true."
 			},
 			"enablePostCompactionNote": {
 				"type": "boolean",
-				"description": "Whether to emit a short continuation note on session:compact:after. Defaults to true."
+				"description": "Whether to emit a short continuation note on after_compaction when the event carries a writable messages array. Defaults to true."
 			},
 			"maxWarningsPerSession": {
 				"type": "integer",

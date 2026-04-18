@@ -1,4 +1,8 @@
-import type { SessionHookEvent } from "../../../api.js";
+import type {
+	AfterCompactionHookEvent,
+	BeforeCompactionHookEvent,
+	PluginHookContext,
+} from "../../../api.js";
 import type { SessionBloatWarningConfig } from "../config/plugin-config.js";
 import { loadWarningState, saveWarningState } from "../state/plugin-state.js";
 import {
@@ -7,43 +11,53 @@ import {
 } from "../text/messages.js";
 
 type CompactionWarningHooks = {
-	beforeCompaction: (event: SessionHookEvent) => Promise<void>;
-	afterCompaction: (event: SessionHookEvent) => Promise<void>;
+	beforeCompaction: (
+		event: BeforeCompactionHookEvent,
+		ctx: PluginHookContext,
+	) => Promise<void>;
+	afterCompaction: (
+		event: AfterCompactionHookEvent,
+		ctx: PluginHookContext,
+	) => Promise<void>;
 };
 
 export function createCompactionWarningHooks(
 	config: SessionBloatWarningConfig,
 ): CompactionWarningHooks {
 	return {
-		beforeCompaction: async (event) => {
+		beforeCompaction: async (event, ctx) => {
 			if (!config.enablePreCompactionWarning) {
 				return;
 			}
 
 			const state = await loadWarningState(config.stateFilePath);
-			const session = getSessionState(state, event.sessionKey);
+			const session = getSessionState(state, ctx.sessionKey);
 
 			if (session.beforeWarnings >= config.maxWarningsPerSession) {
 				return;
 			}
 
-			appendMessage(
-				event,
-				buildPreCompactionWarning({
-					language: config.defaultLanguage,
-				}),
-			);
+			if (
+				!appendMessage(
+					event,
+					buildPreCompactionWarning({
+						language: config.defaultLanguage,
+					}),
+				)
+			) {
+				return;
+			}
 			session.beforeWarnings += 1;
-			session.lastUpdatedAt = readTimestamp(event.timestamp);
+			session.lastUpdatedAt = new Date().toISOString();
 			await saveWarningState(config.stateFilePath, state);
 		},
-		afterCompaction: async (event) => {
+		afterCompaction: async (event, ctx) => {
 			if (!config.enablePostCompactionNote) {
 				return;
 			}
 
 			const state = await loadWarningState(config.stateFilePath);
-			const session = getSessionState(state, event.sessionKey);
+			const session = getSessionState(state, ctx.sessionKey);
 			const allowWithoutPreWarning = !config.enablePreCompactionWarning;
 
 			if (
@@ -54,31 +68,33 @@ export function createCompactionWarningHooks(
 				return;
 			}
 
-			appendMessage(
-				event,
-				buildPostCompactionNote({
-					language: config.defaultLanguage,
-				}),
-			);
+			if (
+				!appendMessage(
+					event,
+					buildPostCompactionNote({
+						language: config.defaultLanguage,
+					}),
+				)
+			) {
+				return;
+			}
 			session.afterWarnings += 1;
-			session.lastUpdatedAt = readTimestamp(event.timestamp);
+			session.lastUpdatedAt = new Date().toISOString();
 			await saveWarningState(config.stateFilePath, state);
 		},
 	};
 }
 
-function appendMessage(event: SessionHookEvent, message: string) {
+function appendMessage(
+	event: BeforeCompactionHookEvent | AfterCompactionHookEvent,
+	message: string,
+) {
 	if (!Array.isArray(event.messages)) {
-		return;
+		return false;
 	}
 
 	event.messages.push(message);
-}
-
-function readTimestamp(timestamp: string | undefined) {
-	return timestamp && timestamp.trim().length > 0
-		? timestamp
-		: new Date().toISOString();
+	return true;
 }
 
 function getSessionState(
