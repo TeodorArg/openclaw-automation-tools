@@ -103,12 +103,6 @@ const CURRENT_STATE_MATRIX: SurfaceMatrixEntry[] = [
 		status: "follow_up_session",
 		note: "Docs sync remains intentionally separate so execution stays reviewable and bounded.",
 	},
-	{
-		phase: "memory_follow_up",
-		surface: "separate memory-sync session",
-		status: "follow_up_session",
-		note: "Memory sync mirrors accepted canon after owner docs and code are already settled.",
-	},
 ];
 
 const CURRENT_TESTED_FLOW = [
@@ -156,12 +150,6 @@ const RECOMMENDED_SESSION_CHOREOGRAPHY: SessionStep[] = [
 		session: "docs_follow_up",
 		surface: "separate docs session",
 		note: "Sync package or repo docs only if the merged slice changed shipped truth.",
-	},
-	{
-		order: 6,
-		session: "memory_follow_up",
-		surface: "separate memory sync session",
-		note: "Mirror the accepted state into memory only after docs and code are already final.",
 	},
 ];
 

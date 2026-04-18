@@ -46,7 +46,7 @@ Primary user-facing entrypoint:
 4. `validate_confirmed_plan`
 5. execution actions
 
-Docs sync и memory sync должны оставаться отдельными follow-up sessions после завершения bounded execution slice.
+Docs sync должен оставаться отдельным follow-up session после завершения bounded execution slice.
 
 ## Жёсткие правила
 
