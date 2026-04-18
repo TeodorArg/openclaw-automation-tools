@@ -42,6 +42,21 @@ Branch-aware planning output now emits package-aware branch suggestions and comm
 
 Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
 
+## Gateway Vs Node Host
+
+In this repo the canonical baseline is the Gateway, not a repo-owned node-host package.
+
+- `openclaw-gateway` in Docker is the always-on Gateway/WebSocket runtime for OpenClaw
+- `node host` is a separate headless OpenClaw node running on the machine where `system.run` / `system.which` must execute for real
+- if you need local repos, host git, `ssh`, `gh`, push, PR creation, or required-check polling, run that node on the corresponding host machine instead of trying to make baseline `openclaw-gateway` own those capabilities
+
+This split matters:
+- the gateway accepts operator and node connections, stores pairing state, and coordinates runtime
+- the node host connects to the gateway and exposes the command surface of its own machine
+- this repo's baseline is intentionally narrow and does not treat container-runtime `git push` or `PR creation` as the canonical path
+
+For the full host-node install, pairing, Windows, and remote-loopback/SSH-tunnel contract, see [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md).
+
 ## Install
 
 Local development install:
@@ -53,6 +68,24 @@ pnpm install
 pnpm build
 cd ..
 openclaw plugins install -l ./openclaw-host-git-workflow
+```
+
+For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin path` setup, do not treat plugin install as the first step. The practical order is:
+
+1. configure the local CLI profile with `gateway.remote.url` and `gateway.remote.token`
+2. approve the local CLI/operator pairing request on the Docker gateway
+3. install and connect the dedicated host node
+4. build and install `openclaw-host-git-workflow`
+5. enable the plugin and set `nodeSelector` when multiple eligible nodes exist
+
+Minimal same-machine Docker gateway bootstrap:
+
+```bash
+openclaw config set gateway.remote.url ws://127.0.0.1:18789
+openclaw config set gateway.remote.token "<gateway-token>"
+docker exec openclaw-gateway node dist/index.js devices list
+docker exec openclaw-gateway node dist/index.js devices approve <requestId>
+openclaw node install --host 127.0.0.1 --port 18789 --display-name "openclaw-docker-host-git"
 ```
 
 Registry install:
@@ -91,3 +124,4 @@ For each skill-only package, verify:
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the active package docs.
 - The active `openclaw-host-git-workflow/` package now uses domain-grouped runtime modules under `src/runtime/` and flat default tests under `src/test/`, in line with the tracked package canon.
+- In Docker-gateway setups, gateway token configuration and device pairing are separate gates; a valid `gateway.remote.token` does not replace CLI/operator pairing approval.
