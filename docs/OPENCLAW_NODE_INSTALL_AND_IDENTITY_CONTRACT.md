@@ -65,11 +65,12 @@ openclaw node uninstall
 
 ## Minimal Host-Backed Flow
 
-1. Start `openclaw-gateway` from this repo.
+1. Start or reach a product-level `openclaw-gateway`; this repo does not ship the gateway or the node host service.
 2. Install OpenClaw CLI on the machine that owns the target repos, credentials, and shell/toolchain surface.
-3. If the gateway requires a shared token, configure the local CLI profile with the gateway URL and token first.
-4. Approve the local CLI/operator pairing request on the gateway.
-5. Start a node host on that machine:
+3. Configure the local CLI profile with the gateway URL, and if the operator/CLI path needs remote auth, use the matching product-level CLI auth path.
+4. If node-host auth is required, provide it through `OPENCLAW_GATEWAY_TOKEN` or local `gateway.auth.token`; in local mode the node host does not inherit `gateway.remote.token`.
+5. Approve the local CLI/operator pairing request on the gateway.
+6. Start a node host on that machine:
 
 ```bash
 openclaw node run --host <gateway-host> --port 18789
@@ -81,7 +82,7 @@ Or install it as a background service:
 openclaw node install --host <gateway-host> --port 18789
 ```
 
-6. Approve node pairing on the gateway:
+7. Approve node pairing on the gateway:
 
 ```bash
 openclaw devices list
@@ -94,27 +95,28 @@ If Docker gateway runs locally on the same machine, `gateway-host` is usually `1
 
 ### Same-Machine Docker Gateway Note
 
-For `openclaw-gateway` in Docker on the same machine as the host node, the practical bootstrap order is stricter than the short generic flow above:
+For a product-level `openclaw-gateway` running in Docker on the same machine as the host node, the practical bootstrap order is stricter than the short generic flow above:
 
 1. confirm the gateway is reachable on `127.0.0.1:18789`
-2. copy the gateway token into the local CLI profile
-3. approve the local CLI/operator pairing request from the gateway side
-4. install or run the host node
-5. approve the host node pairing request if it is separate from the already paired local device identity
+2. configure `gateway.remote.url` for the local CLI profile
+3. provide node-host auth with `OPENCLAW_GATEWAY_TOKEN` or local `gateway.auth.token`; in local mode the node host does not inherit `gateway.remote.token`
+4. approve the local CLI/operator pairing request from the gateway side
+5. install or run the host node
+6. approve the host node pairing request if it is separate from the already paired local device identity
 
 Representative local commands:
 
 ```bash
 openclaw config set gateway.remote.url ws://127.0.0.1:18789
-openclaw config set gateway.remote.token "<gateway-token>"
-docker exec openclaw-gateway node dist/index.js devices list
-docker exec openclaw-gateway node dist/index.js devices approve <requestId>
+export OPENCLAW_GATEWAY_TOKEN="<gateway-token>"
+openclaw devices list
+openclaw devices approve <requestId>
 openclaw node install --host 127.0.0.1 --port 18789 --display-name "openclaw-docker-host-git"
 ```
 
 Observed behavior from the local Docker/macOS path:
 
-- a valid `gateway.remote.token` fixes `unauthorized`, but the local CLI can still fail with `pairing required` until the operator device itself is approved
+- valid node auth through `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` fixes `unauthorized`, but the local CLI can still fail with `pairing required` until the operator device itself is approved
 - approving the exact pending `requestId` on the gateway side is more reliable than assuming `devices approve --latest` will complete approval non-interactively
 - once paired, `openclaw nodes status` can show the local CLI identity before the dedicated host node is connected; do not treat that as proof that host-backed `system.run` is ready
 
