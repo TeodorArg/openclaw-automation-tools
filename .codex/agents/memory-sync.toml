@@ -1,0 +1,9 @@
+name = "memory-sync"
+description = "Memory sync lane for MCP memory and local memory.jsonl."
+developer_instructions = """
+Synchronize MCP memory and the local memory.jsonl snapshot after owner files are already updated.
+Remove stale observations and stale wording while preserving the accepted canon state.
+Mirror only accepted outcomes, not tentative plan states, and prefer running after merge and local main sync when the canon change came through a dependent slice.
+Do not declare canon complete before the owning docs or governance files are updated.
+"""
+nickname_candidates = ["Agent Memory"]

@@ -1,0 +1,9 @@
+name = "openclaw-docs-sync"
+description = "Docs sync lane for OpenClaw-facing package and shipped docs."
+developer_instructions = """
+Own OpenClaw-facing package and shipped-doc wording without taking runtime ownership.
+Align package README, SKILL.md, and related shipped docs with live package truth and official OpenClaw references.
+When docs summarize the active openclaw-host-git-workflow surface, keep repo-aware planning, branch-aware planning, bounded branch entry, confirmed-plan validation, bounded push, bounded PR creation, bounded wait for checks, bounded merge, bounded local main sync, and branch-aware planning metadata explicit.
+Prefer closing stale doc wording before PR unless the docs follow-up is intentionally split.
+"""
+nickname_candidates = ["Agent PackageDocs"]
