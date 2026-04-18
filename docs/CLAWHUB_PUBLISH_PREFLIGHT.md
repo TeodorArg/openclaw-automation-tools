@@ -1,6 +1,6 @@
 # ClawHub Publish Preflight
 
-Date: 2026-04-17  
+Date: 2026-04-18  
 Status: current baseline after migration cleanup
 
 ## Active Publish Surfaces
@@ -10,6 +10,7 @@ The source of truth for the live publishable plugin package list is `docs/PLUGIN
 Plugin packages listed there and currently expected here in lockstep:
 - `openclaw-host-git-workflow/`
 - `openclaw-workflow-planner/`
+- `openclaw-canon/`
 
 Primary host-backed package entrypoint:
 - `send_to_git` / `отправь в гит`
@@ -18,9 +19,10 @@ Planner package entrypoints:
 - bundled skills `openclaw-workflow-planner`, `openclaw-workflow-research`, and `openclaw-workflow-implementer`
 - typed tool `workflow_planner_action`
 
-Skill-only packages:
-- `memory-hygiene/`
-- `source-of-truth-fix/`
+Canon package entrypoints:
+- bundled skills `memory-hygiene` and `source-of-truth-fix`
+- typed tools `canon_status`, `canon_doctor`, and `canon_fix`
+- no standalone skill-only packages remain in the repo; this guidance now ships only through `openclaw-canon/`
 
 Non-publishable repo docs:
 - `README.md`
@@ -48,6 +50,17 @@ Run for `openclaw-workflow-planner/`:
 
 ```bash
 cd openclaw-workflow-planner
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
+Run for `openclaw-canon/`:
+
+```bash
+cd openclaw-canon
 pnpm lint
 pnpm typecheck
 pnpm build
@@ -97,16 +110,12 @@ Current planner package coverage to publish:
 - bounded implementation brief handoff
 - idea closure
 
-## Skill Checks
-
-For each active skill package:
-- `SKILL.md` exists
-- `README.md` exists
-- `LICENSE` exists and is `MIT-0`
-- publish metadata baseline matches the package README: slug, display name, owner placeholder, version, and tags
-- no `package.json`
-- no `openclaw.plugin.json`
-- no `src/` tree or runtime code is introduced
+Current canon package coverage to publish:
+- latest-known `canon_status` summary snapshots
+- bounded `canon_doctor` scopes `source`, `memory`, and `sync`
+- preview-first `canon_fix` for `memory`
+- short-lived confirm-token previews in plugin-owned state
+- bundled `memory-hygiene` and `source-of-truth-fix` instruction layers
 
 ## Commands
 
@@ -115,6 +124,7 @@ Plugin publish preflight:
 ```bash
 clawhub package publish ./openclaw-host-git-workflow --dry-run
 clawhub package publish ./openclaw-workflow-planner --dry-run
+clawhub package publish ./openclaw-canon --dry-run
 ```
 
 Plugin publish:
@@ -122,23 +132,13 @@ Plugin publish:
 ```bash
 clawhub package publish ./openclaw-host-git-workflow
 clawhub package publish ./openclaw-workflow-planner
+clawhub package publish ./openclaw-canon
 ```
 
 Notes:
 - official ClawHub plugin publish accepts a `<source>` such as a local folder, `owner/repo`, `owner/repo@ref`, or a GitHub URL
 - plugin identity and compatibility metadata must already be present in `package.json` / `openclaw.plugin.json`; do not rely on ad hoc publish flags for canonical package metadata
 - prefer `--dry-run` on the current machine before the first real publish
-
-Skill publish examples:
-
-```bash
-clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
-clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
-```
-
-Skill publish baseline:
-- `memory-hygiene/`: slug `memory-hygiene`, display name `Memory Hygiene`, owner `<clawhub-owner>`, version `0.1.0`, tags `memory`, `workflow`, `maintenance`
-- `source-of-truth-fix/`: slug `source-of-truth-fix`, display name `Source Of Truth Fix`, owner `<clawhub-owner>`, version `0.1.0`, tags `docs`, `verification`, `source-of-truth`
 
 ## Blockers
 

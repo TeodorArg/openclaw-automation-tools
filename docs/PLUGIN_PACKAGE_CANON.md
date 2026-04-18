@@ -1,6 +1,6 @@
 # Plugin Package Canon
 
-Date: 2026-04-17  
+Date: 2026-04-18  
 Status: active repo-level canon
 
 ## Scope
@@ -18,6 +18,7 @@ The live publishable plugin package list for this repository is defined here.
 Current live publishable plugin packages:
 - `openclaw-host-git-workflow/`
 - `openclaw-workflow-planner/`
+- `openclaw-canon/`
 
 CI package matrices, publish/preflight docs, and local governance must stay in lockstep with this list.
 
@@ -32,6 +33,13 @@ In the live host-backed package, the current runtime domains are grouped under:
 In the live planner package, the current runtime domains are grouped under:
 - `src/runtime/planning/`
 - `src/runtime/state/`
+
+In the live canon package, the current runtime domains are grouped under:
+- `src/runtime/doctor/`
+- `src/runtime/fix/`
+- `src/runtime/report/`
+- `src/runtime/state/`
+- `src/runtime/status/`
 
 Future plugin packages in this repository should follow the same package-shape baseline unless a narrower canon update replaces it.
 
