@@ -95,6 +95,49 @@ afterEach(async () => {
 });
 
 describe("host preflight", () => {
+	it("does not depend on container-local filesystem access for host repos", async () => {
+		const remoteRunner: HostCommandRunner = {
+			async run(command, args) {
+				if (args[0] === "--version") {
+					return { stdout: `${command} version test`, stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--show-toplevel") {
+					return { stdout: "/Users/tester/repo", stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
+					return { stdout: "feat/openclaw-host-git-workflow-live-check", stderr: "" };
+				}
+				if (args[0] === "remote" && args[1] === "get-url") {
+					return {
+						stdout: "git@github.com:TeodorArg/openclaw-automation-tools.git",
+						stderr: "",
+					};
+				}
+				if (args[0] === "auth" && args[1] === "status") {
+					return { stdout: "github.com\n  ✓ Logged in", stderr: "" };
+				}
+				throw new Error(`Unexpected command: ${command} ${args.join(" ")}`);
+			},
+		};
+
+		const result = await preflightHostOps(
+			"/Users/tester/repo",
+			{
+				requireGhAuth: true,
+				requireNonMainBranch: true,
+			},
+			remoteRunner,
+		);
+
+		expect(result).toMatchObject({
+			repoPath: "/Users/tester/repo",
+			repoRoot: "/Users/tester/repo",
+			currentBranch: "feat/openclaw-host-git-workflow-live-check",
+			originUrl: "git@github.com:TeodorArg/openclaw-automation-tools.git",
+			ghAuthStatus: "ready",
+		});
+	});
+
 	it("returns structured readiness for a valid repo", async () => {
 		const { repoPath, remotePath } = await createRepo();
 		const { binDir } = await createFakeGh(repoPath);
