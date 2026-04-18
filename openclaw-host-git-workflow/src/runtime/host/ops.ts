@@ -335,10 +335,7 @@ export async function createPullRequest(
 			"main",
 			"--head",
 			preflight.currentBranch,
-			"--title",
-			latestCommit.title,
-			"--body",
-			latestCommit.body || latestCommit.title,
+			"--fill-verbose",
 		],
 		{ cwd: repoPath },
 	);
