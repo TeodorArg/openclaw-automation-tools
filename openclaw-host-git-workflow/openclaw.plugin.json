@@ -4,7 +4,6 @@
 	"description": "Host-backed git workflow with bundled skill, single send_to_git entrypoint, and bounded runtime slices for setup doctor, repo-aware planning, branch-aware planning, commit prep, repo resolution, live host node binding, preflight, branch entry, confirmed-plan validation, push, PR creation, checks wait, merge, and sync-main.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
-	"entry": "./dist/index.js",
 	"configSchema": {
 		"type": "object",
 		"additionalProperties": false,

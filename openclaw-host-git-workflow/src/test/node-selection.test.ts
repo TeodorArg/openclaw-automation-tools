@@ -136,4 +136,55 @@ describe("host node selection", () => {
 			usedDefault: true,
 		});
 	});
+
+	it("returns no_node_available when the gateway reports no host nodes", async () => {
+		const result = await resolveHostNodeSelection({
+			nodes: [],
+		});
+
+		expect(result).toMatchObject({
+			runtimeBindingStatus: "no_node_available",
+			runtimeBindingTarget: null,
+		});
+	});
+
+	it("returns selector_unresolved for an unknown configured selector", async () => {
+		const result = await resolveHostNodeSelection({
+			pluginConfig: {
+				nodeSelector: "missing-host",
+			},
+			nodes: [
+				{ nodeId: "node-a", displayName: "host-a", commands: ["system.run"] },
+			],
+		});
+
+		expect(result).toMatchObject({
+			runtimeBindingStatus: "selector_unresolved",
+			runtimeBindingTarget: null,
+			usedDefault: false,
+		});
+	});
+
+	it("returns unsupported_system_run when the resolved node lacks system.run", async () => {
+		const result = await resolveHostNodeSelection({
+			pluginConfig: {
+				nodeSelector: "host-a",
+			},
+			nodes: [
+				{
+					nodeId: "node-a",
+					displayName: "host-a",
+					commands: ["other.command"],
+				},
+			],
+		});
+
+		expect(result).toMatchObject({
+			runtimeBindingStatus: "unsupported_system_run",
+			runtimeBindingTarget: {
+				nodeId: "node-a",
+				bindingSource: "selector",
+			},
+		});
+	});
 });
