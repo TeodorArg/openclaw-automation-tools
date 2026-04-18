@@ -54,11 +54,16 @@ describe("buildCommitPrepResult", () => {
 					status: "productized",
 				}),
 				expect.objectContaining({
-					phase: "memory_follow_up",
+					phase: "docs_follow_up",
 					status: "follow_up_session",
 				}),
 			]),
 		);
+		expect(
+			result.currentStateMatrix.some(
+				(entry) => entry.phase === "memory_follow_up",
+			),
+		).toBe(false);
 		expect(result.currentTestedFlow).toContain("commit_prep");
 		expect(result.recommendedSessionChoreography[0]).toMatchObject({
 			order: 1,
@@ -70,6 +75,11 @@ describe("buildCommitPrepResult", () => {
 			session: "commit_prep",
 			surface: "commit_prep",
 		});
+		expect(
+			result.recommendedSessionChoreography.some(
+				(step) => step.session === "memory_follow_up",
+			),
+		).toBe(false);
 		expect(result.groups).toHaveLength(2);
 		expect(result.confirmedPlanCandidate?.groups).toHaveLength(2);
 	});

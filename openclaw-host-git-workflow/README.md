@@ -47,7 +47,7 @@ Use the package as a short-session chain:
 10. `merge_pr`
 11. `sync_main`
 
-Docs sync and memory sync intentionally remain separate follow-up sessions after the bounded execution kernel finishes.
+If the merged slice changed shipped truth, run docs sync as a separate follow-up session after the bounded execution kernel finishes.
 
 ## Hard Boundaries
 
