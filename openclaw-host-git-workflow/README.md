@@ -49,6 +49,16 @@ Use the package as a short-session chain:
 
 If the merged slice changed shipped truth, run docs sync as a separate follow-up session after the bounded execution kernel finishes.
 
+## Execution Behavior
+
+For live verification requests such as `проверь работает ли плагин openclaw-host-git-workflow` or `нужен полный цикл`, the bundled skill should normalize that phrasing to the same canonical `send_to_git` intent and start the bounded chain immediately.
+
+Routine bounded steps are expected to behave proactively:
+- do the work first
+- do not narrate each upcoming probe or tool call
+- only emit a short user update when a major phase changes or a real blocker appears
+- keep chain-of-thought and speculative step-by-step commentary out of the user-visible flow
+
 ## Hard Boundaries
 
 - no arbitrary shell passthrough

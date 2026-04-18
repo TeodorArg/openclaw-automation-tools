@@ -18,6 +18,34 @@ describe("normalizeWorkflowIntent", () => {
 		expect(normalizeWorkflowIntent("send to git")).toBe("send_to_git");
 	});
 
+	it("normalizes full-cycle verification requests for the active plugin", () => {
+		expect(
+			normalizeWorkflowIntent(
+				"давай проверим работает ли плагин openclaw-host-git-workflow нужно полный цикл",
+			),
+		).toBe("send_to_git");
+		expect(
+			normalizeWorkflowIntent(
+				"check whether plugin openclaw-host-git-workflow works, need full cycle",
+			),
+		).toBe("send_to_git");
+		expect(
+			normalizeWorkflowIntent(
+				"verify openclaw-host-git-workflow with an end-to-end run",
+			),
+		).toBe("send_to_git");
+		expect(
+			normalizeWorkflowIntent(
+				"запусти openclaw-host-git-workflow и сделай полный прогон",
+			),
+		).toBe("send_to_git");
+		expect(
+			normalizeWorkflowIntent(
+				"test plugin openclaw-host-git-workflow with the complete workflow",
+			),
+		).toBe("send_to_git");
+	});
+
 	it("normalizes shipped RU planning and execute aliases", () => {
 		expect(normalizeWorkflowIntent("разложи по git-группам")).toBe(
 			"send_to_git",
@@ -41,6 +69,13 @@ describe("normalizeWorkflowIntent", () => {
 
 	it("returns null for unsupported text", () => {
 		expect(normalizeWorkflowIntent("git status")).toBeNull();
+		expect(normalizeWorkflowIntent("проверь другой плагин")).toBeNull();
+		expect(
+			normalizeWorkflowIntent("run complete workflow for another plugin"),
+		).toBeNull();
+		expect(
+			normalizeWorkflowIntent("openclaw-host-git-workflow docs"),
+		).toBeNull();
 	});
 });
 

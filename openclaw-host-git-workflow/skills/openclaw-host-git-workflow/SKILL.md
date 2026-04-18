@@ -48,6 +48,15 @@ Primary user-facing entrypoint:
 
 Docs sync должен оставаться отдельным follow-up session после завершения bounded execution slice.
 
+## Execution Mode
+
+- Для live-check, full-cycle verification, и формулировок вроде `проверь работает ли плагин openclaw-host-git-workflow` или `нужен полный цикл` сразу переходи к bounded execution chain этого skill.
+- Не трать сообщения на narrated preambles вроде `сначала проверю`, `сейчас посмотрю`, `хочу обойтись без предположений`.
+- Routine bounded tool calls в этом skill считаются proactive: не проси подтверждение и не печатай промежуточную простыню перед каждым шагом.
+- Пользовательский апдейт допустим только когда началась новая крупная фаза или найден реальный blocker; один короткий outcome line плюс один короткий next-step line максимум.
+- Если блокера нет, делай работу сразу и сообщай результат по факту.
+- Не выводи chain-of-thought, внутренние размышления, speculative plans или покадровое комментирование каждого `doctor` / `plan` / `preflight` / `push` / `create_pr` шага.
+
 ## Жёсткие правила
 
 - Не принимай произвольный `git <anything>` как supported input.
@@ -60,3 +69,4 @@ Docs sync должен оставаться отдельным follow-up session
 - PR открывается только из текущей non-main ветки в `main`.
 - Runtime должен использовать уже связанный host node, а не unbound selector placeholder.
 - Repo path должен резолвиться из canonical host/project path, а не из installed output или неявного cwd.
+- Запросы на live/full-cycle verification этого package нужно нормализовать к canonical intent `send_to_git`, а не переводить в длинный режим обсуждения.
