@@ -27,7 +27,7 @@ Canon package entrypoints:
 
 Session-bloat warning package entrypoints:
 - bundled skill `session-bloat-warning`
-- official compaction lifecycle hooks `session:compact:before` and `session:compact:after`
+- official compaction lifecycle hooks `before_compaction` and `after_compaction`
 
 Non-publishable repo docs:
 - `README.md`
@@ -86,7 +86,7 @@ pnpm pack:smoke
 
 Then verify:
 - `package.json` and `openclaw.plugin.json` versions match
-- manifest id/name/entry match the built package
+- manifest id/name match package metadata, and runtime entrypoints stay in `package.json` `openclaw.extensions`
 - package `files` match the intended shipped artifact
 - packed tarball contains the built `dist/**` artifacts required by the package entry surface
 - no secrets or host-local paths leak into shipped files
@@ -134,7 +134,7 @@ Current canon package coverage to publish:
 - bundled `memory-hygiene` and `source-of-truth-fix` instruction layers
 
 Current session-bloat warning package coverage to publish:
-- official compaction lifecycle coverage through `session:compact:before` and `session:compact:after`
+- official compaction lifecycle coverage through `before_compaction` and `after_compaction`
 - calm localized pre/post compaction warning copy
 - plugin-owned per-session dedupe state
 - bundled `session-bloat-warning` instruction layer

@@ -82,8 +82,8 @@ Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtim
 
 `openclaw-session-bloat-warning/` is the active compaction-warning plugin package in this repo.
 Its shipped surface is intentionally bounded to the official compaction lifecycle:
-- `session:compact:before` for a calm warning before compaction starts
-- `session:compact:after` for a short continuation note after compaction finishes
+- `before_compaction` for a calm warning before compaction starts
+- `after_compaction` for a short continuation note after compaction finishes when the hook payload exposes a writable `messages` array
 - plugin-owned dedupe state for per-session warning ceilings
 
 Its bundled skill surface currently centers on `session-bloat-warning`.
