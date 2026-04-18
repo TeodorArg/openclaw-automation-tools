@@ -192,7 +192,7 @@ describe("openclaw-canon tools", () => {
 		expect(previewPayload.status).toBe("warning");
 		expect(previewPayload.confirmToken).toBeTruthy();
 		expect(previewPayload.changes).toHaveLength(3);
-		expect(previewPayload.proposals).toHaveLength(4);
+		expect(previewPayload.proposals).toHaveLength(3);
 
 		await expect(
 			fixTool.execute("call-4b", {
@@ -255,7 +255,7 @@ describe("openclaw-canon tools", () => {
 
 		expect(previewPayload.status).toBe("warning");
 		expect(previewPayload.confirmToken).toBeTruthy();
-		expect(previewPayload.proposals).toHaveLength(3);
+		expect(previewPayload.proposals).toHaveLength(4);
 
 		await fixTool.execute("call-4b", {
 			scope: "memory",
