@@ -1,2 +1,8 @@
-# Keep this file present so npm pack stops inheriting the repo-root `.gitignore`.
-# Shipped files are controlled by `package.json > files`.
+*
+!dist/
+!dist/**
+!skills/
+!skills/**
+!README.md
+!LICENSE
+!openclaw.plugin.json

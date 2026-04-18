@@ -1,6 +1,6 @@
 ---
 name: openclaw-host-git-workflow
-description: Выполняет bounded host git workflow через единый intent `send_to_git`: строит repo-aware план, резолвит repo path, делает live host node binding, выполняет host preflight, умеет bounded branch entry в non-main рабочую ветку, валидирует confirmed plan, делает bounded push, bounded PR create, ждёт required checks, bounded merge и bounded sync `main`.
+description: Выполняет bounded host git workflow через единый intent `send_to_git`: даёт setup doctor, строит repo-aware и branch-aware план, делает explicit commit prep, резолвит repo path, делает live host node binding, выполняет host preflight, умеет bounded branch entry в non-main рабочую ветку, валидирует confirmed plan, делает bounded push, bounded PR create, ждёт required checks, bounded merge и bounded sync `main`.
 user-invocable: true
 command-dispatch: tool
 command-tool: host_git_workflow_action
@@ -22,18 +22,31 @@ Primary user-facing entrypoint:
 ## Current Package Slice
 
 Этот package slice сейчас покрывает:
-1. planning only
-2. branch-aware planning
-3. repo resolution
-4. live host node binding
-5. host preflight
-6. bounded branch entry into requested non-main working branch
-7. confirmed-plan validation
-8. bounded push current branch to `origin`
-9. bounded PR creation into `main`
-10. bounded wait for required checks
-11. bounded merge of the current branch PR into `main`
-12. bounded sync local `main` from `origin/main`
+1. setup doctor
+2. planning only
+3. branch-aware planning
+4. explicit commit prep
+5. repo resolution
+6. live host node binding
+7. host preflight
+8. bounded branch entry into requested non-main working branch
+9. confirmed-plan validation
+10. bounded push current branch to `origin`
+11. bounded PR creation into `main`
+12. bounded wait for required checks
+13. bounded merge of the current branch PR into `main`
+14. bounded sync local `main` from `origin/main`
+
+## Preferred Choreography
+
+Предпочитай короткий chain:
+1. `doctor`
+2. `plan_with_branches`
+3. `commit_prep`
+4. `validate_confirmed_plan`
+5. execution actions
+
+Docs sync и memory sync должны оставаться отдельными follow-up sessions после завершения bounded execution slice.
 
 ## Жёсткие правила
 

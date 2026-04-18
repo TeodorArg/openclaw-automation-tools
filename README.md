@@ -24,8 +24,10 @@ The active publishable plugin package now matches the current runtime/test layou
 Its bundled skill surface is intentionally collapsed to one primary user-facing entrypoint: `send_to_git` / `отправь в гит`.
 
 Its current shipped slice covers:
+- setup doctor for repo targeting, node binding, and host readiness
 - repo-aware planning
 - branch-aware planning
+- explicit commit prep for ownership grouping, branch naming, and commit bodies
 - repo resolution
 - live host node binding
 - host preflight
@@ -39,6 +41,7 @@ Its current shipped slice covers:
 
 The runtime now binds to a concrete host node and executes shell steps through `node.invoke` `system.run.prepare` / `system.run`, instead of treating node selection as an unbound placeholder.
 Branch-aware planning output now emits package-aware branch suggestions and commit titles, so merge-visible PR titles identify the owning package or explicit repo surface instead of a generic workflow label.
+The package now also exposes a recommended short-session choreography of `doctor -> plan_with_branches -> commit_prep -> execution kernel`, leaving docs sync and memory sync as explicit follow-up sessions instead of hiding them in one giant run.
 
 Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
 

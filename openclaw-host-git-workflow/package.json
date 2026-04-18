@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-host-git-workflow",
 	"version": "0.1.0",
-	"description": "Host-backed git workflow plugin for OpenClaw with bundled skill, single send_to_git entrypoint, and bounded runtime slices for repo-aware planning, branch-aware planning, repo resolution, live host node binding, preflight, branch entry, confirmed-plan validation, push, PR creation, checks wait, merge, and sync-main.",
+	"description": "Host-backed git workflow plugin for OpenClaw with bundled skill, single send_to_git entrypoint, and bounded runtime slices for setup doctor, repo-aware planning, branch-aware planning, commit prep, repo resolution, live host node binding, preflight, branch entry, confirmed-plan validation, push, PR creation, checks wait, merge, and sync-main.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",

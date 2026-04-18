@@ -1,4 +1,5 @@
 import { Type } from "@sinclair/typebox";
+import { runHostWorkflowDoctor } from "./runtime/host/doctor.js";
 import {
 	createPullRequest,
 	enterWorkingBranch,
@@ -13,6 +14,7 @@ import {
 	createNodeHostCommandRunner,
 } from "./runtime/node/execution.js";
 import { resolveHostNodeSelection } from "./runtime/node/selection.js";
+import { buildCommitPrepResult } from "./runtime/planning/commit-prep.js";
 import { resolveWorkflowIntent } from "./runtime/planning/intent-routing.js";
 import {
 	buildPlanResult,
@@ -24,8 +26,10 @@ import { resolveRepoTarget } from "./runtime/repo/repo-resolution.js";
 const ToolSchema = Type.Object(
 	{
 		action: Type.Union([
+			Type.Literal("doctor"),
 			Type.Literal("plan"),
 			Type.Literal("plan_with_branches"),
+			Type.Literal("commit_prep"),
 			Type.Literal("validate_confirmed_plan"),
 			Type.Literal("preflight"),
 			Type.Literal("enter_branch"),
@@ -46,8 +50,10 @@ const ToolSchema = Type.Object(
 
 type ToolParams = {
 	action:
+		| "doctor"
 		| "plan"
 		| "plan_with_branches"
+		| "commit_prep"
 		| "validate_confirmed_plan"
 		| "preflight"
 		| "enter_branch"
@@ -96,7 +102,7 @@ export function createHostGitWorkflowTool(
 	return {
 		name: "host_git_workflow_action",
 		description:
-			"Bounded host git workflow for repo-aware planning, branch-aware planning, repo resolution, node selection, host preflight, branch entry, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
+			"Bounded host git workflow for setup doctor, repo-aware planning, branch-aware planning, commit prep, repo resolution, node selection, host preflight, branch entry, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const repoTarget = resolveRepoTarget();
@@ -138,6 +144,33 @@ export function createHostGitWorkflowTool(
 				);
 			}
 
+			if (params.action === "doctor") {
+				const doctor = await runHostWorkflowDoctor({
+					repoResolution: repoTarget,
+					nodeSelection,
+					runner: nodeRunner,
+				});
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...doctor,
+									note: "Doctor is a lightweight setup/readiness surface. It keeps repo targeting, host-node binding, git/gh checks, and origin readiness explicit before the bounded execution kernel starts.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
 			if (params.action === "plan" || params.action === "plan_with_branches") {
 				const repoState = await collectRepoState(repoPath, requireNodeRunner());
 				const planResult = buildPlanResult(repoState, {
@@ -171,6 +204,34 @@ export function createHostGitWorkflowTool(
 										params.action === "plan_with_branches"
 											? "This action returns branch-aware planning output with package-aware branch and commit metadata; separate bounded actions in the same package handle confirmed-plan validation, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync."
 											: "This action returns repo-aware planning output; separate bounded actions in the same package handle confirmed-plan validation, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync.",
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
+			if (params.action === "commit_prep") {
+				const repoState = await collectRepoState(repoPath, requireNodeRunner());
+				const commitPrep = buildCommitPrepResult(repoState, {
+					repoResolution: repoTarget,
+					nodeSelection,
+					sourceCommand: intent,
+				});
+
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									ok: true,
+									action: params.action,
+									intent,
+									...commitPrep,
+									note: "Commit prep is an explicit bounded surface for ownership grouping, branch and commit metadata, current-state mapping, and recommended small-session choreography.",
 								},
 								null,
 								2,
