@@ -324,29 +324,52 @@ export async function createPullRequest(
 ): Promise<CreatePrResult> {
 	const preflight = await preflightPushPr(repoPath, runner);
 	const latestCommit = await readLatestCommit(repoPath, runner);
-	const result = await runner.run(
-		resolveHostGhBin(),
-		[
-			"pr",
-			"create",
-			"--base",
-			"main",
-			"--head",
-			preflight.currentBranch,
-			"--fill-verbose",
-		],
-		{ cwd: repoPath },
-	);
+	try {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			[
+				"pr",
+				"create",
+				"--base",
+				"main",
+				"--head",
+				preflight.currentBranch,
+				"--fill-verbose",
+			],
+			{ cwd: repoPath },
+		);
 
-	return {
-		...preflight,
-		status: "pr_opened",
-		baseBranch: "main",
-		prTitle: latestCommit.title,
-		prBody: latestCommit.body || latestCommit.title,
-		stdout: result.stdout,
-		stderr: result.stderr,
-	};
+		return {
+			...preflight,
+			status: "pr_opened",
+			baseBranch: "main",
+			prTitle: latestCommit.title,
+			prBody: latestCommit.body || latestCommit.title,
+			stdout: result.stdout,
+			stderr: result.stderr,
+		};
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		if (!message.includes("already exists")) {
+			throw error;
+		}
+
+		const existingPr = await readCurrentPullRequest(
+			repoPath,
+			preflight.currentBranch,
+			runner,
+		);
+
+		return {
+			...preflight,
+			status: "pr_opened",
+			baseBranch: "main",
+			prTitle: latestCommit.title,
+			prBody: latestCommit.body || latestCommit.title,
+			stdout: existingPr.url,
+			stderr: "Pull request already existed; returned the current bounded branch PR.",
+		};
+	}
 }
 
 async function readCurrentPullRequest(
