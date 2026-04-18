@@ -213,8 +213,8 @@ describe("createWorkflowPlannerTool", () => {
 		).toBe(true);
 	});
 
-	it("marks tasks done by stable task id", async () => {
-		const { tool } = await createTool();
+	it("marks tasks done by stable task id and syncs persisted plan checklist state", async () => {
+		const { plannerFilePath, tool } = await createTool();
 
 		await seedAcceptedIdea(tool);
 		await tool.execute("call-6a", {
@@ -233,6 +233,7 @@ describe("createWorkflowPlannerTool", () => {
 		});
 		const snapshotBeforePayload = JSON.parse(snapshotBefore.content[0].text);
 		const taskId = snapshotBeforePayload.idea.tasks[0].id;
+		const taskText = snapshotBeforePayload.idea.tasks[0].text;
 
 		await tool.execute("call-6c", {
 			action: "task_done",
@@ -250,11 +251,37 @@ describe("createWorkflowPlannerTool", () => {
 			ideaName: "workflow planner",
 		});
 		const snapshotAfterPayload = JSON.parse(snapshotAfter.content[0].text);
+		const persistedMarkdown = await readFile(plannerFilePath, "utf8");
+		const reloadedTool = createWorkflowPlannerTool({
+			pluginConfig: {
+				plannerFilePath,
+			},
+		});
+		const reloadedSnapshot = await reloadedTool.execute("call-6e", {
+			action: "idea_get",
+			command: "get idea",
+			commandName: "implementation_handoff",
+			skillName: "openclaw-workflow-implementer",
+			ideaName: "workflow planner",
+		});
+		const reloadedPayload = JSON.parse(reloadedSnapshot.content[0].text);
 
 		expect(
 			snapshotAfterPayload.idea.tasks.find(
 				(task: { id: string }) => task.id === taskId,
 			).done,
+		).toBe(true);
+		expect(persistedMarkdown).toContain(`- [x] ${taskText} (\`${taskId}\`, generated)`);
+		expect(
+			reloadedPayload.idea.plan.planBlocks.some(
+				(block: {
+					checklist: Array<{ id: string; done: boolean }>;
+				}) =>
+					block.checklist.some(
+						(task: { id: string; done: boolean }) =>
+							task.id === taskId && task.done,
+					),
+			),
 		).toBe(true);
 	});
 
