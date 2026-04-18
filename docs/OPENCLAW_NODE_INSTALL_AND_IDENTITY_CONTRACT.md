@@ -127,6 +127,27 @@ Observed behavior from the local Docker/macOS path:
 
 It does not rename the underlying macOS Login Items or LaunchAgent process label. If the service runs through a generic `node` binary, macOS can still display it as `node` in system UI even though OpenClaw shows the configured display name.
 
+### macOS Surface Hardening
+
+If the host node is intended only for git-hosted workflows and you want to reduce browser-related surface area before routine use, apply this local config hardening:
+
+```bash
+node -e 'const fs=require("fs"); const p=process.env.HOME+"/.openclaw/openclaw.json"; const raw=JSON.parse(fs.readFileSync(p,"utf8")); raw.browser ??= {}; raw.browser.enabled = false; raw.gateway ??= {}; raw.gateway.nodes ??= {}; raw.gateway.nodes.browser = { ...(raw.gateway.nodes.browser ?? {}), mode: "off" }; raw.nodeHost ??= {}; raw.nodeHost.browserProxy = { ...(raw.nodeHost.browserProxy ?? {}), enabled: false }; fs.writeFileSync(p, JSON.stringify(raw,null,2)+"\n"); console.log(JSON.stringify({browser:raw.browser,gatewayNodesBrowser:raw.gateway.nodes.browser,nodeHostBrowserProxy:raw.nodeHost.browserProxy},null,2));'
+openclaw node restart
+```
+
+What this changes:
+
+- disables top-level browser capability wiring
+- disables gateway node browser routing
+- disables node-host browser proxy exposure
+
+Important boundary:
+
+- this reduces browser-related surface area and startup work
+- it does not guarantee that the generic `node` process will never trigger unrelated macOS TCC prompts
+- if strict isolation from unrelated macOS permission prompts is required, use a separate macOS user, VM, or dedicated machine for the host node
+
 If the gateway is remote and bound to loopback, a remote node host cannot connect directly. Use an SSH tunnel and point the node host at the local tunnel endpoint instead:
 
 ```bash
