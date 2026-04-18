@@ -13,6 +13,7 @@ Allowed work:
 - reason about rebase-readiness and local conflict surfaces
 - prepare a branch for handoff once it is locally PR-ready
 - enforce the current bounded slice only; if the diff already mixes later dependent work, stop and regroup before commit
+- when local main sync is needed on the host, prefer `fetch` plus `merge --ff-only` or an explicit `pull --ff-only`; do not depend on an unset host pull strategy
 
 Commit-grouping rules:
 

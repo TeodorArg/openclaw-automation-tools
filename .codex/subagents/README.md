@@ -51,6 +51,8 @@ Usage rules:
 - `git-lane` owns local git state, branch prep, staging, commit prep, and diff grouping only.
 - Default grouping rule for this repo: one branch/PR per single change intent, with repo docs, package-local shipped docs, runtime code, and `.codex` governance split unless they are the same bounded slice.
 - `pr-lane` owns PR creation, check polling cadence with first check after 15 seconds and later polls every 10 seconds, merge follow-up without auto-deleting branches unless the user explicitly asks for deletion, and post-merge pull of updated `main` on the host-backed lane only.
+- For host-side refresh of local `main`, prefer `git fetch origin main` plus `git merge --ff-only origin/main`, or an explicit `git pull --ff-only`; do not depend on an unset pull strategy.
+- When a lane or top-level command must pass shell text directly, avoid double-quoted command strings that contain Markdown backticks or other shell-significant text; prefer argv-safe execution, single-quoted heredocs, or file-based bodies.
 - In this repo, a user request phrased as `отправь в гит` means the full flow should complete through branch, commit, push, PR, checks, merge, and `main` sync unless the user explicitly narrows the scope.
 - Use `openclaw-research` as read-only source gathering.
 - `tool-builder` owns tool runtime surfaces, bounded scripts, schemas, adapters, and runtime execution contracts.
