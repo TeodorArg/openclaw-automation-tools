@@ -11,8 +11,8 @@ compaction, not canon drift, planning state, or host execution.
 
 ## Current shipped scope
 
-- official compaction lifecycle coverage through `session:compact:before`
-  and `session:compact:after`
+- official compaction lifecycle coverage through `before_compaction`
+  and `after_compaction`
 - calm user-facing warning copy in English or Russian
 - per-session dedupe in plugin-owned state keyed by `sessionKey`
 

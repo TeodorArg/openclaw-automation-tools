@@ -11,12 +11,12 @@ describe("session compact hooks", () => {
 		const fixture = await createFixture();
 		const hooks = createCompactionWarningHooks(fixture.config);
 		const event = {
-			sessionKey: "agent:main:main",
-			timestamp: "2026-04-18T12:00:00.000Z",
 			messages: [] as string[],
 		};
 
-		await hooks.beforeCompaction(event);
+		await hooks.beforeCompaction(event, {
+			sessionKey: "agent:main:main",
+		});
 
 		expect(event.messages).toHaveLength(1);
 		const state = JSON.parse(
@@ -42,15 +42,67 @@ describe("session compact hooks", () => {
 			messages: [] as string[],
 		};
 		const secondEvent = {
-			sessionKey: "agent:main:main",
 			messages: [] as string[],
 		};
 
-		await hooks.afterCompaction(firstEvent);
-		await hooks.afterCompaction(secondEvent);
+		await hooks.afterCompaction(firstEvent, {
+			sessionKey: "agent:main:main",
+		});
+		await hooks.afterCompaction(secondEvent, {
+			sessionKey: "agent:main:main",
+		});
 
 		expect(firstEvent.messages).toHaveLength(1);
 		expect(secondEvent.messages).toHaveLength(0);
+	});
+
+	it("uses the default bucket when the hook context has no sessionKey", async () => {
+		const fixture = await createFixture();
+		const hooks = createCompactionWarningHooks(fixture.config);
+		const event = {
+			messages: [] as string[],
+		};
+
+		await hooks.beforeCompaction(event, {});
+
+		const state = JSON.parse(
+			await readFile(fixture.config.stateFilePath, "utf8"),
+		) as {
+			sessions: Record<string, { beforeWarnings: number }>;
+		};
+		expect(state.sessions.__default__?.beforeWarnings).toBe(1);
+	});
+
+	it("does not append or persist when the hook event has no writable messages", async () => {
+		const fixture = await createFixture();
+		const hooks = createCompactionWarningHooks(fixture.config);
+
+		await hooks.beforeCompaction(
+			{},
+			{
+				sessionKey: "agent:main:main",
+			},
+		);
+
+		await expect(
+			readFile(fixture.config.stateFilePath, "utf8"),
+		).rejects.toMatchObject({
+			code: "ENOENT",
+		});
+	});
+
+	it("gates post-compaction notes against prior pre-compaction warnings", async () => {
+		const fixture = await createFixture();
+		const hooks = createCompactionWarningHooks(fixture.config);
+		const event = {
+			messages: [] as string[],
+		};
+
+		await hooks.afterCompaction(event, {
+			sessionKey: "agent:main:main",
+		});
+
+		expect(event.messages).toHaveLength(0);
 	});
 });
 

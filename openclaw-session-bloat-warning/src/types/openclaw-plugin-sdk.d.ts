@@ -1,19 +1,33 @@
 declare module "openclaw/plugin-sdk/plugin-entry" {
-	type SessionHookEvent = {
-		type?: string;
-		action?: string;
+	type PluginHookContext = {
 		sessionKey?: string;
-		timestamp?: string;
+	};
+
+	type BeforeCompactionHookEvent = {
+		messageCount?: number;
+		compactingCount?: number;
+		tokenCount?: number;
 		messages?: string[];
-		context?: Record<string, unknown>;
+		sessionFile?: string;
+	};
+
+	type AfterCompactionHookEvent = {
+		messageCount?: number;
+		compactedCount?: number;
+		tokenCount?: number;
+		messages?: string[];
+		sessionFile?: string;
 	};
 
 	type OpenClawPluginApi = {
 		pluginConfig?: Record<string, unknown>;
 		runtime: unknown;
-		registerHook(
-			events: string | string[],
-			handler: (event: SessionHookEvent) => void | Promise<void>,
+		on(
+			hookName: "before_compaction" | "after_compaction",
+			handler: (
+				event: BeforeCompactionHookEvent | AfterCompactionHookEvent,
+				ctx: PluginHookContext,
+			) => void | Promise<void>,
 			opts?: { priority?: number },
 		): void;
 	};

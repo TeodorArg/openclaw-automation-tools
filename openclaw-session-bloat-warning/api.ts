@@ -1,20 +1,34 @@
 export type PluginRuntime = unknown;
 
-export type SessionHookEvent = {
-	type?: string;
-	action?: string;
+export type PluginHookContext = {
 	sessionKey?: string;
-	timestamp?: string;
+};
+
+export type BeforeCompactionHookEvent = {
+	messageCount?: number;
+	compactingCount?: number;
+	tokenCount?: number;
 	messages?: string[];
-	context?: Record<string, unknown>;
+	sessionFile?: string;
+};
+
+export type AfterCompactionHookEvent = {
+	messageCount?: number;
+	compactedCount?: number;
+	tokenCount?: number;
+	messages?: string[];
+	sessionFile?: string;
 };
 
 export type OpenClawPluginApi = {
 	pluginConfig?: Record<string, unknown>;
 	runtime: PluginRuntime;
-	registerHook(
-		events: string | string[],
-		handler: (event: SessionHookEvent) => void | Promise<void>,
+	on(
+		hookName: "before_compaction" | "after_compaction",
+		handler: (
+			event: BeforeCompactionHookEvent | AfterCompactionHookEvent,
+			ctx: PluginHookContext,
+		) => void | Promise<void>,
 		opts?: { priority?: number },
 	): void;
 };

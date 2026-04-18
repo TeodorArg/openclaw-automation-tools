@@ -11,7 +11,7 @@ export default definePluginEntry({
 		const pluginConfig = resolvePluginConfig(api.pluginConfig);
 		const hooks = createCompactionWarningHooks(pluginConfig);
 
-		api.registerHook("session:compact:before", hooks.beforeCompaction);
-		api.registerHook("session:compact:after", hooks.afterCompaction);
+		api.on("before_compaction", hooks.beforeCompaction);
+		api.on("after_compaction", hooks.afterCompaction);
 	},
 });
