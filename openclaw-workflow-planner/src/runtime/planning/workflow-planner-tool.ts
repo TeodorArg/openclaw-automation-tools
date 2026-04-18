@@ -1,27 +1,5 @@
 import { Type } from "@sinclair/typebox";
-import {
-	evaluateIdeaGate,
-	type IdeaGateInput,
-} from "./runtime/planning/idea-gate.js";
-import {
-	buildImplementationBriefFromIdea,
-	type ImplementationBriefResult,
-} from "./runtime/planning/implementation-brief.js";
-import {
-	buildDraftPlan,
-	type DraftPlanInput,
-	type DraftPlanResult,
-} from "./runtime/planning/plan-draft.js";
-import {
-	requireNonEmptyText,
-	requireNonEmptyTextArray,
-	validatePlannerSkill,
-	validateSkillActionPair,
-} from "./runtime/planning/request-validation.js";
-import {
-	loadPlannerState,
-	savePlannerState,
-} from "./runtime/state/planner-file.js";
+import { loadPlannerState, savePlannerState } from "../state/planner-file.js";
 import {
 	createManualTaskId,
 	mergePlannerTasks,
@@ -32,7 +10,23 @@ import {
 	syncPlanBlockChecklistWithTasks,
 	updateIdea,
 	upsertIdea,
-} from "./runtime/state/planner-state.js";
+} from "../state/planner-state.js";
+import { evaluateIdeaGate, type IdeaGateInput } from "./idea-gate.js";
+import {
+	buildImplementationBriefFromIdea,
+	type ImplementationBriefResult,
+} from "./implementation-brief.js";
+import {
+	buildDraftPlan,
+	type DraftPlanInput,
+	type DraftPlanResult,
+} from "./plan-draft.js";
+import {
+	requireNonEmptyText,
+	requireNonEmptyTextArray,
+	validatePlannerSkill,
+	validateSkillActionPair,
+} from "./request-validation.js";
 
 const ToolSchema = Type.Object(
 	{
