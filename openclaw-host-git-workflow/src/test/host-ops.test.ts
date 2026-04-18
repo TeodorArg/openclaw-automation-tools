@@ -331,6 +331,9 @@ describe("host push and pr ops", () => {
 			prBody: [
 				"Add bounded push and PR support to the host workflow package.",
 				"- Keep current branch as the only allowed PR head.",
+				"- Fix PR base to main and derive metadata from the latest commit.",
+				"- Cover the new runtime files with direct unit tests.",
+				"- Preserve bounded behavior without arbitrary gh passthrough.",
 			].join("\n"),
 		});
 		expect(ghLog).toContain("pr");
@@ -363,7 +366,11 @@ describe("host push and pr ops", () => {
 		expect(ghLog).toContain("pr");
 		expect(ghLog).toContain("view");
 		expect(ghLog).toContain("--json");
-		expect(ghLog).toContain("number,url,headRefName,baseRefName,state");
+		expect(ghLog).toContain("--json\nnumber");
+		expect(ghLog).toContain("--json\nurl");
+		expect(ghLog).toContain("--json\nheadRefName");
+		expect(ghLog).toContain("--json\nbaseRefName");
+		expect(ghLog).toContain("--json\nstate");
 		expect(ghLog).toContain("checks");
 		expect(ghLog).toContain("--required");
 		expect(ghLog).toContain("--watch");
