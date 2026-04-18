@@ -1,7 +1,7 @@
 {
-	"name": "@openclaw/openclaw-canon",
+	"name": "@openclaw/openclaw-session-bloat-warning",
 	"version": "0.1.0",
-	"description": "Operational canon plugin for OpenClaw with typed status, doctor, and preview-first memory and bounded sync fix tools plus bundled memory-hygiene and source-of-truth-fix skills.",
+	"description": "Compaction-surface warning plugin for OpenClaw with calm pre/post compaction notices plus bundled session-bloat-warning guidance.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
@@ -15,9 +15,9 @@
 	"keywords": [
 		"openclaw",
 		"plugin",
-		"canon",
-		"memory",
-		"drift"
+		"compaction",
+		"hooks",
+		"warning"
 	],
 	"type": "module",
 	"engines": {
@@ -40,10 +40,7 @@
 		"check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm pack:smoke",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"test": "vitest run --passWithNoTests",
-		"pack:smoke": "sh -c 'rm -rf .pack .npm-cache && mkdir -p .pack .npm-cache && trap \"rm -rf .npm-cache\" EXIT && npm_config_cache=.npm-cache npm pack --dry-run --json > .pack/pack.json && node --input-type=module -e \"import { readFileSync } from \\\"node:fs\\\"; const pack = JSON.parse(readFileSync(\\\".pack/pack.json\\\", \\\"utf8\\\"))[0]; const paths = new Set(pack.files.map((file) => file.path)); for (const required of [\\\"dist/index.js\\\", \\\"openclaw.plugin.json\\\", \\\"skills/memory-hygiene/SKILL.md\\\", \\\"skills/source-of-truth-fix/SKILL.md\\\", \\\"README.md\\\", \\\"LICENSE\\\"]) { if (!paths.has(required)) { throw new Error(\\\"Missing packed artifact: \\\" + required); } }\"'"
-	},
-	"dependencies": {
-		"@sinclair/typebox": "0.34.49"
+		"pack:smoke": "sh -c 'rm -rf .pack .npm-cache && mkdir -p .pack .npm-cache && trap \"rm -rf .npm-cache\" EXIT && npm_config_cache=.npm-cache npm pack --dry-run --json > .pack/pack.json && node --input-type=module -e \"import { readFileSync } from \\\"node:fs\\\"; const pack = JSON.parse(readFileSync(\\\".pack/pack.json\\\", \\\"utf8\\\"))[0]; const paths = new Set(pack.files.map((file) => file.path)); for (const required of [\\\"dist/index.js\\\", \\\"openclaw.plugin.json\\\", \\\"skills/session-bloat-warning/SKILL.md\\\", \\\"README.md\\\", \\\"LICENSE\\\"]) { if (!paths.has(required)) { throw new Error(\\\"Missing packed artifact: \\\" + required); } }\"'"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.11",
