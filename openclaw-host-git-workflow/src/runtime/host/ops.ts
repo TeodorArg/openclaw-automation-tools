@@ -429,32 +429,52 @@ export async function waitForPullRequestChecks(
 		preflight.currentBranch,
 		runner,
 	);
-	const result = await runner.run(
-		resolveHostGhBin(),
-		[
-			"pr",
-			"checks",
-			String(pullRequest.number),
-			"--required",
-			"--watch",
-			"--interval",
-			String(CHECKS_WATCH_INTERVAL_SECONDS),
-		],
-		{ cwd: repoPath },
-	);
+	try {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			[
+				"pr",
+				"checks",
+				String(pullRequest.number),
+				"--required",
+				"--watch",
+				"--interval",
+				String(CHECKS_WATCH_INTERVAL_SECONDS),
+			],
+			{ cwd: repoPath },
+		);
 
-	return {
-		...preflight,
-		status: "checks_passed",
-		prNumber: pullRequest.number,
-		prUrl: pullRequest.url,
-		baseBranch: "main",
-		checkScope: "required",
-		watchMode: "poll_until_complete",
-		watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
-		stdout: result.stdout,
-		stderr: result.stderr,
-	};
+		return {
+			...preflight,
+			status: "checks_passed",
+			prNumber: pullRequest.number,
+			prUrl: pullRequest.url,
+			baseBranch: "main",
+			checkScope: "required",
+			watchMode: "poll_until_complete",
+			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
+			stdout: result.stdout,
+			stderr: result.stderr,
+		};
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		if (!message.includes("no required checks reported")) {
+			throw error;
+		}
+
+		return {
+			...preflight,
+			status: "checks_passed",
+			prNumber: pullRequest.number,
+			prUrl: pullRequest.url,
+			baseBranch: "main",
+			checkScope: "required",
+			watchMode: "poll_until_complete",
+			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
+			stdout: "No required checks were configured for this PR.",
+			stderr: "gh pr checks reported no required checks, so bounded wait completed without blocking.",
+		};
+	}
 }
 
 export async function mergePullRequest(
