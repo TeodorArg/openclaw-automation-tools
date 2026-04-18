@@ -328,6 +328,10 @@ describe("host push and pr ops", () => {
 			baseBranch: "main",
 			currentBranch: "feat/host-workflow-test",
 			prTitle: "feat(openclaw-host-git-workflow): add host push and pr slice",
+			prBody: [
+				"Add bounded push and PR support to the host workflow package.",
+				"- Keep current branch as the only allowed PR head.",
+			].join("\n"),
 		});
 		expect(ghLog).toContain("pr");
 		expect(ghLog).toContain("create");
@@ -335,6 +339,7 @@ describe("host push and pr ops", () => {
 		expect(ghLog).toContain("main");
 		expect(ghLog).toContain("--head");
 		expect(ghLog).toContain("feat/host-workflow-test");
+		expect(ghLog).toContain("--fill-verbose");
 	});
 
 	it("waits for required checks on the bounded current-branch PR", async () => {

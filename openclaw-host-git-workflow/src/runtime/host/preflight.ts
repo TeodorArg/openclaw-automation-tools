@@ -1,5 +1,3 @@
-import { constants } from "node:fs";
-import { access } from "node:fs/promises";
 import type { HostCommandRunner } from "../node/execution.js";
 import { resolveHostGhBin, resolveHostGitBin } from "./binaries.js";
 
@@ -17,14 +15,6 @@ export type HostPreflight = {
 	originUrl: string;
 	ghAuthStatus: "ready" | "skipped";
 };
-
-async function assertRepoPathReadable(repoPath: string) {
-	try {
-		await access(repoPath, constants.R_OK | constants.X_OK);
-	} catch {
-		throw new Error(`Repository path is not accessible: ${repoPath}`);
-	}
-}
 
 async function assertBinaryAvailable(
 	command: string,
@@ -97,7 +87,6 @@ export async function preflightHostOps(
 ): Promise<HostPreflight> {
 	const { requireGhAuth = true, requireNonMainBranch = false } = options;
 
-	await assertRepoPathReadable(repoPath);
 	await assertBinaryAvailable(resolveHostGitBin(), repoPath, runner);
 	if (requireGhAuth) {
 		await assertBinaryAvailable(resolveHostGhBin(), repoPath, runner);

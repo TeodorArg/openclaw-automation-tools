@@ -115,30 +115,28 @@ async function readLatestCommit(
 	repoPath: string,
 	runner: HostCommandRunner,
 ): Promise<LatestCommit> {
-	const title = await runner.run(
+	const commit = await runner.run(
 		resolveHostGitBin(),
-		["log", "-1", "--pretty=%s"],
+		["cat-file", "-p", "HEAD"],
 		{
 			cwd: repoPath,
 		},
 	);
-	const body = await runner.run(
-		resolveHostGitBin(),
-		["log", "-1", "--pretty=%b"],
-		{
-			cwd: repoPath,
-		},
-	);
+	const raw = commit.stdout.replace(/\r\n/g, "\n");
+	const message = raw.includes("\n\n") ? raw.slice(raw.indexOf("\n\n") + 2) : "";
+	const [titleLine = "", ...bodyLines] = message.split("\n");
+	const title = titleLine.trim();
+	const body = bodyLines.join("\n").trim();
 
-	if (title.stdout.trim() === "") {
+	if (title === "") {
 		throw new Error(
 			"Latest commit title is empty; cannot create a bounded PR.",
 		);
 	}
 
 	return {
-		title: title.stdout.trim(),
-		body: body.stdout.trim(),
+		title,
+		body,
 	};
 }
 
@@ -326,32 +324,52 @@ export async function createPullRequest(
 ): Promise<CreatePrResult> {
 	const preflight = await preflightPushPr(repoPath, runner);
 	const latestCommit = await readLatestCommit(repoPath, runner);
-	const result = await runner.run(
-		resolveHostGhBin(),
-		[
-			"pr",
-			"create",
-			"--base",
-			"main",
-			"--head",
-			preflight.currentBranch,
-			"--title",
-			latestCommit.title,
-			"--body",
-			latestCommit.body || latestCommit.title,
-		],
-		{ cwd: repoPath },
-	);
+	try {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			[
+				"pr",
+				"create",
+				"--base",
+				"main",
+				"--head",
+				preflight.currentBranch,
+				"--fill-verbose",
+			],
+			{ cwd: repoPath },
+		);
 
-	return {
-		...preflight,
-		status: "pr_opened",
-		baseBranch: "main",
-		prTitle: latestCommit.title,
-		prBody: latestCommit.body || latestCommit.title,
-		stdout: result.stdout,
-		stderr: result.stderr,
-	};
+		return {
+			...preflight,
+			status: "pr_opened",
+			baseBranch: "main",
+			prTitle: latestCommit.title,
+			prBody: latestCommit.body || latestCommit.title,
+			stdout: result.stdout,
+			stderr: result.stderr,
+		};
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		if (!message.includes("already exists")) {
+			throw error;
+		}
+
+		const existingPr = await readCurrentPullRequest(
+			repoPath,
+			preflight.currentBranch,
+			runner,
+		);
+
+		return {
+			...preflight,
+			status: "pr_opened",
+			baseBranch: "main",
+			prTitle: latestCommit.title,
+			prBody: latestCommit.body || latestCommit.title,
+			stdout: existingPr.url,
+			stderr: "Pull request already existed; returned the current bounded branch PR.",
+		};
+	}
 }
 
 async function readCurrentPullRequest(
@@ -359,18 +377,26 @@ async function readCurrentPullRequest(
 	currentBranch: string,
 	runner: HostCommandRunner,
 ): Promise<CurrentPullRequest> {
-	const result = await runner.run(
-		resolveHostGhBin(),
-		[
-			"pr",
-			"view",
-			currentBranch,
-			"--json",
-			"number,url,headRefName,baseRefName,state",
-		],
-		{ cwd: repoPath },
-	);
-	const pr = JSON.parse(result.stdout) as CurrentPullRequest;
+	const readField = async <T>(field: string): Promise<T> => {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			["pr", "view", currentBranch, "--json", field],
+			{ cwd: repoPath },
+		);
+		const payload = JSON.parse(result.stdout) as Record<string, T>;
+		if (!(field in payload)) {
+			throw new Error(`Bounded PR lookup missing field '${field}'.`);
+		}
+		return payload[field] as T;
+	};
+
+	const pr: CurrentPullRequest = {
+		number: await readField<number>("number"),
+		url: await readField<string>("url"),
+		headRefName: await readField<string>("headRefName"),
+		baseRefName: await readField<string>("baseRefName"),
+		state: await readField<CurrentPullRequest["state"]>("state"),
+	};
 
 	if (pr.headRefName !== currentBranch) {
 		throw new Error(
@@ -403,32 +429,52 @@ export async function waitForPullRequestChecks(
 		preflight.currentBranch,
 		runner,
 	);
-	const result = await runner.run(
-		resolveHostGhBin(),
-		[
-			"pr",
-			"checks",
-			String(pullRequest.number),
-			"--required",
-			"--watch",
-			"--interval",
-			String(CHECKS_WATCH_INTERVAL_SECONDS),
-		],
-		{ cwd: repoPath },
-	);
+	try {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			[
+				"pr",
+				"checks",
+				String(pullRequest.number),
+				"--required",
+				"--watch",
+				"--interval",
+				String(CHECKS_WATCH_INTERVAL_SECONDS),
+			],
+			{ cwd: repoPath },
+		);
 
-	return {
-		...preflight,
-		status: "checks_passed",
-		prNumber: pullRequest.number,
-		prUrl: pullRequest.url,
-		baseBranch: "main",
-		checkScope: "required",
-		watchMode: "poll_until_complete",
-		watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
-		stdout: result.stdout,
-		stderr: result.stderr,
-	};
+		return {
+			...preflight,
+			status: "checks_passed",
+			prNumber: pullRequest.number,
+			prUrl: pullRequest.url,
+			baseBranch: "main",
+			checkScope: "required",
+			watchMode: "poll_until_complete",
+			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
+			stdout: result.stdout,
+			stderr: result.stderr,
+		};
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		if (!message.includes("no required checks reported")) {
+			throw error;
+		}
+
+		return {
+			...preflight,
+			status: "checks_passed",
+			prNumber: pullRequest.number,
+			prUrl: pullRequest.url,
+			baseBranch: "main",
+			checkScope: "required",
+			watchMode: "poll_until_complete",
+			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
+			stdout: "No required checks were configured for this PR.",
+			stderr: "gh pr checks reported no required checks, so bounded wait completed without blocking.",
+		};
+	}
 }
 
 export async function mergePullRequest(
