@@ -271,12 +271,12 @@ describe("createWorkflowPlannerTool", () => {
 				(task: { id: string }) => task.id === taskId,
 			).done,
 		).toBe(true);
-		expect(persistedMarkdown).toContain(`- [x] ${taskText} (\`${taskId}\`, generated)`);
+		expect(persistedMarkdown).toContain(
+			`- [x] ${taskText} (\`${taskId}\`, generated)`,
+		);
 		expect(
 			reloadedPayload.idea.plan.planBlocks.some(
-				(block: {
-					checklist: Array<{ id: string; done: boolean }>;
-				}) =>
+				(block: { checklist: Array<{ id: string; done: boolean }> }) =>
 					block.checklist.some(
 						(task: { id: string; done: boolean }) =>
 							task.id === taskId && task.done,
