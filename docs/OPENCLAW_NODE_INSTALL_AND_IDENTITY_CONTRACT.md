@@ -11,6 +11,7 @@ For this repo:
 - `openclaw-host-git-workflow/` is the active host-backed plugin package
 - `openclaw-workflow-planner/` is a separate planning-first plugin package and does not own node runtime implementation
 - `openclaw-canon/` is a separate operational-canon plugin package and does not own node runtime implementation
+- `openclaw-session-bloat-warning/` is a separate compaction-warning plugin package and does not own node runtime implementation
 - canon guidance previously shipped as standalone skills now lives as bundled skills inside `openclaw-canon/` and does not own node runtime implementation
 
 ## Gateway Vs Node Host

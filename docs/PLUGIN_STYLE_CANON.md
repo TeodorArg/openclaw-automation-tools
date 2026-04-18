@@ -1,6 +1,6 @@
 # Plugin Style Canon
 
-Date: 2026-04-17  
+Date: 2026-04-18  
 Status: active repo-level canon
 
 ## Scope
@@ -15,7 +15,13 @@ Repo-wide machine enforcement is still partial.
 
 Until a shared repo-level Biome configuration is materialized, enforcement remains split between existing package scripts, TypeScript strict mode, review, and follow-up canon rollout work.
 
-The live plugin packages already reflect the current domain-subdirectory runtime canon; remaining convergence is primarily about broader repo-level machine enforcement rather than those packages' baseline layout.
+The four live plugin packages already reflect the current domain-subdirectory runtime canon:
+- `openclaw-host-git-workflow/`
+- `openclaw-workflow-planner/`
+- `openclaw-canon/`
+- `openclaw-session-bloat-warning/`
+
+Remaining convergence is primarily about broader repo-level machine enforcement rather than those packages' baseline layout.
 
 ## Naming Canon
 

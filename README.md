@@ -1,6 +1,6 @@
 # openclaw-automation-tools
 
-Multi-package OpenClaw repository for three active publishable plugin packages.
+Multi-package OpenClaw repository for four active publishable plugin packages.
 
 ## Repo Docs
 
@@ -24,7 +24,8 @@ The package-shape canon is broader than runtime/test layout alone, and the style
 | --- | --- | --- |
 | [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
 | [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea and plan lifecycle |
-| [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory fixes |
+| [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory and bounded sync fixes |
+| [openclaw-session-bloat-warning/README.md](openclaw-session-bloat-warning/README.md) | publishable plugin-plus-skill package | Compaction-warning package for calm pre/post compaction session-bloat notices |
 
 ## Plugin Packages
 
@@ -72,12 +73,23 @@ Its runtime layout is currently grouped under `src/runtime/planning/` and `src/r
 Its shipped surface centers on a compact typed runtime contract:
 - `canon_status` for latest-known summary snapshots plus optional light refresh
 - `canon_doctor` for bounded `source`, `memory`, and `sync` diagnosis
-- `canon_fix` for preview-first `memory` fixes with confirm-token gated apply
+- `canon_fix` for preview-first `memory` and bounded `sync` fixes with confirm-token gated apply
 
 Its bundled skills are `memory-hygiene` and `source-of-truth-fix`, but those remain instruction layers on top of the typed tool surface rather than replacing it.
 The plugin keeps only minimal file-backed domain state for latest summaries, doctor reports, and short-lived preview tokens.
 
 Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtime/fix/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/status/`, with flat default tests under `src/test/`.
+
+`openclaw-session-bloat-warning/` is the active compaction-warning plugin package in this repo.
+Its shipped surface is intentionally bounded to the official compaction lifecycle:
+- `session:compact:before` for a calm warning before compaction starts
+- `session:compact:after` for a short continuation note after compaction finishes
+- plugin-owned dedupe state for per-session warning ceilings
+
+Its bundled skill surface currently centers on `session-bloat-warning`.
+The first shipped slice does not yet claim early pre-compaction overload detection or bounded handoff summarization outside the official compaction path.
+
+Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/hooks/`, `src/runtime/state/`, and `src/runtime/text/`, with flat default tests under `src/test/`.
 
 ## Gateway Vs Node Host
 
@@ -109,6 +121,7 @@ openclaw plugins install -l ./openclaw-host-git-workflow
 
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-workflow-planner/` when working on the planner package.
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-canon/` when working on the canon package.
+Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-session-bloat-warning/` when working on the compaction-warning package.
 
 For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin path` setup, do not treat plugin install as the first step. The practical order is:
 
@@ -146,6 +159,7 @@ Registry install:
 openclaw plugins install clawhub:@openclaw/openclaw-host-git-workflow
 openclaw plugins install clawhub:@openclaw/openclaw-workflow-planner
 openclaw plugins install clawhub:@openclaw/openclaw-canon
+openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
 ```
 
 ## Verification
@@ -183,6 +197,17 @@ pnpm test
 pnpm pack:smoke
 ```
 
+For `openclaw-session-bloat-warning/`:
+
+```bash
+cd openclaw-session-bloat-warning
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
 For publish workflow details and the manual pre-publish gate beyond CI minimum, use [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md).
 
 ## Repo Facts
@@ -190,7 +215,7 @@ For publish workflow details and the manual pre-publish gate beyond CI minimum, 
 - The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
 - Local development is pinned to Node `24.13.0` via `.nvmrc`.
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
-- The repo currently ships three publishable plugin packages: `openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, and `openclaw-canon/`.
+- The repo currently ships four publishable plugin packages: `openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, and `openclaw-session-bloat-warning/`.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.

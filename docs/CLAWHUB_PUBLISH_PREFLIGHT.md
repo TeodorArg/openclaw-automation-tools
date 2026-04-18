@@ -11,6 +11,7 @@ Plugin packages listed there and currently expected here in lockstep:
 - `openclaw-host-git-workflow/`
 - `openclaw-workflow-planner/`
 - `openclaw-canon/`
+- `openclaw-session-bloat-warning/`
 
 Primary host-backed package entrypoint:
 - `send_to_git` / `отправь в гит`
@@ -23,6 +24,10 @@ Canon package entrypoints:
 - bundled skills `memory-hygiene` and `source-of-truth-fix`
 - typed tools `canon_status`, `canon_doctor`, and `canon_fix`
 - no standalone skill-only packages remain in the repo; this guidance now ships only through `openclaw-canon/`
+
+Session-bloat warning package entrypoints:
+- bundled skill `session-bloat-warning`
+- official compaction lifecycle hooks `session:compact:before` and `session:compact:after`
 
 Non-publishable repo docs:
 - `README.md`
@@ -61,6 +66,17 @@ Run for `openclaw-canon/`:
 
 ```bash
 cd openclaw-canon
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
+Run for `openclaw-session-bloat-warning/`:
+
+```bash
+cd openclaw-session-bloat-warning
 pnpm lint
 pnpm typecheck
 pnpm build
@@ -113,9 +129,15 @@ Current planner package coverage to publish:
 Current canon package coverage to publish:
 - latest-known `canon_status` summary snapshots
 - bounded `canon_doctor` scopes `source`, `memory`, and `sync`
-- preview-first `canon_fix` for `memory`
+- preview-first `canon_fix` for `memory` plus bounded `sync`
 - short-lived confirm-token previews in plugin-owned state
 - bundled `memory-hygiene` and `source-of-truth-fix` instruction layers
+
+Current session-bloat warning package coverage to publish:
+- official compaction lifecycle coverage through `session:compact:before` and `session:compact:after`
+- calm localized pre/post compaction warning copy
+- plugin-owned per-session dedupe state
+- bundled `session-bloat-warning` instruction layer
 
 ## Commands
 
@@ -125,6 +147,7 @@ Plugin publish preflight:
 clawhub package publish ./openclaw-host-git-workflow --dry-run
 clawhub package publish ./openclaw-workflow-planner --dry-run
 clawhub package publish ./openclaw-canon --dry-run
+clawhub package publish ./openclaw-session-bloat-warning --dry-run
 ```
 
 Plugin publish:
@@ -133,6 +156,7 @@ Plugin publish:
 clawhub package publish ./openclaw-host-git-workflow
 clawhub package publish ./openclaw-workflow-planner
 clawhub package publish ./openclaw-canon
+clawhub package publish ./openclaw-session-bloat-warning
 ```
 
 Notes:
