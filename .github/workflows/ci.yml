@@ -57,15 +57,3 @@ jobs:
           test ! -f "${{ matrix.package }}/package.json"
           test ! -f "${{ matrix.package }}/openclaw.plugin.json"
           test ! -d "${{ matrix.package }}/src"
-
-  host-git-lane:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: test -f host-git-lane/README.md
-      - run: test -f host-git-lane/HOST_GIT_BOUNDARY.md
-      - run: test -f host-git-lane/HOST_PATHS_AND_REPO_RESOLUTION.md
-      - run: test -f host-git-lane/GITHUB_AUTH_AND_PR_FLOW.md
-      - run: test -f host-git-lane/CANONICAL_REFS.md
-      - run: test ! -f host-git-lane/package.json
-      - run: test ! -f host-git-lane/openclaw.plugin.json
