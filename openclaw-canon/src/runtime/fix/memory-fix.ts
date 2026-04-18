@@ -17,6 +17,14 @@ type MemoryFixPlan = {
 	proposals: CanonProposal[];
 };
 
+type MemoryRecordShape = {
+	entityName: string;
+	entityType: string;
+	observation: string;
+	updatedAt: string;
+	source: string;
+};
+
 function buildProposal(
 	id: string,
 	title: string,
@@ -42,6 +50,21 @@ function buildProposal(
 	};
 }
 
+function isMemoryRecordShape(value: unknown): value is MemoryRecordShape {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+
+	const record = value as Record<string, unknown>;
+	return (
+		typeof record.entityName === "string" &&
+		typeof record.entityType === "string" &&
+		typeof record.observation === "string" &&
+		typeof record.updatedAt === "string" &&
+		typeof record.source === "string"
+	);
+}
+
 export async function buildMemoryFixPlan(
 	pluginConfig?: CanonPluginConfig,
 	targetIds?: string[],
@@ -62,7 +85,31 @@ export async function buildMemoryFixPlan(
 		}
 
 		try {
-			JSON.parse(trimmedLine);
+			const parsed = JSON.parse(trimmedLine);
+
+			if (!isMemoryRecordShape(parsed)) {
+				const targetId = `memory-invalid-shape-${lineNumber}`;
+				if (!targetIds || targetIds.includes(targetId)) {
+					changes.push({
+						kind: "delete_line",
+						targetId,
+						ref: `${memoryFilePath}:${lineNumber}`,
+						detail:
+							"Delete valid JSON memory record that does not match the required shape.",
+					});
+					proposals.push(
+						buildProposal(
+							`proposal-${targetId}`,
+							"Remove malformed memory record",
+							targetId,
+							`${memoryFilePath}:${lineNumber}`,
+							"Line parses as JSON but does not include the required memory fields.",
+						),
+					);
+				}
+
+				return;
+			}
 		} catch {
 			const targetId = `memory-invalid-json-${lineNumber}`;
 			if (!targetIds || targetIds.includes(targetId)) {

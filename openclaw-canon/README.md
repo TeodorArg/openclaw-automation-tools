@@ -13,11 +13,10 @@ Initial shipped contract:
 Initial scope:
 - latest-known canon summary with lightweight freshness checks
 - bounded diagnosis for `source`, `memory`, and `sync`
-- preview-first `canon_fix` for `memory` only
+- preview-first `canon_fix` for `memory` and bounded `sync`
 
 Retained backlog, not shipped in the initial contract:
 - `canon_fix` for `source`
-- `canon_fix` for `sync`
 - umbrella `scope=all`
 - standalone follow-up or cron tools
 
@@ -48,7 +47,7 @@ typed tool family above.
 - optional: `followups`, `proposals`, `taskRef`
 
 `canon_fix` input:
-- required: `scope = "memory"`, `mode = "preview" | "apply"`
+- required: `scope = "memory" | "sync"`, `mode = "preview" | "apply"`
 - optional: `targetIds[]`, `confirmToken`
 
 `canon_fix` output:
@@ -66,10 +65,10 @@ The initial runtime focuses on repo-local operational canon for this workspace:
 for source-of-truth issues but does not auto-apply source fixes.
 
 `canon_fix` is intentionally narrower:
-- `scope = "memory"` only
+- `scope = "memory"` deletes malformed JSON, malformed-shape, and byte-identical duplicate memory records
+- `scope = "sync"` rewrites only the bounded package-list sections in `.github/workflows/ci.yml`, `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`, and the repo `README.md` fact line
 - every `apply` requires a preview-issued `confirmToken`
-- safe auto-apply is limited to malformed or byte-identical duplicate
-  memory records
+- `canon_fix source` remains proposal-only
 
 ## Plugin-Owned State
 
