@@ -41,8 +41,10 @@ Then verify:
 - source provenance is ready
 
 Current runtime coverage to publish:
+- setup doctor
 - planning
 - branch-aware planning
+- explicit commit prep
 - repo resolution
 - live host node binding
 - confirmed-plan validation

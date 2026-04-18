@@ -11,8 +11,10 @@ The bundled skill surface is intentionally collapsed to one primary user-facing 
 ## Current Runtime Coverage
 
 This package currently ships:
+- setup doctor for repo target, node binding, and host readiness
 - repo-aware planning
 - branch-aware planning
+- explicit commit prep for ownership grouping and commit contracts
 - repo resolution
 - live host node binding
 - host preflight
@@ -27,6 +29,25 @@ This package currently ships:
 Shell execution now runs on the bound host node through `node.invoke` `system.run.prepare` / `system.run`, not through an unbound selector placeholder and not through repo-local helper scripts outside the package.
 
 Branch-aware planning output now generates branch suggestions and commit titles that identify the owning package or repo surface, so downstream PR titles derived from the latest commit stay informative at merge time.
+Commit prep now exposes the current-state matrix, the tested bounded flow, and the recommended small-session choreography so the package can act as an execution kernel without collapsing everything into one giant session.
+
+## Recommended Session Flow
+
+Use the package as a short-session chain:
+
+1. `doctor`
+2. `plan_with_branches`
+3. `commit_prep`
+4. `validate_confirmed_plan`
+5. `enter_branch`
+6. `preflight`
+7. `push_branch`
+8. `create_pr`
+9. `wait_for_checks`
+10. `merge_pr`
+11. `sync_main`
+
+Docs sync and memory sync intentionally remain separate follow-up sessions after the bounded execution kernel finishes.
 
 ## Hard Boundaries
 
