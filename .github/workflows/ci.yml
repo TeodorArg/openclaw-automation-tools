@@ -18,6 +18,7 @@ jobs:
           - openclaw-host-git-workflow
           - openclaw-workflow-planner
           - openclaw-canon
+          - openclaw-session-bloat-warning
     defaults:
       run:
         working-directory: ${{ matrix.package }}
