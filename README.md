@@ -75,7 +75,7 @@ Its shipped surface centers on a compact typed runtime contract:
 - `canon_doctor` for bounded `source`, `memory`, and `sync` diagnosis
 - `canon_fix` for preview-first `memory` and bounded `sync` fixes with confirm-token gated apply
 
-Its bundled skills are `memory-hygiene` and `source-of-truth-fix`, but those remain instruction layers on top of the typed tool surface rather than replacing it.
+Its bundled skills are `canon-memory-hygiene` and `canon-source-of-truth-fix`, but those remain instruction layers on top of the typed tool surface rather than replacing it.
 The plugin keeps only minimal file-backed domain state for latest summaries, doctor reports, and short-lived preview tokens.
 
 Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtime/fix/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/status/`, with flat default tests under `src/test/`.
@@ -122,6 +122,10 @@ openclaw plugins install -l ./openclaw-host-git-workflow
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-workflow-planner/` when working on the planner package.
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-canon/` when working on the canon package.
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-session-bloat-warning/` when working on the compaction-warning package.
+
+For a Docker gateway with local plugin directories mounted into `/home/node/tools`, do not batch multiple linked installs inside one long-lived `docker exec ... sh -lc '...'` shell. A config-changing `openclaw plugins install -l ...` can trigger gateway reload and kill that shell after the first install.
+
+Treat the batch reinstall flow as runtime-repo orchestration, not plugin-package canon. Use the helper or equivalent install/wait/verify loop from the Docker/OpenClaw runtime repo that owns the live `openclaw-gateway` container.
 
 For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin path` setup, do not treat plugin install as the first step. The practical order is:
 

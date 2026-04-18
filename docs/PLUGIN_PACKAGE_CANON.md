@@ -80,6 +80,12 @@ Plugin packages should use this baseline layout:
 
 For publishable plugin packages in this repo, package-local `.npmignore` should explicitly allow the shipped `dist/**` output and other packed artifacts so repo-root ignores do not strip built files from npm or ClawHub tarballs.
 
+For linked local installs into a separate runtime environment such as a Docker gateway:
+- treat `dist/**`, `openclaw.plugin.json`, `package.json`, bundled `skills/**`, `README.md`, and `LICENSE` as the canonical shipped runtime surface
+- do not treat a host-copied dev `node_modules` tree as part of the canonical shipped surface
+- if a runtime-local linked install needs `node_modules`, rebuild the minimal runtime dependency tree inside that runtime environment so ownership matches the runtime user and safety scans do not trip on host-only uid/gid artifacts
+- for this repo's current plugin packages, `pnpm install --prod --frozen-lockfile --ignore-scripts` is the preferred target-local repair path before the final linked install
+
 For every live publishable plugin package in the canonical list above:
 - CI must run the full plugin verification minimum, including `pnpm pack:smoke`
 - repo-level publish/preflight docs must enumerate that package as a live publish surface

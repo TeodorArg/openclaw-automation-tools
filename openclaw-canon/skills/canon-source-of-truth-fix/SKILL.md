@@ -1,5 +1,5 @@
 ---
-name: source-of-truth-fix
+name: canon-source-of-truth-fix
 description: Use when canon work needs `canon_doctor scope=source` to diagnose source-of-truth or template drift and review proposal data without implying auto-apply.
 user-invocable: true
 command-dispatch: tool

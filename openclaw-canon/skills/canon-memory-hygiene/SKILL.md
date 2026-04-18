@@ -1,5 +1,5 @@
 ---
-name: memory-hygiene
+name: canon-memory-hygiene
 description: Use when canon work needs `canon_status`, `canon_doctor scope=memory`, or preview-first `canon_fix scope=memory` to compact or repair the memory layer without unsafe semantic rewrites.
 user-invocable: true
 command-dispatch: tool

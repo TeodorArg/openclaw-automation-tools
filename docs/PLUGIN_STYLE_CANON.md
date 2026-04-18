@@ -97,6 +97,23 @@ Rules:
 
 If several files belong to the same domain, prefer a domain subdirectory over a single dump file.
 
+## Runtime Install Hygiene
+
+Rules:
+- generated or copied runtime-local artifacts are not source of truth
+- do not rely on host-copied dev `node_modules` trees as stable runtime input for linked plugin installs into another environment
+- when a separate runtime environment needs package dependencies for plugin discovery or execution, rebuild the minimal runtime dependency tree inside that environment instead of carrying over host-only ownership metadata
+
+Preferred operational pattern:
+- host machine builds canonical source outputs such as `dist/**`
+- target runtime receives the package directory
+- target runtime rebuilds runtime-only dependencies locally, for example with `pnpm install --prod --frozen-lockfile --ignore-scripts`
+- final linked install runs after ownership and runtime-local dependency shape are clean
+
+Avoid:
+- treating container-local `node_modules` ownership drift as harmless if plugin safety scans or linked install checks consume that tree
+- fixing repeated ownership failures by broad unsafe overrides when the real problem is a copied host dependency tree
+
 ## Error And Result Canon
 
 Rules:

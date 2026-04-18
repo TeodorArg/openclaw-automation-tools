@@ -21,7 +21,7 @@ Planner package entrypoints:
 - typed tool `workflow_planner_action`
 
 Canon package entrypoints:
-- bundled skills `memory-hygiene` and `source-of-truth-fix`
+- bundled skills `canon-memory-hygiene` and `canon-source-of-truth-fix`
 - typed tools `canon_status`, `canon_doctor`, and `canon_fix`
 - no standalone skill-only packages remain in the repo; this guidance now ships only through `openclaw-canon/`
 
@@ -92,6 +92,14 @@ Then verify:
 - no secrets or host-local paths leak into shipped files
 - source provenance is ready
 
+For local linked installs into a Docker gateway or other separate runtime environment:
+- do not rely on host-copied `node_modules` as the install-safe runtime tree
+- if the plugin directory is copied into `/home/node/tools` or a similar runtime-local path, rebuild `node_modules` inside that target environment before the final linked install
+- prefer `pnpm install --prod --frozen-lockfile --ignore-scripts` in the target environment so runtime dependencies are owned by the runtime user and dev-only host artifacts do not trigger ownership or safety-scan drift
+- if a linked plugin install fails on suspicious ownership inside `node_modules`, treat that as packaging/install drift and repair the target-local dependency tree before publish or runtime validation is considered complete
+- if several linked plugin reinstalls must be run against a live Docker gateway, do not batch them inside one long-lived `docker exec` shell because the first successful install can trigger a gateway reload and terminate the shell before later installs run
+- run one `docker exec` per plugin and wait for the gateway to come back between installs; keep that helper in the Docker/OpenClaw runtime repo rather than hardcoding it into the plugin-packages repo
+
 These checks extend beyond the CI verification minimum and remain an explicit manual pre-publish gate unless later automated in package scripts or CI.
 
 Current runtime coverage to publish:
@@ -131,7 +139,7 @@ Current canon package coverage to publish:
 - bounded `canon_doctor` scopes `source`, `memory`, and `sync`
 - preview-first `canon_fix` for `memory` plus bounded `sync`
 - short-lived confirm-token previews in plugin-owned state
-- bundled `memory-hygiene` and `source-of-truth-fix` instruction layers
+- bundled `canon-memory-hygiene` and `canon-source-of-truth-fix` instruction layers
 
 Current session-bloat warning package coverage to publish:
 - official compaction lifecycle coverage through `before_compaction` and `after_compaction`

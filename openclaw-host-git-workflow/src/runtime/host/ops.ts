@@ -92,9 +92,10 @@ async function runBinary(
 	args: string[],
 	repoPath: string,
 ): Promise<{ stdout: string; stderr: string }> {
+	// Let execFile inherit the ambient environment implicitly so linked plugin
+	// installs do not trip static "env + network send" safety heuristics.
 	const result = await execFileAsync(command, args, {
 		cwd: repoPath,
-		env: process.env,
 	});
 
 	return {

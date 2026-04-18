@@ -121,6 +121,10 @@ Observed behavior from the local Docker/macOS path:
 - valid node auth through `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` fixes `unauthorized`, but the local CLI can still fail with `pairing required` until the operator device itself is approved
 - approving the exact pending `requestId` on the gateway side is more reliable than assuming `devices approve --latest` will complete approval non-interactively
 - once paired, `openclaw nodes status` can show the local CLI identity before the dedicated host node is connected; do not treat that as proof that host-backed `system.run` is ready
+- if a local plugin directory is copied into the Docker gateway under `/home/node/tools`, do not trust the copied host `node_modules` tree as canonical runtime state; rebuild minimal runtime dependencies inside the container so files are owned by the container runtime user instead of a host-only uid/gid
+- for this repo's local plugin packages, a safe container-side repair path is `pnpm install --prod --frozen-lockfile --ignore-scripts` inside the package directory before the final `openclaw plugins install -l /home/node/tools/<package>`
+- when several linked plugin reinstalls are needed, do not chain them inside one `docker exec ... sh -lc 'install; install; install'` session; a gateway reload after the first config change can terminate that shell with code `137`
+- use one host-side `docker exec` per plugin and wait for the gateway to become ready again between installs; keep that helper in the Docker/OpenClaw runtime repo rather than hardcoding it into the plugin-packages repo
 
 ### macOS Display Name Note
 
@@ -187,6 +191,7 @@ Practical boundary:
 - do not authenticate `git` inside the runtime/container
 - do not authenticate GitHub inside the runtime/container
 - keep push and PR creation on the bound host node
+- do not normalize linked-plugin ownership or `node_modules` drift by patching generated container output only; repair the target-local dependency tree or the canonical source/install flow instead
 
 ## Platform Notes
 

@@ -164,6 +164,19 @@ cd ..
 openclaw plugins install -l ./openclaw-host-git-workflow
 ```
 
+If this package is copied into a separate runtime environment such as a Docker gateway under `/home/node/tools/openclaw-host-git-workflow`, do not trust the copied host `node_modules` tree as install-safe runtime state.
+
+Use this runtime-local repair path before the final linked install:
+
+```bash
+cd /home/node/tools/openclaw-host-git-workflow
+rm -rf node_modules
+pnpm run install:runtime-safe
+openclaw plugins install -l /home/node/tools/openclaw-host-git-workflow
+```
+
+This package ships `dist/**`, `openclaw.plugin.json`, `skills/**`, `README.md`, and `LICENSE` as the canonical plugin surface. A host-copied dev `node_modules` tree is not part of that shipped surface and can trigger ownership or safety-scan drift when the target runtime user differs from the host uid/gid.
+
 Enable the plugin in `openclaw.json` and set `config.nodeSelector` when more than one eligible host node may be visible:
 
 ```json5

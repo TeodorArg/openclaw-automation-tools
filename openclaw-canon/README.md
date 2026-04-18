@@ -22,8 +22,8 @@ Retained backlog, not shipped in the initial contract:
 
 ## Bundled Skills
 
-- `memory-hygiene`
-- `source-of-truth-fix`
+- `canon-memory-hygiene`
+- `canon-source-of-truth-fix`
 
 These skills remain instruction layers. The executable runtime surface is the
 typed tool family above.
