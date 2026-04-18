@@ -1,0 +1,38 @@
+{
+	"id": "openclaw-canon",
+	"name": "OpenClaw Canon",
+	"description": "Operational canon plugin with typed status, doctor, and preview-first memory fix tools plus bundled memory-hygiene and source-of-truth-fix skills.",
+	"version": "0.1.0",
+	"skills": ["./skills"],
+	"entry": "./dist/index.js",
+	"configSchema": {
+		"type": "object",
+		"additionalProperties": false,
+		"properties": {
+			"stateFilePath": {
+				"type": "string",
+				"description": "Optional path to the canon state JSON file. Defaults to ./.openclaw-canon-state.json in the current working directory."
+			},
+			"memoryFilePath": {
+				"type": "string",
+				"description": "Optional path to the memory snapshot JSONL file. Defaults to ./memory.jsonl in the current working directory."
+			},
+			"packageCanonPath": {
+				"type": "string",
+				"description": "Optional path to docs/PLUGIN_PACKAGE_CANON.md."
+			},
+			"publishPreflightPath": {
+				"type": "string",
+				"description": "Optional path to docs/CLAWHUB_PUBLISH_PREFLIGHT.md."
+			},
+			"repoReadmePath": {
+				"type": "string",
+				"description": "Optional path to the repo README.md used for sync checks."
+			},
+			"ciWorkflowPath": {
+				"type": "string",
+				"description": "Optional path to the CI workflow that enumerates plugin packages."
+			}
+		}
+	}
+}

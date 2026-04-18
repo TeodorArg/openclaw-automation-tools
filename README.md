@@ -1,6 +1,6 @@
 # openclaw-automation-tools
 
-Multi-package OpenClaw repository for two active publishable plugin packages plus skill-only packages.
+Multi-package OpenClaw repository for three active publishable plugin packages.
 
 ## Repo Docs
 
@@ -24,8 +24,7 @@ The package-shape canon is broader than runtime/test layout alone, and the style
 | --- | --- | --- |
 | [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
 | [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea and plan lifecycle |
-| [memory-hygiene/README.md](memory-hygiene/README.md) | skill-only package | Memory maintenance skill package |
-| [source-of-truth-fix/README.md](source-of-truth-fix/README.md) | skill-only package | Source-of-truth repair skill package |
+| [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory fixes |
 
 ## Plugin Packages
 
@@ -69,6 +68,17 @@ Its concrete planner entry surfaces are the bundled skills `openclaw-workflow-pl
 
 Its runtime layout is currently grouped under `src/runtime/planning/` and `src/runtime/state/`, with flat default tests under `src/test/`.
 
+`openclaw-canon/` is the active operational-canon plugin package in this repo.
+Its shipped surface centers on a compact typed runtime contract:
+- `canon_status` for latest-known summary snapshots plus optional light refresh
+- `canon_doctor` for bounded `source`, `memory`, and `sync` diagnosis
+- `canon_fix` for preview-first `memory` fixes with confirm-token gated apply
+
+Its bundled skills are `memory-hygiene` and `source-of-truth-fix`, but those remain instruction layers on top of the typed tool surface rather than replacing it.
+The plugin keeps only minimal file-backed domain state for latest summaries, doctor reports, and short-lived preview tokens.
+
+Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtime/fix/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/status/`, with flat default tests under `src/test/`.
+
 ## Gateway Vs Node Host
 
 In this repo the canonical baseline is the Gateway, not a repo-owned node-host package.
@@ -98,6 +108,7 @@ openclaw plugins install -l ./openclaw-host-git-workflow
 ```
 
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-workflow-planner/` when working on the planner package.
+Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-canon/` when working on the canon package.
 
 For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin path` setup, do not treat plugin install as the first step. The practical order is:
 
@@ -134,6 +145,7 @@ Registry install:
 ```bash
 openclaw plugins install clawhub:@openclaw/openclaw-host-git-workflow
 openclaw plugins install clawhub:@openclaw/openclaw-workflow-planner
+openclaw plugins install clawhub:@openclaw/openclaw-canon
 ```
 
 ## Verification
@@ -160,13 +172,16 @@ pnpm test
 pnpm pack:smoke
 ```
 
-For each skill-only package, verify:
-- `SKILL.md` exists
-- `README.md` exists
-- `LICENSE` exists
-- no `package.json`
-- no `openclaw.plugin.json`
-- no `src/` tree or runtime code is introduced
+For `openclaw-canon/`:
+
+```bash
+cd openclaw-canon
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
 
 For publish workflow details and the manual pre-publish gate beyond CI minimum, use [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md).
 
@@ -175,7 +190,7 @@ For publish workflow details and the manual pre-publish gate beyond CI minimum, 
 - The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
 - Local development is pinned to Node `24.13.0` via `.nvmrc`.
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
-- The repo currently ships two publishable plugin packages: `openclaw-host-git-workflow/` and `openclaw-workflow-planner/`.
+- The repo currently ships three publishable plugin packages: `openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, and `openclaw-canon/`.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.

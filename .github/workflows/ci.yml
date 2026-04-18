@@ -17,6 +17,7 @@ jobs:
         package:
           - openclaw-host-git-workflow
           - openclaw-workflow-planner
+          - openclaw-canon
     defaults:
       run:
         working-directory: ${{ matrix.package }}
@@ -36,31 +37,3 @@ jobs:
       - run: pnpm build
       - run: pnpm test
       - run: pnpm pack:smoke
-
-  skill-packages:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package:
-          - memory-hygiene
-          - source-of-truth-fix
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check required files
-        run: |
-          test -f "${{ matrix.package }}/SKILL.md"
-          test -f "${{ matrix.package }}/README.md"
-          test -f "${{ matrix.package }}/LICENSE"
-      - name: Check license and metadata baseline
-        run: |
-          grep -Fq "MIT No Attribution" "${{ matrix.package }}/LICENSE"
-          grep -Fq -- "- slug: " "${{ matrix.package }}/README.md"
-          grep -Fq -- "- display name: " "${{ matrix.package }}/README.md"
-          grep -Fq -- "- owner: " "${{ matrix.package }}/README.md"
-          grep -Fq -- "- version: " "${{ matrix.package }}/README.md"
-          grep -Fq -- "- tags: " "${{ matrix.package }}/README.md"
-      - name: Check forbidden runtime files
-        run: |
-          test ! -f "${{ matrix.package }}/package.json"
-          test ! -f "${{ matrix.package }}/openclaw.plugin.json"
-          test ! -d "${{ matrix.package }}/src"
