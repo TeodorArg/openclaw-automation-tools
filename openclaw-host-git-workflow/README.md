@@ -105,6 +105,17 @@ Operational notes:
 - `--display-name` affects the OpenClaw-visible node identity used by `openclaw nodes status`, pairing diagnostics, and this plugin's `nodeSelector`
 - on macOS, the LaunchAgent/Login Items UI can still show the underlying runtime as generic `node`; that system label does not override the OpenClaw node display name
 
+### macOS Hardening Note
+
+For a git-only host-node path on macOS, reduce browser-related surface area before relying on the node for routine use:
+
+```bash
+node -e 'const fs=require("fs"); const p=process.env.HOME+"/.openclaw/openclaw.json"; const raw=JSON.parse(fs.readFileSync(p,"utf8")); raw.browser ??= {}; raw.browser.enabled = false; raw.gateway ??= {}; raw.gateway.nodes ??= {}; raw.gateway.nodes.browser = { ...(raw.gateway.nodes.browser ?? {}), mode: "off" }; raw.nodeHost ??= {}; raw.nodeHost.browserProxy = { ...(raw.nodeHost.browserProxy ?? {}), enabled: false }; fs.writeFileSync(p, JSON.stringify(raw,null,2)+"\n"); console.log(JSON.stringify({browser:raw.browser,gatewayNodesBrowser:raw.gateway.nodes.browser,nodeHostBrowserProxy:raw.nodeHost.browserProxy},null,2));'
+openclaw node restart
+```
+
+This hardening reduces browser-routing and browser-proxy surface area, but it does not guarantee that macOS will never show TCC prompts for the generic `node` process. If you need hard isolation from unrelated macOS permission prompts, run the host node under a separate macOS user, VM, or dedicated machine.
+
 ## Install
 
 ```bash
