@@ -88,6 +88,15 @@ docker exec openclaw-gateway node dist/index.js devices approve <requestId>
 openclaw node install --host 127.0.0.1 --port 18789 --display-name "openclaw-docker-host-git"
 ```
 
+Recommended macOS hardening before routine use:
+
+```bash
+node -e 'const fs=require("fs"); const p=process.env.HOME+"/.openclaw/openclaw.json"; const raw=JSON.parse(fs.readFileSync(p,"utf8")); raw.browser ??= {}; raw.browser.enabled = false; raw.gateway ??= {}; raw.gateway.nodes ??= {}; raw.gateway.nodes.browser = { ...(raw.gateway.nodes.browser ?? {}), mode: "off" }; raw.nodeHost ??= {}; raw.nodeHost.browserProxy = { ...(raw.nodeHost.browserProxy ?? {}), enabled: false }; fs.writeFileSync(p, JSON.stringify(raw,null,2)+"\n");'
+openclaw node restart
+```
+
+This reduces browser-related surface area, but it does not fully convert the generic `node` host into a strict system-only process from the perspective of macOS privacy prompts.
+
 Registry install:
 
 ```bash
@@ -125,3 +134,4 @@ For each skill-only package, verify:
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the active package docs.
 - The active `openclaw-host-git-workflow/` package now uses domain-grouped runtime modules under `src/runtime/` and flat default tests under `src/test/`, in line with the tracked package canon.
 - In Docker-gateway setups, gateway token configuration and device pairing are separate gates; a valid `gateway.remote.token` does not replace CLI/operator pairing approval.
+- On macOS, config hardening can reduce browser-related node surface, but a generic `node` host can still trigger unrelated TCC prompts unless you isolate it by user/session/VM/host.
