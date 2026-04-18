@@ -2,13 +2,21 @@
 
 Multi-package OpenClaw repository for two active publishable plugin packages plus skill-only packages.
 
-## Canon Docs
+## Repo Docs
+
+Core canon:
 
 - [docs/PLUGIN_PACKAGE_CANON.md](docs/PLUGIN_PACKAGE_CANON.md)
 - [docs/PLUGIN_STYLE_CANON.md](docs/PLUGIN_STYLE_CANON.md)
 
-These documents define the active repo-level canon.
+Operational canon:
+
+- [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md)
+- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+
+Together these documents define the active repo-level package, style, node-boundary, and publish-preflight canon.
 The live plugin packages now match the current runtime/test layout canon.
+The package-shape canon is broader than runtime/test layout alone, and the style canon is active policy even though some enforcement still remains review/script-driven until repo tooling converges further.
 
 ## Current Repo Map
 
@@ -42,7 +50,7 @@ Its current shipped slice covers:
 
 The runtime now binds to a concrete host node and executes shell steps through `node.invoke` `system.run.prepare` / `system.run`, instead of treating node selection as an unbound placeholder.
 Branch-aware planning output now emits package-aware branch suggestions and commit titles, so merge-visible PR titles identify the owning package or explicit repo surface instead of a generic workflow label.
-The package now also exposes a recommended short-session choreography of `doctor -> plan_with_branches -> commit_prep -> execution kernel`, leaving docs sync as a separate follow-up when shipped truth changed instead of hiding everything in one giant run.
+The package now also exposes a recommended short-session choreography of `doctor -> plan_with_branches -> commit_prep -> bounded execution flow`, where the execution flow is the canonical push/PR/checks/merge/main-sync path and docs sync stays a separate follow-up when shipped truth changed.
 
 Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
 
@@ -56,6 +64,8 @@ Its shipped surface centers on file-backed `WORKFLOW_PLAN.md` state plus typed p
 - manual task add / done tracking
 - bounded implementation brief generation
 - explicit idea closure
+
+Its concrete planner entry surfaces are the bundled skills `openclaw-workflow-planner`, `openclaw-workflow-research`, and `openclaw-workflow-implementer`, plus the typed tool `workflow_planner_action`.
 
 Its runtime layout is currently grouped under `src/runtime/planning/` and `src/runtime/state/`, with flat default tests under `src/test/`.
 
@@ -87,21 +97,26 @@ cd ..
 openclaw plugins install -l ./openclaw-host-git-workflow
 ```
 
+Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-workflow-planner/` when working on the planner package.
+
 For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin path` setup, do not treat plugin install as the first step. The practical order is:
 
-1. configure the local CLI profile with `gateway.remote.url` and `gateway.remote.token`
-2. approve the local CLI/operator pairing request on the Docker gateway
-3. install and connect the dedicated host node
-4. build and install `openclaw-host-git-workflow`
-5. enable the plugin and set `nodeSelector` when multiple eligible nodes exist
+1. configure the local CLI profile with `gateway.remote.url`
+2. set node-host auth with `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` for local-mode node install/run
+3. approve the local CLI/operator pairing request on the gateway
+4. install and connect the dedicated host node
+5. build and install `openclaw-host-git-workflow`
+6. enable the plugin and set `nodeSelector` when multiple eligible nodes exist
+
+Token auth and pairing approval are separate gates in this flow. A valid token does not replace operator pairing approval, and host-node pairing can still require its own approval step after install/run.
 
 Minimal same-machine Docker gateway bootstrap:
 
 ```bash
 openclaw config set gateway.remote.url ws://127.0.0.1:18789
-openclaw config set gateway.remote.token "<gateway-token>"
-docker exec openclaw-gateway node dist/index.js devices list
-docker exec openclaw-gateway node dist/index.js devices approve <requestId>
+export OPENCLAW_GATEWAY_TOKEN="<gateway-token>"
+openclaw devices list
+openclaw devices approve <requestId>
 openclaw node install --host 127.0.0.1 --port 18789 --display-name "openclaw-docker-host-git"
 ```
 
@@ -118,6 +133,7 @@ Registry install:
 
 ```bash
 openclaw plugins install clawhub:@openclaw/openclaw-host-git-workflow
+openclaw plugins install clawhub:@openclaw/openclaw-workflow-planner
 ```
 
 ## Verification
@@ -150,7 +166,9 @@ For each skill-only package, verify:
 - `LICENSE` exists
 - no `package.json`
 - no `openclaw.plugin.json`
-- no runtime code is implied unless it exists
+- no `src/` tree or runtime code is introduced
+
+For publish workflow details and the manual pre-publish gate beyond CI minimum, use [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md).
 
 ## Repo Facts
 
@@ -161,6 +179,7 @@ For each skill-only package, verify:
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.
-- The live plugin packages use domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, and package-local `.npmignore` files so packed tarballs keep built `dist/**` artifacts despite the repo-root `dist/` ignore.
+- Repo-local publish/preflight guidance now lives in `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`.
+- The live plugin packages follow the broader local package canon, including domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, required package docs/metadata, and package-local `.npmignore` so packed tarballs keep built `dist/**` artifacts despite the repo-root `dist/` ignore.
 - In Docker-gateway setups, gateway token configuration and device pairing are separate gates; a valid `gateway.remote.token` does not replace CLI/operator pairing approval.
 - On macOS, config hardening can reduce browser-related node surface, but a generic `node` host can still trigger unrelated TCC prompts unless you isolate it by user/session/VM/host.

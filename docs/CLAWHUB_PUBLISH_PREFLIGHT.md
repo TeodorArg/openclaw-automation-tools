@@ -25,6 +25,8 @@ Skill-only packages:
 Non-publishable repo docs:
 - `README.md`
 - `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`
+- `docs/PLUGIN_PACKAGE_CANON.md`
+- `docs/PLUGIN_STYLE_CANON.md`
 - `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md`
 
 ## Plugin Checks
@@ -60,6 +62,8 @@ Then verify:
 - packed tarball contains the built `dist/**` artifacts required by the package entry surface
 - no secrets or host-local paths leak into shipped files
 - source provenance is ready
+
+These checks extend beyond the CI verification minimum and remain an explicit manual pre-publish gate unless later automated in package scripts or CI.
 
 Current runtime coverage to publish:
 - setup doctor
@@ -98,10 +102,11 @@ Current planner package coverage to publish:
 For each active skill package:
 - `SKILL.md` exists
 - `README.md` exists
-- `LICENSE` exists and matches the intended publication target
+- `LICENSE` exists and is `MIT-0`
+- publish metadata baseline matches the package README: slug, display name, owner placeholder, version, and tags
 - no `package.json`
 - no `openclaw.plugin.json`
-- no runtime code is implied unless it exists
+- no `src/` tree or runtime code is introduced
 
 ## Commands
 
@@ -127,9 +132,13 @@ Notes:
 Skill publish examples:
 
 ```bash
-clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
-clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
+clawhub skill publish ./memory-hygiene --slug memory-hygiene --name "Memory Hygiene" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags memory,workflow,maintenance
+clawhub skill publish ./source-of-truth-fix --slug source-of-truth-fix --name "Source Of Truth Fix" --owner <clawhub-owner> --version 0.1.0 --changelog "Initial standalone package release" --tags docs,verification,source-of-truth
 ```
+
+Skill publish baseline:
+- `memory-hygiene/`: slug `memory-hygiene`, display name `Memory Hygiene`, owner `<clawhub-owner>`, version `0.1.0`, tags `memory`, `workflow`, `maintenance`
+- `source-of-truth-fix/`: slug `source-of-truth-fix`, display name `Source Of Truth Fix`, owner `<clawhub-owner>`, version `0.1.0`, tags `docs`, `verification`, `source-of-truth`
 
 ## Blockers
 
