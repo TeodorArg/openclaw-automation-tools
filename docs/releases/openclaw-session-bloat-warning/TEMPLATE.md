@@ -1,0 +1,41 @@
+# openclaw-session-bloat-warning vX.Y.Z
+
+- Package: `@openclaw/openclaw-session-bloat-warning`
+- Slug: `openclaw-session-bloat-warning`
+- Version: `X.Y.Z`
+- Release date: `YYYY-MM-DD`
+- Tag: `openclaw-session-bloat-warning/vX.Y.Z`
+- Tag commit:
+- GitHub Release URL:
+- GitHub notes mode: `tracked file only` or `generated + mirrored`
+- Publish flow: `manual ClawHub archive upload` or `clawhub package publish`
+- Source commit:
+- PR:
+
+## Summary
+
+- 
+
+## Verification
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm test`
+- `pnpm pack:smoke`
+- `clawhub package publish ./openclaw-session-bloat-warning --dry-run`
+
+## Operator Copy
+
+Short release note text for GitHub Release or ClawHub:
+
+```text
+openclaw-session-bloat-warning vX.Y.Z
+
+- 
+```
+
+## Publish Result
+
+- Status:
+- Operator notes:
