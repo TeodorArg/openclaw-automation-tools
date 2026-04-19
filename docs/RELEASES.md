@@ -7,7 +7,8 @@ Release storage contract:
 - use one package directory per live publishable plugin package
 - keep a package index at `docs/releases/<package-slug>/README.md`
 - keep one small Markdown note per released version at `docs/releases/<package-slug>/vX.Y.Z.md`
-- use that per-version file as the canonical operator copy-paste source for GitHub Release text and optional manual ClawHub release or archive upload flows
+- use that per-version file as the canonical operator copy-paste source for GitHub Release text and the tracked release record for the package version
+- when a release needs manual ClawHub publication, also keep a companion worksheet file at `docs/releases/<package-slug>/vX.Y.Z.clawhub.md`
 - keep transient release prep checklists in `.local-planning/`, not in `docs/releases/`
 - use package-qualified tags in the form `<package-slug>/vX.Y.Z`
 
@@ -30,6 +31,20 @@ Required fields for each `docs/releases/<package-slug>/vX.Y.Z.md`:
 - short summary
 - verification checklist
 - publish result
+- if manual ClawHub publication was requested, companion worksheet path
+
+Required fields for each optional `docs/releases/<package-slug>/vX.Y.Z.clawhub.md` worksheet:
+
+- package slug
+- package version
+- tarball filename or source artifact
+- source repo
+- source commit
+- source ref
+- source path
+- publish flow
+- owner or publisher
+- operator notes
 
 GitHub release notes policy:
 
