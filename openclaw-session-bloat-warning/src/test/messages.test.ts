@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+	buildEarlyWarning,
 	buildPostCompactionNote,
 	buildPreCompactionWarning,
 } from "../runtime/text/messages.js";
@@ -20,5 +21,15 @@ describe("session bloat warning messages", () => {
 				language: "ru",
 			}),
 		).toContain("Compaction завершён");
+	});
+
+	it("returns severity-aware early warning copy", () => {
+		expect(
+			buildEarlyWarning({
+				language: "en",
+				severity: "critical",
+				reasonCode: "input_tokens",
+			}),
+		).toContain("close to overload");
 	});
 });

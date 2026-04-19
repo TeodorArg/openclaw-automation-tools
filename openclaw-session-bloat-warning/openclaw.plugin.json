@@ -28,7 +28,41 @@
 			"maxWarningsPerSession": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Maximum number of pre-compaction warnings and post-compaction notes per session key. Defaults to 2."
+				"description": "Maximum number of early warnings, pre-compaction warnings, and post-compaction notes per session key. Defaults to 2."
+			},
+			"enableEarlyWarning": {
+				"type": "boolean",
+				"description": "Whether to track early session-heaviness signals from llm_input before compaction. Defaults to true."
+			},
+			"cooldownTurns": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Minimum turn gap before another early warning can be counted for the same session. Defaults to 3."
+			},
+			"warningCharThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Approximate combined prompt-plus-history character threshold for early warning heuristics. Defaults to 120000."
+			},
+			"warningMessageCountThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Approximate history message-count threshold for early warning heuristics. Defaults to 80."
+			},
+			"warningInputTokensThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Observed llm_output usage.input threshold that marks a warning-level heavy turn. Defaults to 120000."
+			},
+			"elevatedInputTokensThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Observed llm_output usage.input threshold that marks an elevated heavy turn. Defaults to 145000."
+			},
+			"criticalInputTokensThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Observed llm_output usage.input threshold that marks a critical heavy turn. Defaults to 170000."
 			}
 		}
 	}
