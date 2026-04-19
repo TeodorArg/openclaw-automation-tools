@@ -4,7 +4,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import type { SessionBloatWarningConfig } from "../runtime/config/plugin-config.js";
-import { getEarlyWarningMessage } from "../runtime/core/early-warning-core.js";
+import {
+	buildStoredEarlyWarningMessage,
+	getEarlyWarningMessage,
+} from "../runtime/core/early-warning-core.js";
 import { createEarlyWarningDeliveryHooks } from "../runtime/hooks/early-warning-delivery-hooks.js";
 import { createCompactionWarningHooks } from "../runtime/hooks/session-compact-hooks.js";
 import {
@@ -259,6 +262,106 @@ describe("session compact hooks", () => {
 		);
 
 		expect(second).toBeUndefined();
+	});
+
+	it("replays a stored early-warning signal on before_agent_reply without a fresh llm_input in the same turn", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-stored",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-stored" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-later" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply).toEqual({
+			text: buildStoredEarlyWarningMessage({
+				config: fixture.config,
+				signals: {
+					lastSeverity: "warning",
+					lastReasonCode: "history_chars",
+				},
+			}),
+		});
+	});
+
+	it("prefers stored token signals over char heuristics when building delivery copy", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-tokens",
+				usage: {
+					input: 171000,
+				},
+			},
+			{ sessionKey: "agent:main:main", runId: "run-tokens" },
+		);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-tokens",
+				systemPrompt: "small prompt",
+				prompt: "small user message",
+				historyMessages: [{ role: "user", content: "short" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-tokens" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-tokens" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply?.text).toContain("input is already very large");
+	});
+
+	it("returns only synthetic visible reply payload semantics on before_agent_reply delivery", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-shape",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-shape" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-shape" },
+		);
+
+		expect(result).toEqual({
+			handled: true,
+			reply: {
+				text: expect.any(String),
+			},
+			reason: "session-bloat-early-warning",
+		});
+		expect(Object.keys(result ?? {})).toEqual([
+			"handled",
+			"reply",
+			"reason",
+		]);
 	});
 });
 
