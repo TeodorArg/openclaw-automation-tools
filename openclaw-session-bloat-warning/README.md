@@ -26,6 +26,18 @@ This package does not yet ship:
 - bounded handoff summaries
 - autonomous session transfer
 
+## Current Refactor Direction
+
+The current agreed next step is a safe architecture-preserving refactor before any early-hook expansion.
+
+Planned sequence:
+- state normalization with versioned lazy-normalized fail-open state
+- service extraction so compaction hooks become thin adapters
+- delivery split so warning decisions are separated from mutable `messages` delivery
+- regression-lock test matrix before adding `llm_input` / `llm_output`
+
+This means the next coding session should start by strengthening internal seams under the existing `before_compaction` and `after_compaction` behavior, not by attaching new hook families first.
+
 ## Install
 
 Local development install:
