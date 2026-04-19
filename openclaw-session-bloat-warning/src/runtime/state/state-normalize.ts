@@ -61,6 +61,7 @@ function normalizeSessionWarningState(value: unknown): SessionWarningState {
 		beforeWarnings: readCounter(record.beforeWarnings),
 		afterWarnings: readCounter(record.afterWarnings),
 		earlyWarnings: readCounter(record.earlyWarnings),
+		turnCount: readOptionalCounter(record.turnCount),
 		lastUpdatedAt:
 			typeof record.lastUpdatedAt === "string"
 				? record.lastUpdatedAt

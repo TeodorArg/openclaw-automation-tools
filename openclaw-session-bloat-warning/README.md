@@ -1,15 +1,20 @@
 # OpenClaw Session Bloat Warning
 
-OpenClaw plugin for calm session-bloat warnings on the official compaction
-lifecycle surface.
+OpenClaw plugin for calm session-bloat warnings across the shipped compaction,
+observation, and visible early-warning delivery surfaces.
 
 ## Shipped Slice
 
-This first implementation slice is intentionally bounded to the upstream
-compaction events confirmed in official OpenClaw docs:
+The current shipped slice is intentionally bounded, but it is no longer
+compaction-only.
 
-- `before_compaction`
-- `after_compaction`
+Implemented surfaces:
+
+- `before_compaction`, writable warning delivery via `event.messages`
+- `after_compaction`, writable continuation note via `event.messages`
+- `llm_input`, observe-only signal capture
+- `llm_output`, observe-only token capture
+- `before_agent_reply`, visible early-warning delivery as a synthetic reply
 
 The package currently ships:
 
@@ -17,26 +22,24 @@ The package currently ships:
   another large phase
 - a post-compaction continuation note that nudges the next heavy phase into a
   fresh session
-- plugin-owned JSON state with per-session counters for warning dedupe
+- early warning based on stored runtime signals, delivered as a visible
+  synthetic reply before the agent reply path
+- plugin-owned JSON state with per-session counters and signal persistence for
+  dedupe and cooldown handling
 - a bundled `session-bloat-warning` skill
+
+The current architecture split is:
+
+- signal hooks: `llm_input` and `llm_output`
+- decision core: `src/runtime/core/early-warning-core.ts`
+- delivery adapter: `src/runtime/hooks/early-warning-delivery-hooks.ts`
 
 This package does not yet ship:
 
-- early Stage 1 / Stage 2 warnings before compaction
+- prompt-mutation based early-warning delivery
 - bounded handoff summaries
 - autonomous session transfer
-
-## Current Refactor Direction
-
-The current agreed next step is a safe architecture-preserving refactor before any early-hook expansion.
-
-Planned sequence:
-- state normalization with versioned lazy-normalized fail-open state
-- service extraction so compaction hooks become thin adapters
-- delivery split so warning decisions are separated from mutable `messages` delivery
-- regression-lock test matrix before adding `llm_input` / `llm_output`
-
-This means the next coding session should start by strengthening internal seams under the existing `before_compaction` and `after_compaction` behavior, not by attaching new hook families first.
+- broader repeated-failure, edit-loop, or timeout-risk heuristic families
 
 ## Install
 
@@ -84,14 +87,25 @@ Supported config keys:
   language selection and defaults to English
 - `enablePreCompactionWarning`: defaults to `true`
 - `enablePostCompactionNote`: defaults to `true`
+- `enableEarlyWarning`: defaults to `true`
 - `maxWarningsPerSession`: defaults to `2`
+- `cooldownTurns`: defaults to `3`
+- `warningCharThreshold`: default char threshold for early warning
+- `warningMessageCountThreshold`: default message-count threshold for early warning
+- `warningInputTokensThreshold`: warning token threshold
+- `elevatedInputTokensThreshold`: elevated token threshold
+- `criticalInputTokensThreshold`: critical token threshold
 
 ## Current Behavior Notes
 
 - warning state is keyed by `sessionKey`; when the event has no usable
   `sessionKey`, the package falls back to a shared internal default bucket
-- pre-compaction and post-compaction messages use separate counters in the
-  state file
+- pre-compaction, post-compaction, and early-warning delivery use separate
+  persisted counters/state
+- early-warning observation is gathered on observe-only hooks and delivered only
+  through `before_agent_reply`
+- early-warning cooldown recovery is based on real observed turn progression,
+  not on accumulated warning counters
 - when pre-compaction warnings stay enabled, post-compaction notes are gated so
   they do not outnumber prior pre-compaction warnings for the same session
 - if the hook event does not expose a mutable `messages` array, the package
@@ -102,10 +116,9 @@ Supported config keys:
 ## Current Limits
 
 - localization is config-selected, not auto-detected from the live session
-- state is simple JSON persistence for dedupe only; there is no bounded handoff
-  summary or transcript compaction artifact owned by this package
-- the first shipped slice stays on official compaction events and does not
-  claim a separate early-overload detector before compaction
+- state is simple JSON persistence; there is no bounded handoff summary or
+  transcript compaction artifact owned by this package
+- visible early warning is a synthetic reply surface, not prompt mutation
 
 ## Verification
 

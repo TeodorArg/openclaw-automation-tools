@@ -30,11 +30,7 @@ export function createEarlyWarningDeliveryHooks(
 
 			const state = await loadWarningState(config.stateFilePath);
 			const session = getSessionState(state, ctx.sessionKey);
-			const turn =
-				session.beforeWarnings +
-				session.afterWarnings +
-				session.earlyWarnings +
-				1;
+			const turn = session.turnCount ?? 0;
 			const shouldWarnNow = shouldEmitEarlyWarning(
 				session.cooldownUntilTurn,
 				turn,

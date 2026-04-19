@@ -112,6 +112,7 @@ export function createCompactionWarningHooks(
 				session,
 			});
 
+			session.turnCount = observation.turn;
 			session.signals = observation.signals;
 			session.lastUpdatedAt = observation.now;
 			state.updatedAt = observation.now;

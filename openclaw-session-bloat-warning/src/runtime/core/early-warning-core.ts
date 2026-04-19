@@ -39,9 +39,7 @@ export function observeEarlyWarningInput(params: {
 	config: SessionBloatWarningConfig;
 	session: Pick<
 		SessionWarningState,
-		| "beforeWarnings"
-		| "afterWarnings"
-		| "earlyWarnings"
+		| "turnCount"
 		| "cooldownUntilTurn"
 		| "signals"
 	>;
@@ -49,11 +47,7 @@ export function observeEarlyWarningInput(params: {
 }): EarlyWarningObservation {
 	const signals = measureInputSignals(params.event, params.session.signals);
 	const decision = createEarlyWarningDecision(signals, params.config);
-	const turn =
-		params.session.beforeWarnings +
-		params.session.afterWarnings +
-		params.session.earlyWarnings +
-		1;
+	const turn = (params.session.turnCount ?? 0) + 1;
 	const now = params.now ?? new Date().toISOString();
 	const shouldWarnNow = Boolean(
 		decision && shouldEmitEarlyWarning(params.session.cooldownUntilTurn, turn),
@@ -99,9 +93,7 @@ export function getEarlyWarningMessage(params: {
 	config: SessionBloatWarningConfig;
 	session: Pick<
 		SessionWarningState,
-		| "beforeWarnings"
-		| "afterWarnings"
-		| "earlyWarnings"
+		| "turnCount"
 		| "cooldownUntilTurn"
 		| "signals"
 	>;

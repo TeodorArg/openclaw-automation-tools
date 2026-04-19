@@ -11,18 +11,21 @@ compaction, not canon drift, planning state, or host execution.
 
 ## Current shipped scope
 
-- official compaction lifecycle coverage through `before_compaction`
+- compaction lifecycle coverage through `before_compaction`
   and `after_compaction`
+- observe-only runtime signal capture on `llm_input` and `llm_output`
+- visible early warning on `before_agent_reply` as a synthetic reply
 - calm user-facing warning copy in English or Russian
-- per-session dedupe in plugin-owned state keyed by `sessionKey`
+- per-session dedupe and cooldown state keyed by `sessionKey`
 
 ## Current boundary
 
-- no early pre-compaction overload detector before the official compaction path
+- no early-warning delivery on the prompt-mutation path
 - no bounded handoff summary generation
 - no autonomous fresh-session transfer
 - no automatic per-session language detection; language is selected by package
   config
+- no broader repeated tool failure, edit-loop, or timeout-risk heuristics yet
 
 ## Output bar
 
