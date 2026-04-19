@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-session-bloat-warning",
 	"name": "OpenClaw Session Bloat Warning",
-	"description": "Compaction-surface warning plugin for OpenClaw with calm pre/post compaction notices and bundled session-bloat-warning guidance.",
+	"description": "Session-heaviness warning plugin for OpenClaw with compaction notices, early-warning hooks, and bundled session-bloat-warning guidance.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
 	"configSchema": {

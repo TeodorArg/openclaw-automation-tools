@@ -39,6 +39,10 @@ export function createEarlyWarningDeliveryHooks(
 				config,
 				signals: session.signals,
 			});
+			const matchesCurrentRun = shouldUseStoredSignalForRun(
+				ctx.runId,
+				session.signals?.lastRunId,
+			);
 			const now = new Date().toISOString();
 
 			session.lastUpdatedAt = now;
@@ -46,6 +50,7 @@ export function createEarlyWarningDeliveryHooks(
 
 			if (
 				!message ||
+				!matchesCurrentRun ||
 				session.earlyWarnings >= config.maxWarningsPerSession ||
 				!shouldWarnNow
 			) {
@@ -67,4 +72,15 @@ export function createEarlyWarningDeliveryHooks(
 			};
 		},
 	};
+}
+
+function shouldUseStoredSignalForRun(
+	currentRunId: string | undefined,
+	storedRunId: string | undefined,
+) {
+	return (
+		currentRunId === undefined ||
+		storedRunId === undefined ||
+		currentRunId === storedRunId
+	);
 }

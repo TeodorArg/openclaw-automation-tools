@@ -28,6 +28,8 @@ Canon package entrypoints:
 Session-bloat warning package entrypoints:
 - bundled skill `session-bloat-warning`
 - official compaction lifecycle hooks `before_compaction` and `after_compaction`
+- observe-only hooks `llm_input` and `llm_output`
+- visible early-warning delivery on `before_agent_reply`
 
 Non-publishable repo docs:
 - `README.md`
@@ -223,8 +225,10 @@ Current canon package coverage to publish:
 
 Current session-bloat warning package coverage to publish:
 - official compaction lifecycle coverage through `before_compaction` and `after_compaction`
-- calm localized pre/post compaction warning copy
-- plugin-owned per-session dedupe state
+- observe-only runtime signal capture on `llm_input` and `llm_output`
+- visible early-warning delivery on `before_agent_reply`
+- calm localized pre/post compaction and early-warning copy
+- plugin-owned per-session dedupe and cooldown state
 - bundled `session-bloat-warning` instruction layer
 
 ## Commands

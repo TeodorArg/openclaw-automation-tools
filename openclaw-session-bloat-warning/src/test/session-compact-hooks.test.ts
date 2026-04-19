@@ -322,7 +322,7 @@ describe("session compact hooks", () => {
 		expect(recovered?.reason).toBe("session-bloat-early-warning");
 	});
 
-	it("replays a stored early-warning signal on before_agent_reply without a fresh llm_input in the same turn", async () => {
+	it("does not replay a stored early-warning signal onto a different run", async () => {
 		const fixture = await createFixture();
 		const compactionHooks = createCompactionWarningHooks(fixture.config);
 		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
@@ -340,6 +340,29 @@ describe("session compact hooks", () => {
 		const result = await deliveryHooks.beforeAgentReply(
 			{ cleanedBody: "assistant reply" },
 			{ sessionKey: "agent:main:main", runId: "run-later" },
+		);
+
+		expect(result).toBeUndefined();
+	});
+
+	it("replays a stored early-warning signal later in the same run", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-stored",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-stored" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-stored" },
 		);
 
 		expect(result?.handled).toBe(true);
@@ -415,11 +438,7 @@ describe("session compact hooks", () => {
 			},
 			reason: "session-bloat-early-warning",
 		});
-		expect(Object.keys(result ?? {})).toEqual([
-			"handled",
-			"reply",
-			"reason",
-		]);
+		expect(Object.keys(result ?? {})).toEqual(["handled", "reply", "reason"]);
 	});
 });
 

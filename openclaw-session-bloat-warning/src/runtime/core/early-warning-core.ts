@@ -39,9 +39,7 @@ export function observeEarlyWarningInput(params: {
 	config: SessionBloatWarningConfig;
 	session: Pick<
 		SessionWarningState,
-		| "turnCount"
-		| "cooldownUntilTurn"
-		| "signals"
+		"turnCount" | "cooldownUntilTurn" | "signals"
 	>;
 	now?: string;
 }): EarlyWarningObservation {
@@ -93,9 +91,7 @@ export function getEarlyWarningMessage(params: {
 	config: SessionBloatWarningConfig;
 	session: Pick<
 		SessionWarningState,
-		| "turnCount"
-		| "cooldownUntilTurn"
-		| "signals"
+		"turnCount" | "cooldownUntilTurn" | "signals"
 	>;
 }) {
 	return observeEarlyWarningInput(params).decision?.message;
