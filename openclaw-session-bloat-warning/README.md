@@ -129,5 +129,5 @@ pnpm typecheck
 pnpm build
 pnpm test
 pnpm pack:smoke
-clawhub package publish ./openclaw-session-bloat-warning --dry-run
+# optional manual ClawHub preflight depends on the installed clawhub CLI surface
 ```
