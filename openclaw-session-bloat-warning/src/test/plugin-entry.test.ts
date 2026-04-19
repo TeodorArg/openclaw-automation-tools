@@ -13,7 +13,7 @@ describe("plugin entry", () => {
 		on.mockReset();
 	});
 
-	it("registers the official compaction hook names", async () => {
+	it("registers the official compaction and llm hook names", async () => {
 		const pluginModule = (await import("../index.js")) as {
 			default: {
 				register(api: {
@@ -30,7 +30,7 @@ describe("plugin entry", () => {
 			on,
 		});
 
-		expect(on).toHaveBeenCalledTimes(2);
+		expect(on).toHaveBeenCalledTimes(5);
 		expect(on).toHaveBeenNthCalledWith(
 			1,
 			"before_compaction",
@@ -41,5 +41,12 @@ describe("plugin entry", () => {
 			"after_compaction",
 			expect.any(Function),
 		);
+		expect(on).toHaveBeenNthCalledWith(
+			3,
+			"before_agent_reply",
+			expect.any(Function),
+		);
+		expect(on).toHaveBeenNthCalledWith(4, "llm_input", expect.any(Function));
+		expect(on).toHaveBeenNthCalledWith(5, "llm_output", expect.any(Function));
 	});
 });

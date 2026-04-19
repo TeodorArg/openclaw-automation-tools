@@ -23,6 +23,7 @@ describe("plugin state", () => {
 					"agent:main:main": {
 						beforeWarnings: 2,
 						afterWarnings: 1,
+						earlyWarnings: 0,
 						lastUpdatedAt: "2026-04-19T10:00:00.000Z",
 					},
 				},
@@ -40,7 +41,11 @@ describe("plugin state", () => {
 				"agent:main:main": {
 					beforeWarnings: 2,
 					afterWarnings: 1,
+					earlyWarnings: 0,
 					lastUpdatedAt: "2026-04-19T10:00:00.000Z",
+					cooldownUntilTurn: undefined,
+					lastWarnedTurn: undefined,
+					signals: undefined,
 				},
 			},
 		});
@@ -65,6 +70,7 @@ describe("plugin state", () => {
 		state.sessions[DEFAULT_SESSION_STATE_KEY] = {
 			beforeWarnings: 1,
 			afterWarnings: 0,
+			earlyWarnings: 0,
 		};
 		await saveWarningState(fixture.stateFilePath, state);
 
@@ -72,7 +78,11 @@ describe("plugin state", () => {
 		expect(reloaded.sessions[DEFAULT_SESSION_STATE_KEY]).toEqual({
 			beforeWarnings: 1,
 			afterWarnings: 0,
+			earlyWarnings: 0,
 			lastUpdatedAt: undefined,
+			cooldownUntilTurn: undefined,
+			lastWarnedTurn: undefined,
+			signals: undefined,
 		});
 	});
 
@@ -86,7 +96,18 @@ describe("plugin state", () => {
 				"agent:main:main": {
 					beforeWarnings: 3,
 					afterWarnings: 2,
+					earlyWarnings: 1,
 					lastUpdatedAt: "2026-04-19T10:29:00.000Z",
+					cooldownUntilTurn: 8,
+					lastWarnedTurn: 5,
+					signals: {
+						lastInputChars: 125000,
+						lastMessageCount: 81,
+						lastInputTokens: 130000,
+						lastSeverity: "warning",
+						lastReasonCode: "input_tokens",
+						lastRunId: "run-3",
+					},
 				},
 			},
 		};

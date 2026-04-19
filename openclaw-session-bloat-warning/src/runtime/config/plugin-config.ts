@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 
 export type SessionWarningLanguage = "en" | "ru";
+export type WarningSeverity = "warning" | "elevated" | "critical";
 
 export type SessionBloatWarningConfig = {
 	stateFilePath: string;
@@ -8,6 +9,13 @@ export type SessionBloatWarningConfig = {
 	enablePreCompactionWarning: boolean;
 	enablePostCompactionNote: boolean;
 	maxWarningsPerSession: number;
+	enableEarlyWarning: boolean;
+	cooldownTurns: number;
+	warningCharThreshold: number;
+	warningMessageCountThreshold: number;
+	warningInputTokensThreshold: number;
+	elevatedInputTokensThreshold: number;
+	criticalInputTokensThreshold: number;
 };
 
 const DEFAULT_STATE_FILE = ".openclaw-session-bloat-warning-state.json";
@@ -27,6 +35,28 @@ export function resolvePluginConfig(
 			true,
 		),
 		maxWarningsPerSession: readPositiveInteger(input?.maxWarningsPerSession, 2),
+		enableEarlyWarning: readBoolean(input?.enableEarlyWarning, true),
+		cooldownTurns: readPositiveInteger(input?.cooldownTurns, 3),
+		warningCharThreshold: readPositiveInteger(
+			input?.warningCharThreshold,
+			120000,
+		),
+		warningMessageCountThreshold: readPositiveInteger(
+			input?.warningMessageCountThreshold,
+			80,
+		),
+		warningInputTokensThreshold: readPositiveInteger(
+			input?.warningInputTokensThreshold,
+			120000,
+		),
+		elevatedInputTokensThreshold: readPositiveInteger(
+			input?.elevatedInputTokensThreshold,
+			145000,
+		),
+		criticalInputTokensThreshold: readPositiveInteger(
+			input?.criticalInputTokensThreshold,
+			170000,
+		),
 	};
 }
 
