@@ -129,4 +129,5 @@ pnpm typecheck
 pnpm build
 pnpm test
 pnpm pack:smoke
+clawhub package publish ./openclaw-session-bloat-warning --dry-run
 ```

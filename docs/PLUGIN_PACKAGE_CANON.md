@@ -43,6 +43,7 @@ In the live canon package, the current runtime domains are grouped under:
 - `src/runtime/status/`
 
 In the live session-bloat warning package, the current runtime domains are grouped under:
+- `src/runtime/core/`
 - `src/runtime/config/`
 - `src/runtime/hooks/`
 - `src/runtime/state/`
