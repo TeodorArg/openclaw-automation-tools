@@ -3,10 +3,9 @@
 OpenClaw plugin for calm session-bloat warnings across the shipped compaction,
 observation, and visible early-warning delivery surfaces.
 
-## Shipped Slice
+## Features
 
-The current shipped slice is intentionally bounded, but it is no longer
-compaction-only.
+This plugin ships a bounded, stable warning surface for session heaviness.
 
 Implemented surfaces:
 
@@ -16,7 +15,7 @@ Implemented surfaces:
 - `llm_output`, observe-only token capture
 - `before_agent_reply`, visible early-warning delivery as a synthetic reply
 
-The package currently ships:
+The plugin provides:
 
 - a pre-compaction warning that tells the user the session is already heavy for
   another large phase
@@ -28,13 +27,13 @@ The package currently ships:
   dedupe and cooldown handling
 - a bundled `session-bloat-warning` skill
 
-The current architecture split is:
+The architecture split is:
 
 - signal hooks: `llm_input` and `llm_output`
 - decision core: `src/runtime/core/early-warning-core.ts`
 - delivery adapter: `src/runtime/hooks/early-warning-delivery-hooks.ts`
 
-This package does not yet ship:
+Not in scope:
 
 - prompt-mutation based early-warning delivery
 - bounded handoff summaries
@@ -96,7 +95,7 @@ Supported config keys:
 - `elevatedInputTokensThreshold`: elevated token threshold
 - `criticalInputTokensThreshold`: critical token threshold
 
-## Current Behavior Notes
+## Behavior
 
 - warning state is keyed by `sessionKey`; when the event has no usable
   `sessionKey`, the package falls back to a shared internal default bucket
@@ -113,7 +112,7 @@ Supported config keys:
 - session identity is taken from the hook context rather than from a custom
   event-local `sessionKey` field
 
-## Current Limits
+## Constraints
 
 - localization is config-selected, not auto-detected from the live session
 - state is simple JSON persistence; there is no bounded handoff summary or
