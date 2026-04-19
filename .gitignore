@@ -60,3 +60,9 @@ coverage/
 # Ignore repo-local runtime noise if this repo is ever used as a mounted project.
 # =========================================================
 .openclaw/
+
+# =========================================================
+# Local release working notes
+# Keep package release records out of tracked git state.
+# =========================================================
+docs/releases/
