@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-session-bloat-warning",
 	"name": "OpenClaw Session Bloat Warning",
-	"description": "Session-heaviness warning plugin for OpenClaw with compaction notices, early-warning hooks, and bundled session-bloat-warning guidance.",
+	"description": "OpenClaw plugin for compaction warnings and visible early session-heaviness warnings with bundled session-bloat-warning guidance.",
 	"version": "0.1.1",
 	"skills": ["./skills"],
 	"configSchema": {
@@ -32,7 +32,7 @@
 			},
 			"enableEarlyWarning": {
 				"type": "boolean",
-				"description": "Whether to track early session-heaviness signals from llm_input before compaction. Defaults to true."
+				"description": "Whether to track early session-heaviness signals from llm_input and llm_output and deliver visible early warnings on before_agent_reply. Defaults to true."
 			},
 			"cooldownTurns": {
 				"type": "integer",

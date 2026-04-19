@@ -6,10 +6,10 @@ user-invocable: true
 
 # Session Bloat Warning
 
-Use this bundled skill when the current risk is session overload around
+Use this bundled skill when the risk is session overload around
 compaction, not canon drift, planning state, or host execution.
 
-## Current shipped scope
+## Supported scope
 
 - compaction lifecycle coverage through `before_compaction`
   and `after_compaction`
@@ -18,14 +18,14 @@ compaction, not canon drift, planning state, or host execution.
 - calm user-facing warning copy in English or Russian
 - per-session dedupe and cooldown state keyed by `sessionKey`
 
-## Current boundary
+## Boundaries
 
 - no early-warning delivery on the prompt-mutation path
 - no bounded handoff summary generation
 - no autonomous fresh-session transfer
 - no automatic per-session language detection; language is selected by package
   config
-- no broader repeated tool failure, edit-loop, or timeout-risk heuristics yet
+- no broader repeated tool failure, edit-loop, or timeout-risk heuristics
 
 ## Output bar
 
