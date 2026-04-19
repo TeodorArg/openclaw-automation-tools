@@ -17,6 +17,7 @@ export type SessionWarningState = {
 	beforeWarnings: number;
 	afterWarnings: number;
 	earlyWarnings: number;
+	turnCount?: number;
 	lastUpdatedAt?: string;
 	cooldownUntilTurn?: number;
 	lastWarnedTurn?: number;

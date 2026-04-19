@@ -56,19 +56,55 @@ function createEmptySessionWarningState(): SessionWarningState {
 
 function normalizeSessionWarningState(value: unknown): SessionWarningState {
 	const record = asRecord(value);
+	const beforeWarnings = readCounter(record.beforeWarnings);
+	const afterWarnings = readCounter(record.afterWarnings);
+	const earlyWarnings = readCounter(record.earlyWarnings);
+	const lastWarnedTurn = readOptionalCounter(record.lastWarnedTurn);
+	const cooldownUntilTurn = readOptionalCounter(record.cooldownUntilTurn);
+	const turnCount = normalizeTurnCount({
+		beforeWarnings,
+		afterWarnings,
+		earlyWarnings,
+		turnCount: readOptionalCounter(record.turnCount),
+		lastWarnedTurn,
+		cooldownUntilTurn,
+	});
 
 	return {
-		beforeWarnings: readCounter(record.beforeWarnings),
-		afterWarnings: readCounter(record.afterWarnings),
-		earlyWarnings: readCounter(record.earlyWarnings),
+		beforeWarnings,
+		afterWarnings,
+		earlyWarnings,
+		turnCount,
 		lastUpdatedAt:
 			typeof record.lastUpdatedAt === "string"
 				? record.lastUpdatedAt
 				: undefined,
-		cooldownUntilTurn: readOptionalCounter(record.cooldownUntilTurn),
-		lastWarnedTurn: readOptionalCounter(record.lastWarnedTurn),
+		cooldownUntilTurn,
+		lastWarnedTurn,
 		signals: normalizeSignalState(record.signals),
 	};
+}
+
+function normalizeTurnCount(params: {
+	beforeWarnings: number;
+	afterWarnings: number;
+	earlyWarnings: number;
+	turnCount: number | undefined;
+	lastWarnedTurn: number | undefined;
+	cooldownUntilTurn: number | undefined;
+}) {
+	if (params.turnCount !== undefined) {
+		return params.turnCount;
+	}
+
+	const legacyTurnCount =
+		params.beforeWarnings + params.afterWarnings + params.earlyWarnings;
+	const cooldownFloor =
+		params.cooldownUntilTurn !== undefined
+			? Math.max(0, params.cooldownUntilTurn - 1)
+			: 0;
+
+	return Math.max(legacyTurnCount, params.lastWarnedTurn ?? 0, cooldownFloor);
 }
 
 function normalizeSignalState(value: unknown) {

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { resolvePluginConfig } from "../runtime/config/plugin-config.js";
@@ -50,5 +52,31 @@ describe("plugin config", () => {
 		expect(config.warningInputTokensThreshold).toBe(100000);
 		expect(config.elevatedInputTokensThreshold).toBe(130000);
 		expect(config.criticalInputTokensThreshold).toBe(160000);
+	});
+
+	it("keeps manifest config keys aligned with runtime defaults", () => {
+		const config = resolvePluginConfig(undefined);
+		const manifest = JSON.parse(
+			readFileSync(resolve(process.cwd(), "openclaw.plugin.json"), "utf8"),
+		) as {
+			configSchema: {
+				properties: Record<string, { enum?: string[]; description?: string }>;
+			};
+		};
+
+		expect(Object.keys(manifest.configSchema.properties).sort()).toEqual(
+			Object.keys(config).sort(),
+		);
+		expect(manifest.configSchema.properties.defaultLanguage?.enum).toEqual([
+			"en",
+			"ru",
+		]);
+		expect(
+			manifest.configSchema.properties.cooldownTurns?.description,
+		).toContain("Defaults to 3.");
+		expect(
+			manifest.configSchema.properties.criticalInputTokensThreshold
+				?.description,
+		).toContain("Defaults to 170000.");
 	});
 });

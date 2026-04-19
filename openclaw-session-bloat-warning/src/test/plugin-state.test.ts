@@ -42,6 +42,7 @@ describe("plugin state", () => {
 					beforeWarnings: 2,
 					afterWarnings: 1,
 					earlyWarnings: 0,
+					turnCount: 3,
 					lastUpdatedAt: "2026-04-19T10:00:00.000Z",
 					cooldownUntilTurn: undefined,
 					lastWarnedTurn: undefined,
@@ -79,11 +80,36 @@ describe("plugin state", () => {
 			beforeWarnings: 1,
 			afterWarnings: 0,
 			earlyWarnings: 0,
+			turnCount: 1,
 			lastUpdatedAt: undefined,
 			cooldownUntilTurn: undefined,
 			lastWarnedTurn: undefined,
 			signals: undefined,
 		});
+	});
+
+	it("backfills turnCount from legacy cooldown state", async () => {
+		const fixture = await createFixture();
+		await writeFile(
+			fixture.stateFilePath,
+			JSON.stringify({
+				sessions: {
+					"agent:main:main": {
+						beforeWarnings: 3,
+						afterWarnings: 2,
+						earlyWarnings: 1,
+						cooldownUntilTurn: 8,
+						lastWarnedTurn: 5,
+					},
+				},
+			}),
+			"utf8",
+		);
+
+		const state = await loadWarningState(fixture.stateFilePath);
+		expect(state.sessions["agent:main:main"]?.turnCount).toBe(7);
+		expect(state.sessions["agent:main:main"]?.cooldownUntilTurn).toBe(8);
+		expect(state.sessions["agent:main:main"]?.lastWarnedTurn).toBe(5);
 	});
 
 	it("roundtrips normalized state read/write", async () => {
@@ -97,6 +123,7 @@ describe("plugin state", () => {
 					beforeWarnings: 3,
 					afterWarnings: 2,
 					earlyWarnings: 1,
+					turnCount: 9,
 					lastUpdatedAt: "2026-04-19T10:29:00.000Z",
 					cooldownUntilTurn: 8,
 					lastWarnedTurn: 5,

@@ -4,7 +4,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import type { SessionBloatWarningConfig } from "../runtime/config/plugin-config.js";
-import { getEarlyWarningMessage } from "../runtime/core/early-warning-core.js";
+import {
+	buildStoredEarlyWarningMessage,
+	getEarlyWarningMessage,
+} from "../runtime/core/early-warning-core.js";
 import { createEarlyWarningDeliveryHooks } from "../runtime/hooks/early-warning-delivery-hooks.js";
 import { createCompactionWarningHooks } from "../runtime/hooks/session-compact-hooks.js";
 import {
@@ -181,9 +184,7 @@ describe("session compact hooks", () => {
 			ctx: {},
 			config: fixture.config,
 			session: {
-				beforeWarnings: 0,
-				afterWarnings: 0,
-				earlyWarnings: 0,
+				turnCount: 0,
 			},
 		});
 
@@ -221,12 +222,14 @@ describe("session compact hooks", () => {
 				string,
 				{
 					earlyWarnings: number;
+					turnCount?: number;
 					cooldownUntilTurn?: number;
 					signals?: { lastReasonCode?: string; lastRunId?: string };
 				}
 			>;
 		};
 		expect(state.sessions["agent:main:main"]?.earlyWarnings).toBe(1);
+		expect(state.sessions["agent:main:main"]?.turnCount).toBe(1);
 		expect(state.sessions["agent:main:main"]?.cooldownUntilTurn).toBe(4);
 		expect(state.sessions["agent:main:main"]?.signals?.lastReasonCode).toBe(
 			"history_chars",
@@ -259,6 +262,183 @@ describe("session compact hooks", () => {
 		);
 
 		expect(second).toBeUndefined();
+	});
+
+	it("redelivers early warning after enough subsequent real turns advance past cooldown", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-1",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-1" },
+		);
+		const first = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "hello" },
+			{ sessionKey: "agent:main:main", runId: "run-1" },
+		);
+
+		expect(first?.handled).toBe(true);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-2",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "turn 2" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-2" },
+		);
+		await compactionHooks.llmInput(
+			{
+				runId: "run-3",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "turn 3" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-3" },
+		);
+		await compactionHooks.llmInput(
+			{
+				runId: "run-4",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "turn 4" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-4" },
+		);
+
+		const recovered = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "hello again" },
+			{ sessionKey: "agent:main:main", runId: "run-4" },
+		);
+
+		expect(recovered?.handled).toBe(true);
+		expect(recovered?.reason).toBe("session-bloat-early-warning");
+	});
+
+	it("does not replay a stored early-warning signal onto a different run", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-stored",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-stored" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-later" },
+		);
+
+		expect(result).toBeUndefined();
+	});
+
+	it("replays a stored early-warning signal later in the same run", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-stored",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-stored" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-stored" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply).toEqual({
+			text: buildStoredEarlyWarningMessage({
+				config: fixture.config,
+				signals: {
+					lastSeverity: "warning",
+					lastReasonCode: "history_chars",
+				},
+			}),
+		});
+	});
+
+	it("prefers stored token signals over char heuristics when building delivery copy", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-tokens",
+				usage: {
+					input: 171000,
+				},
+			},
+			{ sessionKey: "agent:main:main", runId: "run-tokens" },
+		);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-tokens",
+				systemPrompt: "small prompt",
+				prompt: "small user message",
+				historyMessages: [{ role: "user", content: "short" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-tokens" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-tokens" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply?.text).toContain("input is already very large");
+	});
+
+	it("returns only synthetic visible reply payload semantics on before_agent_reply delivery", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-shape",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-shape" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-shape" },
+		);
+
+		expect(result).toEqual({
+			handled: true,
+			reply: {
+				text: expect.any(String),
+			},
+			reason: "session-bloat-early-warning",
+		});
+		expect(Object.keys(result ?? {})).toEqual(["handled", "reply", "reason"]);
 	});
 });
 
