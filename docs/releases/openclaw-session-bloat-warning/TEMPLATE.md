@@ -8,7 +8,7 @@
 - Tag commit:
 - GitHub Release URL:
 - GitHub notes mode: `tracked file only` or `generated + mirrored`
-- Publish flow: `manual ClawHub archive upload` or `clawhub package publish`
+- Publish flow: `github-only`, `manual ClawHub archive upload`, or `clawhub package publish`
 - Source commit:
 - PR:
 
@@ -23,7 +23,7 @@
 - `pnpm build`
 - `pnpm test`
 - `pnpm pack:smoke`
-- `clawhub package publish ./openclaw-session-bloat-warning --dry-run`
+- optional manual ClawHub preflight notes
 
 ## Operator Copy
 
@@ -37,5 +37,6 @@ openclaw-session-bloat-warning vX.Y.Z
 
 ## Publish Result
 
-- Status:
+- GitHub Release status:
+- ClawHub publish status:
 - Operator notes:

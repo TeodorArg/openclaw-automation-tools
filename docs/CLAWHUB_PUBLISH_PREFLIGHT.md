@@ -104,9 +104,10 @@ For this repo, treat a package release as the bounded sequence:
 - merge to `main` and sync local `main`
 - package-qualified git tag creation in the form `<package-slug>/vX.Y.Z`
 - GitHub Release publication from that pushed tag
-- manual ClawHub preflight or dry-run confirmation
-- the real ClawHub publish or manual archive upload
 - a tracked release record under `docs/releases/<package-slug>/`
+
+Default local agent behavior in this repo is GitHub-only publication.
+Treat ClawHub preflight, real ClawHub publish, and manual archive upload as optional operator steps unless the user explicitly asks for them.
 
 Official OpenClaw publish guidance accepts a local folder, `owner/repo`, `owner/repo@ref`, or a GitHub URL as the package source, so GitHub Release objects are not required by ClawHub itself.
 They are still required by this repo's public release policy because GitHub Releases are tag-backed, public, and auditable for a multi-package public repo.
@@ -118,8 +119,9 @@ Use local `release-lane` for one package at a time when a release is being prepa
 Its bounded ownership is:
 - align release-scoped versions across `package.json`, `openclaw.plugin.json`, and release-note artifacts
 - run `node scripts/release-prep.mjs` for one live package at a time
-- run or verify package preflight and `clawhub package publish ... --dry-run`
-- prepare the short Markdown text used for GitHub Release and manual ClawHub release or archive upload flows
+- run or verify the package verification minimum
+- preserve manual ClawHub operator instructions in package README and tracked release notes when they exist
+- prepare the short Markdown text used for GitHub Release first, plus manual ClawHub release or archive upload flows when explicitly needed
 - draft the tracked release note file under `docs/releases/<package-slug>/`
 
 Keep the live publishable package list in `docs/PLUGIN_PACKAGE_CANON.md`; do not move that ownership into the release lane.
@@ -183,6 +185,8 @@ For local linked installs into a Docker gateway or other separate runtime enviro
 - run one `docker exec` per plugin and wait for the gateway to come back between installs; keep that helper in the Docker/OpenClaw runtime repo rather than hardcoding it into the plugin-packages repo
 
 These checks extend beyond the CI verification minimum and remain an explicit manual pre-publish gate unless later automated in package scripts or CI.
+
+They are not part of the default local-agent public-release closure unless the user explicitly asks for ClawHub publication.
 
 Current runtime coverage to publish:
 - setup doctor

@@ -7,14 +7,15 @@ Release storage contract:
 - use one package directory per live publishable plugin package
 - keep a package index at `docs/releases/<package-slug>/README.md`
 - keep one small Markdown note per released version at `docs/releases/<package-slug>/vX.Y.Z.md`
-- use that per-version file as the canonical operator copy-paste source for GitHub Release text and manual ClawHub release or archive upload flows
+- use that per-version file as the canonical operator copy-paste source for GitHub Release text and optional manual ClawHub release or archive upload flows
 - keep transient release prep checklists in `.local-planning/`, not in `docs/releases/`
 - use package-qualified tags in the form `<package-slug>/vX.Y.Z`
 
 Release boundary:
 
 - a merged PR is not a package release by itself
-- for this repo, a release closes when the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, ClawHub publish or manual upload is complete, and the corresponding `vX.Y.Z.md` record is stored
+- for this repo, the default public release closes when the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, and the corresponding `vX.Y.Z.md` record is stored
+- ClawHub publish or manual archive upload is optional by default and remains a separate operator step unless explicitly requested for that release
 - GitHub Releases are public release records for this repo even though ClawHub itself does not require them for package publication
 
 Required fields for each `docs/releases/<package-slug>/vX.Y.Z.md`:
