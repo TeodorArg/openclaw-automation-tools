@@ -5,6 +5,10 @@ import { describe, expect, it } from "vitest";
 
 import type { SessionBloatWarningConfig } from "../runtime/config/plugin-config.js";
 import { createCompactionWarningHooks } from "../runtime/hooks/session-compact-hooks.js";
+import {
+	WARNING_STATE_PLUGIN_ID,
+	WARNING_STATE_SCHEMA_VERSION,
+} from "../runtime/state/state-types.js";
 
 describe("session compact hooks", () => {
 	it("adds a pre-compaction warning and persists state", async () => {
@@ -27,6 +31,8 @@ describe("session compact hooks", () => {
 				{ beforeWarnings: number; afterWarnings: number }
 			>;
 		};
+		expect(state.schemaVersion).toBe(WARNING_STATE_SCHEMA_VERSION);
+		expect(state.pluginId).toBe(WARNING_STATE_PLUGIN_ID);
 		expect(state.sessions["agent:main:main"]?.beforeWarnings).toBe(1);
 	});
 

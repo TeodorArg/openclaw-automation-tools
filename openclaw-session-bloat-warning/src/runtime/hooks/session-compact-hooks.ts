@@ -5,6 +5,7 @@ import type {
 } from "../../../api.js";
 import type { SessionBloatWarningConfig } from "../config/plugin-config.js";
 import { loadWarningState, saveWarningState } from "../state/plugin-state.js";
+import { getSessionState } from "../state/state-normalize.js";
 import {
 	buildPostCompactionNote,
 	buildPreCompactionWarning,
@@ -95,19 +96,4 @@ function appendMessage(
 
 	event.messages.push(message);
 	return true;
-}
-
-function getSessionState(
-	state: Awaited<ReturnType<typeof loadWarningState>>,
-	sessionKey: string | undefined,
-) {
-	const key =
-		sessionKey && sessionKey.trim().length > 0 ? sessionKey : "__default__";
-
-	state.sessions[key] ??= {
-		beforeWarnings: 0,
-		afterWarnings: 0,
-	};
-
-	return state.sessions[key];
 }
