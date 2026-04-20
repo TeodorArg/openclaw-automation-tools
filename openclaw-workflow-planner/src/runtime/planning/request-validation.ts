@@ -10,6 +10,8 @@ const AllowedSkillActions = {
 		"plan_snapshot",
 		"task_add",
 		"task_done",
+		"task_remove",
+		"task_reopen",
 		"implementation_brief",
 		"idea_close",
 	]),
@@ -26,6 +28,8 @@ const AllowedSkillActions = {
 		"plan_snapshot",
 		"task_add",
 		"task_done",
+		"task_remove",
+		"task_reopen",
 		"implementation_brief",
 		"idea_close",
 	]),
@@ -43,6 +47,8 @@ export type PlannerAction =
 	| "plan_snapshot"
 	| "task_add"
 	| "task_done"
+	| "task_remove"
+	| "task_reopen"
 	| "implementation_brief"
 	| "idea_close";
 
