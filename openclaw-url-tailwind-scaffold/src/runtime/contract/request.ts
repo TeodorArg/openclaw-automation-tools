@@ -11,17 +11,28 @@ export const SUPPORTED_COMPONENT_SPLIT = [
 	"content",
 	"footer",
 ] as const;
+const SUPPORTED_OUTPUT_MODE = [
+	"scaffold_summary",
+	"page_contract",
+] as const;
+const SUPPORTED_FRAMEWORK_HINT = ["html"] as const;
+const SUPPORTED_ACQUISITION_MODE = [
+	"fetch-backed",
+	"browser-assisted",
+	"unresolved",
+] as const;
 
 export type ComponentSplit = (typeof SUPPORTED_COMPONENT_SPLIT)[number];
 export type AcquisitionMode =
 	| "fetch-backed"
 	| "browser-assisted"
 	| "unresolved";
+export type OutputMode = "scaffold_summary" | "page_contract";
 
 export type ReferencePageRequest = {
 	url: string;
 	goal?: string;
-	outputMode?: "scaffold_summary";
+	outputMode?: OutputMode;
 	componentSplit?: ComponentSplit[];
 	frameworkHint?: "html";
 	acquisitionMode?: AcquisitionMode;
@@ -34,7 +45,7 @@ export type UrlTailwindScaffoldRequest = {
 	skillName: typeof URL_TAILWIND_SCAFFOLD_SKILL_NAME;
 	url?: string;
 	goal?: string;
-	outputMode?: "scaffold_summary";
+	outputMode?: OutputMode;
 	componentSplit?: ComponentSplit[];
 	frameworkHint?: "html";
 	acquisitionMode?: AcquisitionMode;
@@ -47,7 +58,7 @@ export type NormalizedUrlTailwindScaffoldRequest = {
 	skillName: typeof URL_TAILWIND_SCAFFOLD_SKILL_NAME;
 	url: string;
 	goal?: string;
-	outputMode: "scaffold_summary";
+	outputMode: OutputMode;
 	componentSplit: ComponentSplit[];
 	frameworkHint: "html";
 	acquisitionMode: AcquisitionMode;
@@ -84,7 +95,7 @@ export const UrlTailwindScaffoldRequestSchema = {
 		},
 		outputMode: {
 			type: "string",
-			enum: ["scaffold_summary"],
+			enum: [...SUPPORTED_OUTPUT_MODE],
 		},
 		componentSplit: {
 			type: "array",
@@ -95,11 +106,11 @@ export const UrlTailwindScaffoldRequestSchema = {
 		},
 		frameworkHint: {
 			type: "string",
-			enum: ["html"],
+			enum: [...SUPPORTED_FRAMEWORK_HINT],
 		},
 		acquisitionMode: {
 			type: "string",
-			enum: ["fetch-backed", "browser-assisted", "unresolved"],
+			enum: [...SUPPORTED_ACQUISITION_MODE],
 		},
 	},
 } as const;
@@ -145,6 +156,13 @@ function optionalStringArray(
 
 function isComponentSplit(value: string): value is ComponentSplit {
 	return (SUPPORTED_COMPONENT_SPLIT as readonly string[]).includes(value);
+}
+
+function hasOwn(
+	value: Record<string, unknown>,
+	key: string,
+): key is keyof typeof value {
+	return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function optionalComponentSplit(value: unknown): ComponentSplit[] | undefined {
@@ -229,19 +247,29 @@ function resolveAcquisitionMode(
 	value: unknown,
 	commandObject?: Record<string, unknown>,
 ): AcquisitionMode | undefined {
-	const candidate =
-		typeof value === "string" && value.trim().length > 0
-			? value
-			: typeof commandObject?.acquisitionMode === "string"
-				? commandObject.acquisitionMode
-				: undefined;
+	if (value !== undefined) {
+		const candidate = requireString(value, "acquisitionMode");
+		if (
+			(SUPPORTED_ACQUISITION_MODE as readonly string[]).includes(candidate)
+		) {
+			return candidate as AcquisitionMode;
+		}
 
-	if (
-		candidate === "browser-assisted" ||
-		candidate === "unresolved" ||
-		candidate === "fetch-backed"
-	) {
-		return candidate;
+		throw new Error(`Unsupported acquisitionMode: ${candidate}.`);
+	}
+
+	if (commandObject && hasOwn(commandObject, "acquisitionMode")) {
+		const candidate = requireString(
+			commandObject.acquisitionMode,
+			"command.acquisitionMode",
+		);
+		if (
+			(SUPPORTED_ACQUISITION_MODE as readonly string[]).includes(candidate)
+		) {
+			return candidate as AcquisitionMode;
+		}
+
+		throw new Error(`Unsupported command.acquisitionMode: ${candidate}.`);
 	}
 
 	return undefined;
@@ -251,28 +279,53 @@ function resolveFrameworkHint(
 	value: unknown,
 	commandObject?: Record<string, unknown>,
 ): "html" | undefined {
-	const candidate =
-		value === "html"
-			? value
-			: commandObject?.frameworkHint === "html"
-				? "html"
-				: undefined;
+	if (value !== undefined) {
+		const candidate = requireString(value, "frameworkHint");
+		if ((SUPPORTED_FRAMEWORK_HINT as readonly string[]).includes(candidate)) {
+			return candidate as "html";
+		}
 
-	return candidate;
+		throw new Error(`Unsupported frameworkHint: ${candidate}.`);
+	}
+
+	if (commandObject && hasOwn(commandObject, "frameworkHint")) {
+		const candidate = requireString(
+			commandObject.frameworkHint,
+			"command.frameworkHint",
+		);
+		if ((SUPPORTED_FRAMEWORK_HINT as readonly string[]).includes(candidate)) {
+			return candidate as "html";
+		}
+
+		throw new Error(`Unsupported command.frameworkHint: ${candidate}.`);
+	}
+
+	return undefined;
 }
 
 function resolveOutputMode(
 	value: unknown,
 	commandObject?: Record<string, unknown>,
-): "scaffold_summary" | undefined {
-	const candidate =
-		value === "scaffold_summary"
-			? value
-			: commandObject?.outputMode === "scaffold_summary"
-				? "scaffold_summary"
-				: undefined;
+): OutputMode | undefined {
+	if (value !== undefined) {
+		const candidate = requireString(value, "outputMode");
+		if ((SUPPORTED_OUTPUT_MODE as readonly string[]).includes(candidate)) {
+			return candidate as OutputMode;
+		}
 
-	return candidate;
+		throw new Error(`Unsupported outputMode: ${candidate}.`);
+	}
+
+	if (commandObject && hasOwn(commandObject, "outputMode")) {
+		const candidate = requireString(commandObject.outputMode, "command.outputMode");
+		if ((SUPPORTED_OUTPUT_MODE as readonly string[]).includes(candidate)) {
+			return candidate as OutputMode;
+		}
+
+		throw new Error(`Unsupported command.outputMode: ${candidate}.`);
+	}
+
+	return undefined;
 }
 
 function resolveComponentSplit(

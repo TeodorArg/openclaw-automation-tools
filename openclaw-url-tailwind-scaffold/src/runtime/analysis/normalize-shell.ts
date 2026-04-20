@@ -41,8 +41,6 @@ export function buildNormalizedTailwindAppShell(
 		"content",
 		"footer",
 	];
-	const sourceBacked = acquisition.sourceBacked;
-
 	return {
 		schemaVersion: 1,
 		kind: "normalized-url-tailwind-shell",
@@ -54,15 +52,15 @@ export function buildNormalizedTailwindAppShell(
 		},
 		regions: componentSplit.map((name) => ({
 			name,
-			sourceBacked,
-			note: sourceBacked
-				? `${name} is labeled source-backed only as a synthetic request-mode signal in the current reference-URL-driven slice.`
-				: `${name} is kept as an inferred placeholder because live page extraction is not active for this request mode.`,
+			sourceBacked: false,
+			note: acquisition.sourceBacked
+				? `${name} remains inferred in the current slice. The plugin acquired source HTML, but region extraction and selector derivation are not implemented yet.`
+				: `${name} is kept as an inferred placeholder because live page extraction did not produce usable HTML evidence for this request.`,
 		})),
 		tokens: {
 			colors: {
-				status: sourceBacked ? "source-backed" : "inferred",
-				note: "Color tokens stay semantic and map into Tailwind CSS v4 `@theme` variables.",
+				status: "inferred",
+				note: "Color tokens stay semantic and map into Tailwind CSS v4 `@theme` variables. The current slice does not derive them from fetched HTML yet.",
 			},
 			spacing: {
 				status: "inferred",
@@ -85,10 +83,10 @@ export function buildNormalizedTailwindAppShell(
 		},
 		optionalSurfaces: ["settings drawer", "notifications", "overlays"],
 		unresolvedAreas:
-			acquisition.mode === "fetch-backed"
+			acquisition.sourceBacked
 				? []
 				: [
-						"Non-default acquisition modes are outside the current shipped reference-URL-driven v1 scope.",
+						"Static acquisition did not yield usable source HTML. Region extraction, selector derivation, and token extraction remain unresolved.",
 					],
 	};
 }
