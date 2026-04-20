@@ -1,6 +1,6 @@
 ---
 name: openclaw-url-tailwind-scaffold
-description: Use when the user needs bounded reference-URL-driven scaffold synthesis and a Tailwind CSS v4 scaffold summary through `url_tailwind_scaffold_action`.
+description: Use when the user needs bounded reference-URL-driven scaffold synthesis and a Tailwind CSS v4 scaffold summary or page contract through `url_tailwind_scaffold_action`.
 user-invocable: true
 command-dispatch: tool
 command-tool: url_tailwind_scaffold_action
@@ -9,7 +9,7 @@ command-arg-mode: raw
 
 # OpenClaw URL Tailwind Scaffold
 
-Use this bundled skill for bounded `reference URL -> normalize -> scaffold summary` work.
+Use this bundled skill for bounded `reference URL -> normalize -> scaffold summary or page contract` work.
 
 ## Primary Surface
 
@@ -20,16 +20,21 @@ Primary user-facing tool:
 The skill should stay narrow:
 
 - accept the canonical action `analyze_reference_page`
-- work from a reference page URL as input, not as a fetched inspected document
-- return acquisition metadata, normalized shell regions, synthetic `sourceBacked` vs `inferred` notes derived from request mode, and a Tailwind CSS v4 scaffold summary
+- work from a reference page URL as input and, for `fetch-backed`, perform bounded static HTML acquisition
+- return acquisition metadata, normalized shell regions, bounded source-document signals, synthesized Tailwind v4 token candidates, and either a scaffold summary or a structured page contract
 - keep optional surfaces reported as optional or unresolved instead of fabricating them
+- keep multi-agent orchestration outside the plugin boundary
+- hand off to `openclaw-url-tailwind-scaffold-orchestrator` when the user wants per-island fan-out or persisted artifact collection above `page_contract`
 
 ## Supported V1 Scope
 
-- reference-URL-driven scaffold synthesis without live page fetch or inspection
+- reference-URL-driven scaffold synthesis with bounded static HTML acquisition for `fetch-backed`
+- bounded static DOM/island extraction for shell landmarks from usable fetched HTML
+- bounded Tailwind v4 token synthesis and utility-candidate mapping from shell structure
 - default shell split: `app-shell`, `sidebar`, `header`, `content`, `footer`
-- Tailwind CSS v4 summary output
+- Tailwind CSS v4 summary output or `page_contract` output
 - componentized HTML-first target unless `frameworkHint` explicitly narrows it
+- unmatched regions remain explicit and inferred when no confident static DOM landmark is found
 
 ## Preferred Raw Command Forms
 
@@ -47,7 +52,8 @@ Pass either:
 - no state file
 - no pixel-perfect clone claim
 - no raw donor CSS dump
-- no claim that live fetch-backed, JS-heavy, browser-assisted, or auth-gated analysis is supported in v1
+- no claim that JS-heavy, browser-assisted, or auth-gated analysis is supported in the current slice
+- no plugin-owned subagent spawning or multi-step orchestration
 
 ## Output Bar
 

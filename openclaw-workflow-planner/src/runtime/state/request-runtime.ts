@@ -10,10 +10,15 @@ export function deriveRequestPhase(input: {
 	hasResearch: boolean;
 	hasPlan: boolean;
 	hasTasks: boolean;
+	hasCurrentSliceBrief: boolean;
 	hasCloseNote: boolean;
 }): WorkflowPhase {
 	if (input.hasCloseNote || input.status === "closed") {
 		return "done";
+	}
+
+	if (input.hasPlan && input.hasCurrentSliceBrief) {
+		return "execution";
 	}
 
 	if (input.hasPlan) {
@@ -77,6 +82,7 @@ export function createRequestRuntimeRecord(input: {
 	hasResearch: boolean;
 	hasPlan: boolean;
 	hasTasks: boolean;
+	hasCurrentSliceBrief: boolean;
 	hasCloseNote: boolean;
 	updatedAt: string;
 }): RequestRuntimeRecord {

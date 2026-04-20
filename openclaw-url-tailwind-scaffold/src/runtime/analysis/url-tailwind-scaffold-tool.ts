@@ -48,11 +48,11 @@ export function createUrlTailwindScaffoldTool(
 	return {
 		name: URL_TAILWIND_SCAFFOLD_TOOL_NAME,
 		description:
-			"Accepts a reference page URL and returns a bounded Tailwind CSS v4 app-shell scaffold summary.",
+			"Accepts a reference page URL and returns a bounded Tailwind CSS v4 scaffold summary or page contract.",
 		parameters: UrlTailwindScaffoldRequestSchema,
 		async execute(_toolCallId: string, params: UrlTailwindScaffoldRequest) {
 			const request = validateUrlTailwindScaffoldRequest(params);
-			return formatJsonContent(analyzeReferencePage(request));
+			return formatJsonContent(await analyzeReferencePage(request));
 		},
 	};
 }

@@ -5,11 +5,9 @@ description: Use when the user needs to create an idea, attach typed research, p
 
 # OpenClaw Workflow Planner
 
-This skill provides a planning-first layer over `workflow_planner_action` and
-uses `WORKFLOW_PLAN.md` as the single persisted state surface.
+This skill provides a planning-first orchestration layer over `workflow_planner_action`, and persisted current brief presence can move the active request runtime from `planning` to `execution` for the current slice while `WORKFLOW_PLAN.md` remains the single persisted state surface.
 
-Control-plane request, entity, and pointer metadata is rebuilt from that
-state; do not imply separate persisted plan, task, or brief files.
+Control-plane request, entity, and pointer metadata, including rebuilt `ExecutionBrief` records from persisted `currentBriefBySlice` summaries, is rebuilt from that state; do not imply separate persisted plan, task, or brief files outside `WORKFLOW_PLAN.md`.
 
 ## Когда использовать
 
@@ -28,7 +26,7 @@ state; do not imply separate persisted plan, task, or brief files.
 6. If an accepted plan already exists and changes materially, use `plan_refresh`.
 7. Inspect the current state with `idea_get`, `idea_list`, or `plan_snapshot`.
 8. For manual plan tracking, use `task_add`, prefer `task_done` and `task_remove` by stable `taskId`, and use `task_reopen` to intentionally reopen work without relying on task text matching.
-9. When a bounded slice starts, run `implementation_brief` to get a derived handoff payload with structured open tasks for that slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance. Successful `task_done`, `task_remove`, and `task_reopen` responses now echo the same remaining-open-task guidance for immediate follow-through.
+9. When a bounded slice starts, run `implementation_brief` to get a derived handoff payload with structured open tasks for that slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance. The action also records current brief presence in persisted planner state and control-plane entities without creating a separate brief file. Successful task actions, including `task_add`, `task_done`, `task_remove`, and `task_reopen`, now echo the same remaining-open-task guidance for immediate follow-through.
 10. Run `idea_close` only after the idea is accepted, has a canonical plan, all tracked tasks are done, and you can record the delivered outcome in the close note.
 
 ## Skill Routing

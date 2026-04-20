@@ -24,6 +24,15 @@ export class PlannerConcurrentModificationError extends Error {
 	}
 }
 
+export class PlannerLockContentionError extends Error {
+	constructor(filePath: string) {
+		super(
+			`Planner state is currently locked for ${filePath}. Wait for the active save to finish, then retry the action.`,
+		);
+		this.name = "PlannerLockContentionError";
+	}
+}
+
 function hashPlannerMarkdown(markdown: string): string {
 	return createHash("sha256").update(markdown).digest("hex");
 }
@@ -276,7 +285,18 @@ export async function savePlannerState(
 	const tempPath = `${filePath}.${process.pid}.${Date.now().toString(36)}${TEMPFILE_SUFFIX}`;
 
 	await mkdir(dirname(filePath), { recursive: true });
-	const lockHandle = await open(lockPath, "wx");
+	const lockHandle = await open(lockPath, "wx").catch((error: unknown) => {
+		if (
+			error &&
+			typeof error === "object" &&
+			"code" in error &&
+			error.code === "EEXIST"
+		) {
+			throw new PlannerLockContentionError(filePath);
+		}
+
+		throw error;
+	});
 
 	try {
 		const currentMarkdown = await readPlannerMarkdownIfPresent(filePath);

@@ -3,6 +3,11 @@ import type {
 	NormalizedUrlTailwindScaffoldRequest,
 } from "../contract/request.js";
 import type { AcquisitionMetadata } from "./acquisition.js";
+import type { ExtractedDomIslands } from "./extract-dom-islands.js";
+import {
+	buildTailwindTokenSet,
+	type TailwindTokenSet,
+} from "./tailwind-tokens.js";
 
 export type NormalizedTailwindAppShell = {
 	schemaVersion: 1;
@@ -18,11 +23,7 @@ export type NormalizedTailwindAppShell = {
 		sourceBacked: boolean;
 		note: string;
 	}>;
-	tokens: {
-		colors: { status: "source-backed" | "inferred"; note: string };
-		spacing: { status: "source-backed" | "inferred"; note: string };
-		typography: { status: "source-backed" | "inferred"; note: string };
-	};
+	tokens: TailwindTokenSet;
 	componentPlan: {
 		generatedFiles: string[];
 	};
@@ -33,6 +34,7 @@ export type NormalizedTailwindAppShell = {
 export function buildNormalizedTailwindAppShell(
 	request: NormalizedUrlTailwindScaffoldRequest,
 	acquisition: AcquisitionMetadata,
+	extraction: ExtractedDomIslands,
 ): NormalizedTailwindAppShell {
 	const componentSplit = request.componentSplit ?? [
 		"app-shell",
@@ -41,8 +43,6 @@ export function buildNormalizedTailwindAppShell(
 		"content",
 		"footer",
 	];
-	const sourceBacked = acquisition.sourceBacked;
-
 	return {
 		schemaVersion: 1,
 		kind: "normalized-url-tailwind-shell",
@@ -52,27 +52,26 @@ export function buildNormalizedTailwindAppShell(
 			url: acquisition.sourceUrl,
 			acquisitionMode: acquisition.mode,
 		},
-		regions: componentSplit.map((name) => ({
-			name,
-			sourceBacked,
-			note: sourceBacked
-				? `${name} is labeled source-backed only as a synthetic request-mode signal in the current reference-URL-driven slice.`
-				: `${name} is kept as an inferred placeholder because live page extraction is not active for this request mode.`,
-		})),
-		tokens: {
-			colors: {
-				status: sourceBacked ? "source-backed" : "inferred",
-				note: "Color tokens stay semantic and map into Tailwind CSS v4 `@theme` variables.",
-			},
-			spacing: {
-				status: "inferred",
-				note: "Spacing scale is normalized into a reusable shell rhythm rather than donor CSS classes.",
-			},
-			typography: {
-				status: "inferred",
-				note: "Typography defaults to a bounded app-shell hierarchy instead of page-clone fidelity.",
-			},
-		},
+		regions: componentSplit.map((name) => {
+			const matchedIsland = extraction.islands.find(
+				(island) => island.regionType === name,
+			);
+
+			return {
+				name,
+				sourceBacked: Boolean(matchedIsland),
+				note: matchedIsland
+					? matchedIsland.note
+					: acquisition.sourceBacked
+						? `${name} stayed unresolved after static HTML parsing. No confident DOM landmark matched this region in the current slice.`
+						: `${name} is kept as an inferred placeholder because live page extraction did not produce usable HTML evidence for this request.`,
+			};
+		}),
+		tokens: buildTailwindTokenSet({
+			acquisition,
+			extraction,
+			componentSplit,
+		}),
 		componentPlan: {
 			generatedFiles: [
 				"app.css",
@@ -84,11 +83,18 @@ export function buildNormalizedTailwindAppShell(
 			],
 		},
 		optionalSurfaces: ["settings drawer", "notifications", "overlays"],
-		unresolvedAreas:
-			acquisition.mode === "fetch-backed"
-				? []
-				: [
-						"Non-default acquisition modes are outside the current shipped reference-URL-driven v1 scope.",
-					],
+		unresolvedAreas: acquisition.sourceBacked
+			? componentSplit
+					.filter(
+						(name) =>
+							!extraction.islands.some((island) => island.regionType === name),
+					)
+					.map(
+						(name) =>
+							`${name} could not be matched confidently from fetched HTML in the current static DOM slice.`,
+					)
+			: [
+					"Static acquisition did not yield usable source HTML. Region extraction, selector derivation, and token extraction remain unresolved.",
+				],
 	};
 }

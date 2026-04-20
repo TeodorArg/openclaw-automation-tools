@@ -9,7 +9,7 @@ export default definePluginEntry({
 	id: "openclaw-url-tailwind-scaffold",
 	name: "OpenClaw URL Tailwind Scaffold",
 	description:
-		"Analyzes a reference page URL and returns a bounded Tailwind CSS v4 app-shell scaffold summary.",
+		"Analyzes a reference page URL and returns a bounded Tailwind CSS v4 scaffold summary or page contract.",
 	register(api: OpenClawPluginApi) {
 		api.registerTool(
 			(toolContext: { agentId?: string; sessionKey?: string } = {}) =>

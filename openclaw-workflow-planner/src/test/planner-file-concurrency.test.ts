@@ -1,10 +1,11 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, open, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
 	loadPlannerState,
 	PlannerConcurrentModificationError,
+	PlannerLockContentionError,
 	parsePlannerMarkdown,
 	savePlannerState,
 } from "../runtime/state/planner-file.js";
@@ -56,6 +57,32 @@ describe("planner file concurrency guard", () => {
 			await readFile(plannerFilePath, "utf8"),
 		);
 		expect(persisted.ideas.map((idea) => idea.slug)).toEqual(["idea-a"]);
+	});
+
+	it("returns a planner lock contention error when the lock file is already held", async () => {
+		const plannerFilePath = await createPlannerFilePath();
+		const lockHandle = await open(`${plannerFilePath}.lock`, "wx");
+		const loaded = await loadPlannerState({ plannerFilePath });
+		const nextState = upsertIdea(loaded.state, {
+			slug: "idea-a",
+			name: "idea a",
+			problem: "first problem",
+			requestedOutcome: "first outcome",
+			createdAt: "2026-04-20T00:00:00.000Z",
+			status: "draft",
+			tasks: [],
+		});
+
+		try {
+			await expect(
+				savePlannerState(nextState, {
+					plannerFilePath,
+					expectedRevision: loaded.revision,
+				}),
+			).rejects.toBeInstanceOf(PlannerLockContentionError);
+		} finally {
+			await lockHandle.close();
+		}
 	});
 
 	it("returns a fresh revision after a successful save", async () => {

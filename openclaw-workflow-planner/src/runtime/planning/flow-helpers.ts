@@ -3,6 +3,7 @@ import type {
 	PlannerIdea,
 	PlannerResearch,
 	PlannerState,
+	PlannerTask,
 } from "../state/planner-state.js";
 
 export type PlannerToolParams = {
@@ -32,6 +33,25 @@ export type PlannerToolParams = {
 	taskId?: string;
 	closeNote?: string;
 };
+
+export type TaskTargetContext = {
+	targetTask: PlannerTask;
+	targetTaskId: string;
+	targetTaskIndex: number;
+	targetSelectorHint: string;
+};
+
+export function buildTaskTargetContext(
+	task: PlannerTask,
+	taskIndex: number,
+): TaskTargetContext {
+	return {
+		targetTask: task,
+		targetTaskId: task.id,
+		targetTaskIndex: taskIndex,
+		targetSelectorHint: `taskId=${task.id} | taskIndex=${taskIndex}`,
+	};
+}
 
 export type FlowContext = {
 	filePath: string;
@@ -69,6 +89,24 @@ export function requireAcceptedIdea(idea: PlannerIdea): PlannerIdea {
 
 	throw new Error(
 		`Idea ${idea.slug} must be accepted and have a canonical plan for this action.`,
+	);
+}
+
+export function requireCurrentSliceBrief(idea: PlannerIdea): PlannerIdea {
+	const acceptedIdea = requireAcceptedIdea(idea);
+	const plan = acceptedIdea.plan;
+	if (!plan) {
+		throw new Error(
+			`Idea ${acceptedIdea.slug} must be accepted and have a canonical plan for this action.`,
+		);
+	}
+	const currentSlice = plan.currentSlice;
+	if (acceptedIdea.currentBriefBySlice?.[currentSlice]) {
+		return acceptedIdea;
+	}
+
+	throw new Error(
+		`Idea ${acceptedIdea.slug} requires implementation_brief for the current slice before execution-state task progress can continue. Run implementation_brief for ${currentSlice} first.`,
 	);
 }
 

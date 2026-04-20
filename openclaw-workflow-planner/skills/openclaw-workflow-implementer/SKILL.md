@@ -5,8 +5,7 @@ description: Use when Idea Gate is already passed, the accepted plan lives in WO
 
 # OpenClaw Workflow Implementer
 
-This skill operates after the planning phase once an accepted plan exists in
-`WORKFLOW_PLAN.md`.
+This skill operates once an accepted plan exists in `WORKFLOW_PLAN.md`, and the active request may already be in `execution` when persisted current brief presence marks the current slice as underway.
 
 ## Focus
 
@@ -14,7 +13,7 @@ This skill operates after the planning phase once an accepted plan exists in
 - inspect current state through `idea_get` or `plan_snapshot`
 - choose the current slice
 - update task tracking through `task_add` / `task_done` / `task_remove` / `task_reopen` when needed
-- request `implementation_brief` as a derived handoff payload with structured open-task details for the current slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance; successful `task_done`, `task_remove`, and `task_reopen` responses now also echo the remaining-open-task guidance for immediate next-step use
+- request `implementation_brief` as a derived handoff payload with structured open-task details for the current slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance; it also records current brief presence in persisted planner state and control-plane entities without creating a separate brief file; successful task actions, including `task_add`, `task_done`, `task_remove`, and `task_reopen`, now also echo the remaining-open-task guidance for immediate next-step use
 - finish the slice, then close the idea with `idea_close` only when the accepted plan is complete, all tracked tasks are done, and you can record the delivered outcome clearly
 - execute one reviewable intent at a time
 
@@ -23,7 +22,7 @@ This skill operates after the planning phase once an accepted plan exists in
 - do not widen the slice without cause
 - do not mix planning, docs cleanup, and runtime implementation unless the slice requires it
 - do not describe local governance surfaces as shipped runtime behavior
-- treat `WORKFLOW_PLAN.md` as the only persisted state file; `implementation_brief` does not create a separate persisted brief file
+- treat `WORKFLOW_PLAN.md` as the only persisted state file; `implementation_brief` persists the current slice summary in `currentBriefBySlice` and rebuilds control-plane `ExecutionBrief` metadata from it, but does not create a separate brief file
 - planner-file writes are guarded against stale concurrent overwrite; keep lock/contention handling fail-fast, and if the file changed underneath you, reload current state before retrying instead of forcing a stale write
 - prefer `task_done`, `task_remove`, and `task_reopen` by stable `taskId`; `taskIndex` is legacy compatibility only
 - if execution, verification, or subagent help runs long enough to be noticeable, keep visible progress updates short and alive instead of going silent; report blockers immediately and say what is already confirmed plus the next active step

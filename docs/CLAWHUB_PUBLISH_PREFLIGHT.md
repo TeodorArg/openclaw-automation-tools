@@ -36,6 +36,11 @@ URL-tailwind scaffold package entrypoints:
 - bundled skill `openclaw-url-tailwind-scaffold`
 - typed tool `url_tailwind_scaffold_action`
 - working action `analyze_reference_page`
+- static fetch-backed acquisition for publicly reachable HTML pages is the only live source-backed mode in the current slice
+- bounded static DOM/island extraction is available for shell landmarks when usable fetched HTML exists
+- unmatched shell regions remain inferred placeholders when no confident static DOM landmark is found
+- output may be either a Tailwind CSS v4 scaffold summary or a structured `page_contract`
+- multi-step orchestration, subagent coordination, and file persistence remain outside the plugin boundary
 
 Non-publishable repo docs:
 - `README.md`
@@ -269,11 +274,14 @@ Current session-bloat warning package coverage to publish:
 Current URL-tailwind scaffold package coverage to publish:
 - typed tool `url_tailwind_scaffold_action`
 - working action `analyze_reference_page`
-- bundled skill `openclaw-url-tailwind-scaffold`
-- declared acquisition metadata echoed from the request contract for a reference URL input
+- bundled skills `openclaw-url-tailwind-scaffold` and `openclaw-url-tailwind-scaffold-orchestrator`
+- bounded static fetch-backed acquisition metadata including HTTP and document signals for a reference URL input
 - normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
-- explicit synthetic source-backed versus inferred status labels derived from request mode
-- bounded Tailwind CSS v4 scaffold summary with generated file-tree guidance
+- source-backed shell landmark extraction for matched static DOM regions
+- synthesized Tailwind v4 token candidates and utility candidates remain bounded and inferred from shell structure rather than from donor CSS or computed styles
+- normalized shell regions remain inferred only where no confident static DOM landmark is found
+- bounded Tailwind CSS v4 scaffold summary or structured `page_contract` output
+- packaged orchestration skill and artifact contract describe the outer workflow, while plugin boundary keeps actual multi-step orchestration, subagent coordination, and file persistence external-only
 - raw slash-command dispatch through either a plain URL or a compact JSON payload
 
 ## Commands

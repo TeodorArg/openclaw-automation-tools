@@ -6,10 +6,16 @@ import {
 	syncPlanBlockChecklistWithTasks,
 	updateIdea,
 } from "../state/planner-state.js";
-import type { FlowContext, PlannerToolParams } from "./flow-helpers.js";
+import type {
+	FlowContext,
+	PlannerToolParams,
+	TaskTargetContext,
+} from "./flow-helpers.js";
 import {
 	buildControlPlaneSummary,
+	buildTaskTargetContext,
 	requireAcceptedIdea,
+	requireCurrentSliceBrief,
 	requirePersistedIdea,
 } from "./flow-helpers.js";
 import { summarizeRemainingOpenTasks } from "./implementation-brief.js";
@@ -49,6 +55,9 @@ export async function handleTaskAdd(
 			: existingIdea.plan,
 	}));
 	const saved = await context.save(updatedState, context.pluginConfig);
+	const addedTaskIndex = tasks.length;
+	const targetContext = buildTaskTargetContext(manualTask, addedTaskIndex);
+	const remainingOpenTasks = summarizeRemainingOpenTasks(tasks);
 
 	return {
 		ok: true,
@@ -59,6 +68,11 @@ export async function handleTaskAdd(
 		ideaSlug,
 		plannerFilePath: saved.filePath,
 		addedTask: manualTask,
+		addedTaskId: manualTask.id,
+		addedTaskIndex,
+		addedTaskSelectorHint: targetContext.targetSelectorHint,
+		...targetContext,
+		...remainingOpenTasks,
 		controlPlane: buildControlPlaneSummary(updatedState, ideaSlug),
 		note: "task_add appends one manual unchecked task to an accepted idea.",
 	};
@@ -83,13 +97,10 @@ type TaskCompletionUpdateResult = {
 	ideaSlug: string;
 	plannerFilePath: string;
 	controlPlane: ReturnType<typeof buildControlPlaneSummary>;
-	targetTask: PlannerTask;
-	targetTaskId: string;
-	targetTaskIndex: number;
-	targetSelectorHint: string;
 	remainingOpenTaskCount: number;
 	remainingOpenTaskGuidance: string;
-} & TaskTarget;
+} & TaskTargetContext &
+	TaskTarget;
 
 function resolveTaskTarget(
 	idea: PlannerIdea,
@@ -139,13 +150,14 @@ async function updateTaskCompletionState(
 	action: "task_done" | "task_reopen",
 ): Promise<TaskCompletionUpdateResult> {
 	const ideaSlug = requireIdeaSlug(ideaName);
-	const idea = requireAcceptedIdea(
+	const acceptedIdea = requireAcceptedIdea(
 		requirePersistedIdea(
 			context.state.ideas.find((entry) => entry.slug === ideaSlug),
 			ideaSlug,
 		),
 	);
-	const target = resolveTaskTarget(idea, params, action);
+	const target = resolveTaskTarget(acceptedIdea, params, action);
+	const idea = requireCurrentSliceBrief(acceptedIdea);
 	const targetTaskIndex = target.usedTaskId
 		? idea.tasks.findIndex((entry) => entry.id === target.taskId) + 1
 		: target.taskIndex;
@@ -153,6 +165,7 @@ async function updateTaskCompletionState(
 	if (!targetTask) {
 		throw new Error(`Target task was not found for idea ${idea.slug}.`);
 	}
+	const targetContext = buildTaskTargetContext(targetTask, targetTaskIndex);
 	const tasks = idea.tasks.map((entry, index) => {
 		if (target.usedTaskId) {
 			return entry.id === target.taskId ? { ...entry, done: nextDone } : entry;
@@ -187,10 +200,8 @@ async function updateTaskCompletionState(
 		ideaSlug,
 		plannerFilePath: saved.filePath,
 		controlPlane: buildControlPlaneSummary(updatedState, ideaSlug),
-		targetTask: { ...targetTask, done: nextDone },
-		targetTaskId: targetTask.id,
-		targetTaskIndex,
-		targetSelectorHint: `taskId=${targetTask.id} | taskIndex=${targetTaskIndex}`,
+		...targetContext,
+		targetTask: { ...targetContext.targetTask, done: nextDone },
 		...remainingOpenTasks,
 		...target,
 	};
@@ -263,6 +274,9 @@ export async function handleTaskRemove(
 	const removedTaskIndex = target.usedTaskId
 		? idea.tasks.findIndex((entry) => entry.id === target.taskId) + 1
 		: target.taskIndex;
+	const removedTaskContext = removedTask
+		? buildTaskTargetContext(removedTask, removedTaskIndex)
+		: undefined;
 
 	return {
 		ok: true,
@@ -276,17 +290,13 @@ export async function handleTaskRemove(
 		targetTask: removedTask,
 		targetTaskId: removedTask?.id,
 		targetTaskIndex: removedTaskIndex,
-		targetSelectorHint: removedTask
-			? `taskId=${removedTask.id} | taskIndex=${removedTaskIndex}`
-			: undefined,
+		targetSelectorHint: removedTaskContext?.targetSelectorHint,
 		...remainingOpenTasks,
 		...target,
 		removedTaskId: removedTask?.id,
 		removedTaskIndex,
 		removedTask,
-		removedTaskSelectorHint: removedTask
-			? `taskId=${removedTask.id} | taskIndex=${removedTaskIndex}`
-			: undefined,
+		removedTaskSelectorHint: removedTaskContext?.targetSelectorHint,
 		note: "task_remove deletes a task by stable task id, with legacy taskIndex support.",
 	};
 }

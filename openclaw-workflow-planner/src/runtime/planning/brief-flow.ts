@@ -1,4 +1,7 @@
-import { requireIdeaSlug } from "../state/planner-state.js";
+import {
+	rebuildControlPlaneFromIdeas,
+	requireIdeaSlug,
+} from "../state/planner-state.js";
 import type { FlowContext, PlannerToolParams } from "./flow-helpers.js";
 import {
 	buildControlPlaneSummary,
@@ -20,6 +23,36 @@ export async function handleImplementationBrief(
 		),
 	);
 	const brief = buildImplementationBriefFromIdea(idea);
+	const currentSlice = brief.currentSlice;
+	const now = new Date().toISOString();
+	const updatedState = idea.currentBriefBySlice?.[currentSlice]
+		? context.state
+		: {
+				...context.state,
+				updatedAt: now,
+				ideas: context.state.ideas.map((entry) =>
+					entry.slug === ideaSlug
+						? {
+								...entry,
+								updatedAt: now,
+								currentBriefBySlice: {
+									...(entry.currentBriefBySlice ?? {}),
+									[currentSlice]: brief.summary,
+								},
+							}
+						: entry,
+				),
+			};
+	const persistedState =
+		updatedState === context.state
+			? context.state
+			: {
+					...updatedState,
+					controlPlane: rebuildControlPlaneFromIdeas(updatedState.ideas),
+				};
+	if (persistedState !== context.state) {
+		await context.save(persistedState, context.pluginConfig);
+	}
 
 	return {
 		ok: true,
@@ -29,7 +62,7 @@ export async function handleImplementationBrief(
 		ideaName,
 		plannerFilePath: context.filePath,
 		...brief,
-		controlPlane: buildControlPlaneSummary(context.state, ideaSlug),
+		controlPlane: buildControlPlaneSummary(persistedState, ideaSlug),
 		note: "implementation_brief derives a bounded handoff from the accepted plan and its open tasks.",
 	};
 }

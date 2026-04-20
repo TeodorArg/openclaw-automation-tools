@@ -1,4 +1,5 @@
 import type { PlannerIdea } from "../state/planner-state.js";
+import { buildTaskTargetContext } from "./flow-helpers.js";
 
 export type ImplementationBriefTask = {
 	id: string;
@@ -78,7 +79,7 @@ export function buildImplementationBriefFromIdea(
 		openTasks: openTasks.map(({ task, taskIndex }) => ({
 			id: task.id,
 			taskIndex,
-			selectorHint: `taskId=${task.id} | taskIndex=${taskIndex}`,
+			selectorHint: buildTaskTargetContext(task, taskIndex).targetSelectorHint,
 			text: task.text,
 			origin: task.origin,
 			done: false,
