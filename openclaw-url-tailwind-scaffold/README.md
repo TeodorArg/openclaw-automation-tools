@@ -1,6 +1,28 @@
 # @openclaw/openclaw-url-tailwind-scaffold
 
-Native OpenClaw plugin-plus-skill package for bounded `reference URL -> normalize -> Tailwind CSS v4 scaffold summary or page contract`.
+Turn a reference URL into a reusable Tailwind scaffold.
+
+`@openclaw/openclaw-url-tailwind-scaffold` helps you move from inspiration to implementation faster. Give it a real reference page and it produces a reusable starting scaffold for Tailwind-based UI work, so you can stop staring at a blank page and start from a strong structural base.
+
+This package is built for "build something like this" workflows where the real need is a strong starting contract, not a pixel-perfect clone. It keeps the boundary intentionally tight: fetch-backed acquisition, static shell analysis, Tailwind-oriented synthesis, and orchestration-friendly output that can feed follow-up implementation work.
+
+## Why install this
+
+- Turn design references into implementation momentum.
+- Create strong Tailwind-based scaffolds without starting from scratch.
+- Speed up landing pages, dashboards, and product UI work.
+- Give teams a faster path to first usable UI.
+
+## Common use cases
+
+- Start a landing page or dashboard from a real reference URL.
+- Extract a reusable page structure before implementation begins.
+- Align visual direction before deeper design and frontend work.
+- Shorten the gap between inspiration and a working UI shell.
+
+## One-line example request
+
+`Turn this reference page into a reusable Tailwind scaffold I can build from.`
 
 ## Primary Surface
 
@@ -68,6 +90,22 @@ pnpm pack:smoke
 ## Request Shape
 
 The working slice accepts the bundled skill's command-dispatch envelope.
+
+In our custom skill host, the user-facing invocation should go through `/skill`.
+
+Preferred user-facing form in this repo's runtime:
+
+```bash
+/skill openclaw-url-tailwind-scaffold https://example.com/dashboard
+```
+
+Or with a compact JSON payload:
+
+```bash
+/skill openclaw-url-tailwind-scaffold '{"url":"https://example.com/dashboard","goal":"Keep the shell reusable.","outputMode":"page_contract","componentSplit":["app-shell","sidebar","header","content","footer"],"acquisitionMode":"fetch-backed"}'
+```
+
+The examples below show the raw payload that the bundled skill forwards into command dispatch. Treat the raw slash form without `/skill` as internal dispatch context, not the preferred end-user command in this repo.
 
 Raw command with only a URL:
 

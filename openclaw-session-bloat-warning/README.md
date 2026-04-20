@@ -1,7 +1,28 @@
-# OpenClaw Session Bloat Warning
+# @openclaw/openclaw-session-bloat-warning
 
-OpenClaw plugin for calm session-bloat warnings across the shipped compaction,
-observation, and visible early-warning delivery surfaces.
+Session health protection for long AI work.
+
+`@openclaw/openclaw-session-bloat-warning` helps you catch session degradation before it starts slowing the work down. It warns early when a session is becoming too large, too noisy, or too fragile, so you can simplify context before quality drops and long-running work starts to wobble.
+
+This package stays intentionally narrow. It does not summarize the session, move work automatically, or rewrite the conversation. Its job is to surface growing session heaviness early enough that operators can split work, checkpoint, or move the next heavy phase into a fresh session with less risk.
+
+## Why install this
+
+- Protect long-running work from bloated, noisy sessions.
+- Catch degradation before compaction, slowdown, or lost signal.
+- Keep execution sharper during coding, debugging, research, and orchestration.
+- Add a lightweight session health guardrail without changing your workflow.
+
+## Common use cases
+
+- Warn before a long session becomes too heavy to stay productive.
+- Keep signal from getting buried under accumulated context.
+- Reduce the chance that execution quality drops late in a big session.
+- Maintain better focus in multi-phase OpenClaw work.
+
+## One-line example request
+
+`Warn me before this session gets too bloated to stay productive.`
 
 ## Features
 

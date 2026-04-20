@@ -1,6 +1,28 @@
 # @openclaw/openclaw-host-git-workflow
 
-Publishable OpenClaw plugin package for the active bounded host-backed git/GitHub workflow.
+Safe agent-driven git and PR delivery.
+
+`@openclaw/openclaw-host-git-workflow` gives OpenClaw a disciplined way to move from local changes to shipped work. It helps agents and operators branch safely, prepare commits, open PRs, wait for checks, merge cleanly, and sync `main` without turning git execution into unrestricted shell chaos.
+
+It is built for environments where OpenClaw coordinates the workflow, while the actual git and GitHub actions run on a paired host node that already has the repo, auth, and local execution surface. That keeps the delivery path strong and practical without pretending the container is the host.
+
+## Why install this
+
+- Ship through git with more trust and fewer manual mistakes.
+- Give agents a bounded path through branch, PR, checks, and merge.
+- Reduce workflow confusion around delivery, repo state, and PR completion.
+- Bring more discipline to agent-assisted shipping.
+
+## Common use cases
+
+- Turn a finished local slice into a clean PR and merge flow.
+- Use a safer delivery path instead of improvising git operations in chat.
+- Standardize branch, PR, checks, and merge sequencing for agent work.
+- Support real shipping on host-backed repos with more confidence.
+
+## One-line example request
+
+`Safely take this change from branch setup to PR, checks, merge, and main sync.`
 
 ## Primary UX
 
