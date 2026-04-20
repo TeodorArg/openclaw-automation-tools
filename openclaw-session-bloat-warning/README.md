@@ -70,7 +70,11 @@ openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
         "config": {
           "defaultLanguage": "en",
           "enablePreCompactionWarning": true,
-          "enablePostCompactionNote": true
+          "enablePostCompactionNote": true,
+          "contextWindowTokens": 200000,
+          "warningInputTokensRatio": 0.6,
+          "elevatedInputTokensRatio": 0.725,
+          "criticalInputTokensRatio": 0.85
         }
       }
     }
@@ -93,9 +97,13 @@ Supported config keys:
 - `warningMessageCountThreshold`: exact message-count threshold for elevated heaviness classification
 - `earlyWarningCharThreshold`: earlier char threshold for visible warning before compaction pressure
 - `earlyWarningMessageCountThreshold`: earlier message-count threshold for visible warning before compaction pressure
-- `warningInputTokensThreshold`: warning token threshold
-- `elevatedInputTokensThreshold`: elevated token threshold
-- `criticalInputTokensThreshold`: critical token threshold
+- `warningInputTokensThreshold`: absolute warning token ceiling used together with ratio-based thresholds
+- `elevatedInputTokensThreshold`: absolute elevated token ceiling used together with ratio-based thresholds
+- `criticalInputTokensThreshold`: absolute critical token ceiling used together with ratio-based thresholds
+- `contextWindowTokens`: approximate model context window used for ratio-based token warning thresholds
+- `warningInputTokensRatio`: warning token ratio relative to `contextWindowTokens`
+- `elevatedInputTokensRatio`: elevated token ratio relative to `contextWindowTokens`
+- `criticalInputTokensRatio`: critical token ratio relative to `contextWindowTokens`
 - `timeoutRiskStreakThreshold`: repeated timeout streak threshold
 - `lanePressureStreakThreshold`: lane-pressure streak threshold
 - `noReplyStreakThreshold`: repeated no-reply streak threshold
@@ -112,6 +120,7 @@ Supported config keys:
   through `before_agent_reply`
 - timeout-risk and lane-pressure heuristics can be derived from observed output/error text and reused on the next visible warning delivery
 - elevated heaviness classification uses the configured `warningCharThreshold` and `warningMessageCountThreshold` directly, while the earlier `earlyWarning*` thresholds gate warning-level delivery
+- token-pressure classification now uses the lower of the absolute token thresholds and the ratio-derived thresholds from `contextWindowTokens`, so warning behavior can scale to smaller or larger model windows
 - early-warning cooldown recovery is based on real observed turn progression,
   not on accumulated warning counters
 - when pre-compaction warnings stay enabled, post-compaction notes are gated so
@@ -127,6 +136,7 @@ Supported config keys:
 - state is simple JSON persistence; there is no bounded handoff summary or
   transcript compaction artifact owned by this package
 - visible early warning is a synthetic reply surface, not prompt mutation
+- percent-style token pressure is still approximate because it depends on observed `llm_output.usage.input` and a configured `contextWindowTokens`, not a live provider-reported max window per request
 - timeout and lane-pressure detection remains heuristic and depends on observable output/error text reaching plugin hooks
 
 ## Verification

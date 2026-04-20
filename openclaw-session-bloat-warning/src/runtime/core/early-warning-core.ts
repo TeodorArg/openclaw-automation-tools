@@ -210,13 +210,25 @@ function classifyInputSeverity(
 
 	const inputTokens = signals.inputTokens;
 	if (typeof inputTokens === "number") {
-		if (inputTokens >= config.criticalInputTokensThreshold) {
+		const criticalThreshold = Math.min(
+			config.criticalInputTokensThreshold,
+			Math.round(config.contextWindowTokens * config.criticalInputTokensRatio),
+		);
+		const elevatedThreshold = Math.min(
+			config.elevatedInputTokensThreshold,
+			Math.round(config.contextWindowTokens * config.elevatedInputTokensRatio),
+		);
+		const warningThreshold = Math.min(
+			config.warningInputTokensThreshold,
+			Math.round(config.contextWindowTokens * config.warningInputTokensRatio),
+		);
+		if (inputTokens >= criticalThreshold) {
 			return { severity: "critical", reasonCode: "input_tokens" };
 		}
-		if (inputTokens >= config.elevatedInputTokensThreshold) {
+		if (inputTokens >= elevatedThreshold) {
 			return { severity: "elevated", reasonCode: "input_tokens" };
 		}
-		if (inputTokens >= config.warningInputTokensThreshold) {
+		if (inputTokens >= warningThreshold) {
 			return { severity: "warning", reasonCode: "input_tokens" };
 		}
 	}
