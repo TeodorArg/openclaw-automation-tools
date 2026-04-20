@@ -11,6 +11,8 @@ type EarlyWarningArgs = {
 	language: SessionWarningLanguage;
 	severity: WarningSeverity;
 	reasonCode: string;
+	observedTimeoutMs?: number;
+	observedLaneWaitMs?: number;
 };
 
 const ENGLISH_MESSAGES = {
@@ -74,6 +76,12 @@ function readReasonText(args: EarlyWarningArgs) {
 				return "история уже слишком раздута";
 			case "history_messages":
 				return "в сессии уже слишком много сообщений";
+			case "timeout_risk":
+				return `повторяются timeout'ы gateway около ${formatMs(args.observedTimeoutMs, args.language)}`;
+			case "lane_pressure":
+				return `очередь main session уже подвисает до ${formatMs(args.observedLaneWaitMs, args.language)}`;
+			case "no_reply_streak":
+				return "агент уже несколько раз не смог ответить вовремя";
 			default:
 				return "";
 		}
@@ -86,7 +94,24 @@ function readReasonText(args: EarlyWarningArgs) {
 			return "history is already very large";
 		case "history_messages":
 			return "the session already has many messages";
+		case "timeout_risk":
+			return `repeated gateway timeouts are already landing around ${formatMs(args.observedTimeoutMs, args.language)}`;
+		case "lane_pressure":
+			return `the main session lane is already stalling up to ${formatMs(args.observedLaneWaitMs, args.language)}`;
+		case "no_reply_streak":
+			return "the agent already failed to reply in time multiple times";
 		default:
 			return "";
 	}
+}
+
+function formatMs(value: number | undefined, language: SessionWarningLanguage) {
+	if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+		return language === "ru" ? "десятков секунд" : "tens of seconds";
+	}
+	if (value >= 1000) {
+		const seconds = Math.round((value / 1000) * 10) / 10;
+		return language === "ru" ? `${seconds}с` : `${seconds}s`;
+	}
+	return `${Math.round(value)}ms`;
 }

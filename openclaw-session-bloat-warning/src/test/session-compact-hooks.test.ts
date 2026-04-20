@@ -191,6 +191,53 @@ describe("session compact hooks", () => {
 		expect(message).toContain("fresh session");
 	});
 
+	it("warns earlier on message-count growth before the older elevated threshold", async () => {
+		const fixture = await createFixture();
+
+		const message = getEarlyWarningMessage({
+			event: {
+				systemPrompt: "small",
+				prompt: "small",
+				historyMessages: Array.from({ length: 60 }, (_, index) => ({
+					role: "user",
+					content: `m-${index}`,
+				})),
+			},
+			ctx: {},
+			config: fixture.config,
+			session: {
+				turnCount: 0,
+			},
+		});
+
+		expect(message).toContain("fresh session");
+	});
+
+	it("uses configured elevated thresholds without hidden multipliers", async () => {
+		const fixture = await createFixture();
+
+		const message = getEarlyWarningMessage({
+			event: {
+				systemPrompt: "a".repeat(fixture.config.warningCharThreshold),
+				prompt: "",
+				historyMessages: Array.from(
+					{ length: fixture.config.warningMessageCountThreshold },
+					(_, index) => ({
+						role: "user",
+						content: `m-${index}`,
+					}),
+				),
+			},
+			ctx: {},
+			config: fixture.config,
+			session: {
+				turnCount: 0,
+			},
+		});
+
+		expect(message).toContain("already heavy enough");
+	});
+
 	it("delivers early warning through before_agent_reply as a synthetic visible reply", async () => {
 		const fixture = await createFixture();
 		const compactionHooks = createCompactionWarningHooks(fixture.config);
@@ -370,7 +417,7 @@ describe("session compact hooks", () => {
 			text: buildStoredEarlyWarningMessage({
 				config: fixture.config,
 				signals: {
-					lastSeverity: "warning",
+					lastSeverity: "elevated",
 					lastReasonCode: "history_chars",
 				},
 			}),
@@ -409,6 +456,83 @@ describe("session compact hooks", () => {
 
 		expect(result?.handled).toBe(true);
 		expect(result?.reply?.text).toContain("input is already very large");
+	});
+
+	it("captures repeated gateway timeout risk from observed output text", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-timeout-1",
+				assistantTexts: [
+					"Subagent announce completion direct announce agent call transient failure: gateway timeout after 120000ms",
+				],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-timeout-1" },
+		);
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-timeout-2",
+				assistantTexts: [
+					"Subagent announce completion direct announce agent call transient failure: gateway timeout after 120000ms",
+				],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-timeout-2" },
+		);
+		await compactionHooks.llmInput(
+			{
+				runId: "run-timeout-2",
+				systemPrompt: "small prompt",
+				prompt: "small user message",
+				historyMessages: [{ role: "user", content: "short" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-timeout-2" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-timeout-2" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply?.text).toContain("120s");
+		expect(result?.reply?.text).toContain("gateway timeouts");
+	});
+
+	it("captures lane pressure from observed lane wait diagnostics", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-lane",
+				assistantTexts: [
+					"[diagnostic] lane wait exceeded: lane=session:agent:main:main waitedMs=30024 queueAhead=1",
+				],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-lane" },
+		);
+		await compactionHooks.llmInput(
+			{
+				runId: "run-lane",
+				systemPrompt: "small prompt",
+				prompt: "small user message",
+				historyMessages: [{ role: "user", content: "short" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-lane" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-lane" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply?.text).toContain("30s");
+		expect(result?.reply?.text).toContain("lane");
 	});
 
 	it("returns only synthetic visible reply payload semantics on before_agent_reply delivery", async () => {
@@ -454,9 +578,16 @@ async function createFixture() {
 		cooldownTurns: 3,
 		warningCharThreshold: 120000,
 		warningMessageCountThreshold: 80,
+		earlyWarningCharThreshold: 90000,
+		earlyWarningMessageCountThreshold: 60,
 		warningInputTokensThreshold: 120000,
 		elevatedInputTokensThreshold: 145000,
 		criticalInputTokensThreshold: 170000,
+		timeoutRiskStreakThreshold: 2,
+		lanePressureStreakThreshold: 1,
+		noReplyStreakThreshold: 2,
+		timeoutRiskMsThreshold: 45000,
+		lanePressureMsThreshold: 10000,
 	};
 
 	return {

@@ -11,6 +11,12 @@ export type SessionSignalState = {
 	lastSeverity?: WarningSeverity;
 	lastReasonCode?: string;
 	lastRunId?: string;
+	timeoutRiskStreak?: number;
+	lanePressureStreak?: number;
+	noReplyStreak?: number;
+	lastObservedTimeoutMs?: number;
+	lastObservedLaneWaitMs?: number;
+	lastObservedAt?: string;
 };
 
 export type SessionWarningState = {

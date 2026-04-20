@@ -16,6 +16,13 @@ export type SessionBloatWarningConfig = {
 	warningInputTokensThreshold: number;
 	elevatedInputTokensThreshold: number;
 	criticalInputTokensThreshold: number;
+	earlyWarningMessageCountThreshold: number;
+	earlyWarningCharThreshold: number;
+	timeoutRiskStreakThreshold: number;
+	lanePressureStreakThreshold: number;
+	noReplyStreakThreshold: number;
+	timeoutRiskMsThreshold: number;
+	lanePressureMsThreshold: number;
 };
 
 const DEFAULT_STATE_FILE = ".openclaw-session-bloat-warning-state.json";
@@ -45,6 +52,14 @@ export function resolvePluginConfig(
 			input?.warningMessageCountThreshold,
 			80,
 		),
+		earlyWarningCharThreshold: readPositiveInteger(
+			input?.earlyWarningCharThreshold,
+			90000,
+		),
+		earlyWarningMessageCountThreshold: readPositiveInteger(
+			input?.earlyWarningMessageCountThreshold,
+			60,
+		),
 		warningInputTokensThreshold: readPositiveInteger(
 			input?.warningInputTokensThreshold,
 			120000,
@@ -56,6 +71,26 @@ export function resolvePluginConfig(
 		criticalInputTokensThreshold: readPositiveInteger(
 			input?.criticalInputTokensThreshold,
 			170000,
+		),
+		timeoutRiskStreakThreshold: readPositiveInteger(
+			input?.timeoutRiskStreakThreshold,
+			2,
+		),
+		lanePressureStreakThreshold: readPositiveInteger(
+			input?.lanePressureStreakThreshold,
+			1,
+		),
+		noReplyStreakThreshold: readPositiveInteger(
+			input?.noReplyStreakThreshold,
+			2,
+		),
+		timeoutRiskMsThreshold: readPositiveInteger(
+			input?.timeoutRiskMsThreshold,
+			45000,
+		),
+		lanePressureMsThreshold: readPositiveInteger(
+			input?.lanePressureMsThreshold,
+			10000,
 		),
 	};
 }

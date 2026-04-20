@@ -32,4 +32,15 @@ describe("session bloat warning messages", () => {
 			}),
 		).toContain("close to overload");
 	});
+
+	it("renders timeout-risk reason with human-readable seconds", () => {
+		expect(
+			buildEarlyWarning({
+				language: "en",
+				severity: "critical",
+				reasonCode: "timeout_risk",
+				observedTimeoutMs: 45000,
+			}),
+		).toContain("45s");
+	});
 });
