@@ -91,6 +91,7 @@ export type PlannerIdea = {
 	ideaGate?: PlannerIdeaGate;
 	plan?: PlannerPlan;
 	tasks: PlannerTask[];
+	currentBriefBySlice?: Record<string, string>;
 	closeNote?: string;
 };
 
@@ -120,7 +121,7 @@ export function rebuildControlPlaneFromIdeas(
 		const researchId = idea.research ? `research_${idea.slug}` : undefined;
 		const planId = idea.plan ? `plan_${idea.slug}` : undefined;
 		const taskSetId = idea.tasks.length > 0 ? `tasks_${idea.slug}` : undefined;
-		const currentBriefBySlice = {};
+		const currentBriefBySlice = idea.currentBriefBySlice ?? {};
 
 		const artifactRefIds: string[] = [];
 
@@ -135,6 +136,9 @@ export function rebuildControlPlaneFromIdeas(
 			hasResearch: Boolean(idea.research),
 			hasPlan: Boolean(idea.plan),
 			hasTasks: idea.tasks.length > 0,
+			hasCurrentSliceBrief: Boolean(
+				idea.plan?.currentSlice && currentBriefBySlice[idea.plan.currentSlice],
+			),
 			hasCloseNote: Boolean(idea.closeNote),
 			updatedAt: idea.updatedAt,
 		});
@@ -190,6 +194,21 @@ export function rebuildControlPlaneFromIdeas(
 					updatedAt: idea.updatedAt,
 					governingRequestId: requestId,
 					summary: `${idea.tasks.length} tasks tracked`,
+				}),
+			);
+		}
+
+		for (const [slice, briefSummary] of Object.entries(currentBriefBySlice)) {
+			const briefEntityId = `brief_${idea.slug}_${slice}`;
+			controlPlane.entityRegistry = upsertEntityRecord(
+				controlPlane.entityRegistry,
+				createEntityVersionRecord({
+					entityId: briefEntityId,
+					entityType: "ExecutionBrief",
+					createdAt: idea.createdAt,
+					updatedAt: idea.updatedAt,
+					governingRequestId: requestId,
+					summary: briefSummary,
 				}),
 			);
 		}

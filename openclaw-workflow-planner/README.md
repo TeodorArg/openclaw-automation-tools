@@ -15,7 +15,7 @@ product-facing OpenClaw surface:
 - hand off a bounded implementation brief
 - close an idea with an explicit outcome note
 
-The package intentionally starts as a planning surface.
+The package intentionally starts as a planning-first surface, but persisted current brief presence now also drives the runtime from `planning` into `execution` for the current slice.
 
 It now uses a file-backed planner state, inspired by the `openclaw-todo`
 pattern: the plugin persists a single readable markdown file `WORKFLOW_PLAN.md`
@@ -23,7 +23,8 @@ by default and keeps structured state embedded at the top for safe round-trips,
 stale-write detection, and guarded concurrent updates.
 
 That file is the only persisted planner artifact. Control-plane request,
-entity, and pointer metadata is rebuilt from the state inside
+entity, and pointer metadata, including derived `ExecutionBrief` records from
+persisted `currentBriefBySlice` summaries, is rebuilt from the state inside
 `WORKFLOW_PLAN.md`, and the plugin does not materialize separate plan, task,
 or execution-brief files alongside it.
 
@@ -71,13 +72,14 @@ the typed tool `workflow_planner_action`.
 - `WORKFLOW_PLAN.md` is the only persisted workflow-planner state file
 - planner ideas are stored as explicit lifecycle records with typed research, idea-gate, accepted-plan, task, and close-note sections
 - control-plane request, entity, and pointer metadata is rebuilt from persisted ideas rather than written as separate files
-- `implementation_brief` returns a derived handoff payload, including structured open tasks for the current slice with stable `taskId`, legacy-friendly 1-based `taskIndex`, a command-ready selector hint, and explicit remaining-open-task guidance, and does not persist separate brief metadata or files
+- `implementation_brief` returns a derived handoff payload, including structured open tasks for the current slice with stable `taskId`, legacy-friendly 1-based `taskIndex`, a command-ready selector hint, and explicit remaining-open-task guidance; it now also records current brief presence in persisted planner state and control-plane entities without materializing a separate brief file
 - writes use lock-and-compare protection so stale concurrent mutations do not blindly overwrite newer planner state
+- active lock contention returns a clean planner concurrency error instead of leaking a raw filesystem `EEXIST`
 - lock contention is expected to be brief, and the plugin intentionally does not auto-retry stale saves; reload current `WORKFLOW_PLAN.md` state before retrying a conflicting action
 - `plan_refresh` updates canonical plan blocks while preserving extra manual tasks
 - `task_done`, `task_remove`, and `task_reopen` prefer stable `taskId`; legacy 1-based `taskIndex` is still supported for older/manual flows
-- `implementation_brief` exposes both selectors plus a command-ready selector hint and remaining-open-task guidance for easier handoff consumption
-- successful task-action responses return the resolved stable id, resolved 1-based index, shared `targetTask*` context, command-ready `*SelectorHint` fields, and remaining-open-task guidance for immediate next-step follow-through
+- `implementation_brief` exposes both selectors plus a command-ready selector hint and remaining-open-task guidance for easier handoff consumption, and marks the current slice as having a persisted current brief in control-plane state
+- successful task-action responses, including `task_add`, return the resolved stable id, resolved 1-based index, shared `targetTask*` context, command-ready `*SelectorHint` fields, and remaining-open-task guidance for immediate next-step follow-through
 - checklist synchronization during `task_done`, `task_remove`, `task_reopen`, and `plan_refresh` follows stable task ids rather than matching on task text
 
 ## Shipped Flow
@@ -94,10 +96,10 @@ so the planner state stays coherent.
 
 ## Current Boundary
 
-This package currently focuses on planning and handoff.
+This package currently focuses on planning, bounded handoff, and execution-state transition for the current slice.
 
 Follow-up lanes may add stronger template export, richer plan lifecycle
-closure rules, and executable workflow chaining. The current task/brief UX
+closure rules, and broader executable workflow chaining beyond the current brief-driven execution transition. The current task/brief UX
 polish lane is considered closed after targeted runtime, docs, and test sync,
 and the next implementation step should be a genuinely new bounded lane rather
 than more polishing of this surface. This package already models the core

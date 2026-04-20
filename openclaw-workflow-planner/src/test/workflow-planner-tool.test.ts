@@ -59,6 +59,19 @@ async function seedAcceptedIdea(
 	});
 }
 
+async function buildImplementationBrief(
+	tool: ReturnType<typeof createWorkflowPlannerTool>,
+	callId = "call-brief",
+) {
+	return tool.execute(callId, {
+		action: "implementation_brief",
+		command: "build brief",
+		commandName: "implementation_handoff",
+		skillName: "openclaw-workflow-implementer",
+		ideaName: "workflow planner",
+	});
+}
+
 async function completeAllTasks(
 	tool: ReturnType<typeof createWorkflowPlannerTool>,
 	taskCount: number,
@@ -408,6 +421,31 @@ describe("createWorkflowPlannerTool", () => {
 		);
 
 		expect(addPayload.addedTask.origin).toBe("manual");
+		expect(addPayload.addedTaskId).toBe(addPayload.addedTask.id);
+		expect(addPayload.addedTaskIndex).toBe(payload.idea.tasks.length);
+		expect(addPayload.targetTask).toMatchObject({
+			id: addPayload.addedTask.id,
+			text: "capture user-facing examples",
+			origin: "manual",
+			done: false,
+		});
+		expect(addPayload.targetTaskId).toBe(addPayload.addedTask.id);
+		expect(addPayload.targetTaskIndex).toBe(payload.idea.tasks.length);
+		expect(addPayload.targetSelectorHint).toBe(
+			`taskId=${addPayload.addedTask.id} | taskIndex=${payload.idea.tasks.length}`,
+		);
+		expect(addPayload.addedTaskSelectorHint).toBe(
+			`taskId=${addPayload.addedTask.id} | taskIndex=${payload.idea.tasks.length}`,
+		);
+		expect(addPayload.remainingOpenTaskCount).toBe(
+			payload.idea.tasks.filter((task: { done: boolean }) => !task.done).length,
+		);
+		expect(addPayload.remainingOpenTaskGuidance).toContain(
+			`${addPayload.remainingOpenTaskCount} open tasks remain`,
+		);
+		expect(addPayload.remainingOpenTaskGuidance).toContain(
+			`taskId=${payload.idea.tasks[0].id}`,
+		);
 		expect(
 			payload.idea.tasks.some(
 				(task: { text: string }) =>
@@ -433,6 +471,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-6a0");
 		const snapshotBefore = await tool.execute("call-6b", {
 			action: "plan_snapshot",
 			command: "show plan",
@@ -531,6 +570,7 @@ describe("createWorkflowPlannerTool", () => {
 			snapshotBeforePayload.controlPlane.currentPointers.currentBriefBySlice,
 		).toEqual({});
 
+		await buildImplementationBrief(tool, "call-7c0");
 		await tool.execute("call-7c", {
 			action: "task_done",
 			command: "complete task",
@@ -591,20 +631,47 @@ describe("createWorkflowPlannerTool", () => {
 		expect(briefPayload.openTasks[0]).toHaveProperty("taskIndex");
 		expect(briefPayload.openTasks[0]).toHaveProperty("selectorHint");
 		expect(markdown).toContain("# Workflow Planner");
+		expect(briefPayload.controlPlane.requestRuntime.currentPhase).toBe(
+			"execution",
+		);
 		expect(
 			briefPayload.controlPlane.requestRuntime.currentBriefBySlice,
-		).toEqual({});
+		).toEqual({
+			"Build the next bounded runtime slice.":
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
 		expect(
 			briefPayload.controlPlane.currentPointers.currentBriefBySlice,
-		).toEqual({});
+		).toEqual({
+			"Build the next bounded runtime slice.":
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].currentPhase,
+		).toBe("execution");
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"]
 				.currentBriefBySlice,
-		).toEqual({});
+		).toEqual({
+			"Build the next bounded runtime slice.":
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
 		expect(
 			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"]
 				.currentBriefBySlice,
-		).toEqual({});
+		).toEqual({
+			"Build the next bounded runtime slice.":
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
+		expect(
+			parsed.controlPlane.entityRegistry.records[
+				"brief_workflow-planner_Build the next bounded runtime slice."
+			],
+		).toMatchObject({
+			entityType: "ExecutionBrief",
+			summary:
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
 		expect(
 			Object.keys(parsed.controlPlane.artifactRegistry.records),
 		).toHaveLength(0);
@@ -621,6 +688,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-7e0b");
 		await completeAllTasks(tool, 6);
 
 		const briefResult = await tool.execute("call-7e1", {
@@ -651,6 +719,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-7f0b");
 		const snapshot = await tool.execute("call-7f1", {
 			action: "plan_snapshot",
 			command: "show plan",
@@ -700,6 +769,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-8a0");
 		await completeAllTasks(tool, 6);
 		const result = await tool.execute("call-8b", {
 			action: "idea_close",
@@ -880,6 +950,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-11a0");
 		const doneResult = await tool.execute("call-11b", {
 			action: "task_done",
 			command: "complete task",
@@ -1025,6 +1096,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-11ro-a0");
 		const before = await tool.execute("call-11ro-b", {
 			action: "plan_snapshot",
 			command: "show plan",
@@ -1113,6 +1185,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-11r-a0");
 		const snapshotBefore = await tool.execute("call-11r-b", {
 			action: "plan_snapshot",
 			command: "show plan",
@@ -1188,6 +1261,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-11t-a0");
 		const beforeSnapshot = await tool.execute("call-11t-b", {
 			action: "plan_snapshot",
 			command: "show plan",
@@ -1538,7 +1612,7 @@ describe("createWorkflowPlannerTool", () => {
 		).toEqual({});
 		expect(
 			parsed.controlPlane.entityRegistry.records[
-				"brief_workflow-planner_build-the-next-bounded-runtime-slice"
+				"brief_workflow-planner_Build the next bounded runtime slice."
 			],
 		).toBeUndefined();
 		expect(
@@ -1584,6 +1658,10 @@ describe("createWorkflowPlannerTool", () => {
 									"Planner contract is implemented and verified.",
 								currentSlice: "Build the next bounded runtime slice.",
 								planBlocks: [],
+							},
+							currentBriefBySlice: {
+								"Build the next bounded runtime slice.":
+									"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
 							},
 							tasks: [
 								{
@@ -1679,11 +1757,14 @@ describe("createWorkflowPlannerTool", () => {
 		).toBe("workflow planner");
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"].currentPhase,
-		).toBe("planning");
+		).toBe("execution");
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"]
 				.currentBriefBySlice,
-		).toEqual({});
+		).toEqual({
+			"Build the next bounded runtime slice.":
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"],
 		).not.toHaveProperty("currentDesignId");
@@ -1696,7 +1777,10 @@ describe("createWorkflowPlannerTool", () => {
 		expect(
 			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"]
 				.currentBriefBySlice,
-		).toEqual({});
+		).toEqual({
+			"Build the next bounded runtime slice.":
+				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+		});
 		expect(
 			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"],
 		).not.toHaveProperty("currentDesignId");
@@ -1784,6 +1868,63 @@ describe("createWorkflowPlannerTool", () => {
 				taskIndex: 1,
 			}),
 		).rejects.toThrow("must be accepted and have a canonical plan");
+	});
+
+	it("rejects task_done before implementation_brief exists for the current slice", async () => {
+		const { tool } = await createTool();
+
+		await seedAcceptedIdea(tool);
+		await tool.execute("call-15f", {
+			action: "plan_create",
+			command: "create plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+
+		await expect(
+			tool.execute("call-15g", {
+				action: "task_done",
+				command: "complete task",
+				commandName: "implementation_handoff",
+				skillName: "openclaw-workflow-implementer",
+				ideaName: "workflow planner",
+				taskIndex: 1,
+			}),
+		).rejects.toThrow("requires implementation_brief for the current slice");
+	});
+
+	it("allows task_done after implementation_brief exists for the current slice", async () => {
+		const { tool } = await createTool();
+
+		await seedAcceptedIdea(tool);
+		await tool.execute("call-15h", {
+			action: "plan_create",
+			command: "create plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		await tool.execute("call-15i", {
+			action: "implementation_brief",
+			command: "build brief",
+			commandName: "implementation_handoff",
+			skillName: "openclaw-workflow-implementer",
+			ideaName: "workflow planner",
+		});
+
+		const doneResult = await tool.execute("call-15j", {
+			action: "task_done",
+			command: "complete task",
+			commandName: "implementation_handoff",
+			skillName: "openclaw-workflow-implementer",
+			ideaName: "workflow planner",
+			taskIndex: 1,
+		});
+		const donePayload = JSON.parse(doneResult.content[0].text);
+
+		expect(donePayload.completedTaskIndex).toBe(1);
+		expect(donePayload.completedTask.done).toBe(true);
 	});
 
 	it("rejects planner actions from the wrong bundled skills", async () => {
@@ -2008,6 +2149,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-20a0");
 		const snapshot = await tool.execute("call-20b", {
 			action: "plan_snapshot",
 			command: "show plan",
@@ -2114,6 +2256,7 @@ describe("createWorkflowPlannerTool", () => {
 			skillName: "openclaw-workflow-planner",
 			ideaName: "workflow planner",
 		});
+		await buildImplementationBrief(tool, "call-21a0");
 
 		await expect(
 			tool.execute("call-21b", {
