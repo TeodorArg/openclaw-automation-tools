@@ -120,6 +120,15 @@ function normalizeSignalState(value: unknown) {
 				: undefined,
 		lastRunId:
 			typeof record.lastRunId === "string" ? record.lastRunId : undefined,
+		timeoutRiskStreak: readOptionalCounter(record.timeoutRiskStreak),
+		lanePressureStreak: readOptionalCounter(record.lanePressureStreak),
+		noReplyStreak: readOptionalCounter(record.noReplyStreak),
+		lastObservedTimeoutMs: readOptionalCounter(record.lastObservedTimeoutMs),
+		lastObservedLaneWaitMs: readOptionalCounter(record.lastObservedLaneWaitMs),
+		lastObservedAt:
+			typeof record.lastObservedAt === "string"
+				? record.lastObservedAt
+				: undefined,
 	};
 
 	return Object.values(signalState).some((value) => value !== undefined)

@@ -81,13 +81,15 @@ The plugin keeps only minimal file-backed domain state for latest summaries, doc
 Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtime/fix/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/status/`, with flat default tests under `src/test/`.
 
 `openclaw-session-bloat-warning/` is the active compaction-warning plugin package in this repo.
-Its shipped surface is intentionally bounded to the official compaction lifecycle:
+Its shipped surface combines the official compaction lifecycle with bounded visible early-warning delivery:
 - `before_compaction` for a calm warning before compaction starts
 - `after_compaction` for a short continuation note after compaction finishes when the hook payload exposes a writable `messages` array
-- plugin-owned dedupe state for per-session warning ceilings
+- observe-only `llm_input` and `llm_output` signal capture
+- visible early-warning delivery on `before_agent_reply`
+- plugin-owned dedupe plus cooldown state for per-session warning ceilings
 
 Its bundled skill surface currently centers on `session-bloat-warning`.
-The first shipped slice does not yet claim early pre-compaction overload detection or bounded handoff summarization outside the official compaction path.
+The live slice stays bounded to calm warning copy, visible early warning, persisted dedupe/cooldown state, and heuristic timeout/lane-pressure signal reuse rather than runtime-owned recovery or bounded handoff summarization.
 
 Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/hooks/`, `src/runtime/state/`, and `src/runtime/text/`, with flat default tests under `src/test/`.
 

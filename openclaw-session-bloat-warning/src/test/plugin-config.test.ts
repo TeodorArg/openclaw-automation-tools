@@ -22,6 +22,13 @@ describe("plugin config", () => {
 		expect(config.warningInputTokensThreshold).toBe(120000);
 		expect(config.elevatedInputTokensThreshold).toBe(145000);
 		expect(config.criticalInputTokensThreshold).toBe(170000);
+		expect(config.earlyWarningCharThreshold).toBe(90000);
+		expect(config.earlyWarningMessageCountThreshold).toBe(60);
+		expect(config.timeoutRiskStreakThreshold).toBe(2);
+		expect(config.lanePressureStreakThreshold).toBe(1);
+		expect(config.noReplyStreakThreshold).toBe(2);
+		expect(config.timeoutRiskMsThreshold).toBe(45000);
+		expect(config.lanePressureMsThreshold).toBe(10000);
 	});
 
 	it("accepts explicit overrides", () => {
@@ -38,6 +45,13 @@ describe("plugin config", () => {
 			warningInputTokensThreshold: 100000,
 			elevatedInputTokensThreshold: 130000,
 			criticalInputTokensThreshold: 160000,
+			earlyWarningCharThreshold: 70000,
+			earlyWarningMessageCountThreshold: 45,
+			timeoutRiskStreakThreshold: 3,
+			lanePressureStreakThreshold: 2,
+			noReplyStreakThreshold: 4,
+			timeoutRiskMsThreshold: 30000,
+			lanePressureMsThreshold: 8000,
 		});
 
 		expect(config.stateFilePath).toContain("tmp/custom-state.json");
@@ -52,6 +66,13 @@ describe("plugin config", () => {
 		expect(config.warningInputTokensThreshold).toBe(100000);
 		expect(config.elevatedInputTokensThreshold).toBe(130000);
 		expect(config.criticalInputTokensThreshold).toBe(160000);
+		expect(config.earlyWarningCharThreshold).toBe(70000);
+		expect(config.earlyWarningMessageCountThreshold).toBe(45);
+		expect(config.timeoutRiskStreakThreshold).toBe(3);
+		expect(config.lanePressureStreakThreshold).toBe(2);
+		expect(config.noReplyStreakThreshold).toBe(4);
+		expect(config.timeoutRiskMsThreshold).toBe(30000);
+		expect(config.lanePressureMsThreshold).toBe(8000);
 	});
 
 	it("keeps manifest config keys aligned with runtime defaults", () => {
@@ -78,5 +99,8 @@ describe("plugin config", () => {
 			manifest.configSchema.properties.criticalInputTokensThreshold
 				?.description,
 		).toContain("Defaults to 170000.");
+		expect(
+			manifest.configSchema.properties.timeoutRiskMsThreshold?.description,
+		).toContain("Defaults to 45000.");
 	});
 });

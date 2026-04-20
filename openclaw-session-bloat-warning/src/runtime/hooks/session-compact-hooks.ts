@@ -124,6 +124,7 @@ export function createCompactionWarningHooks(
 			const observation = observeEarlyWarningOutput({
 				event,
 				ctx,
+				config,
 				sessionSignals: session.signals,
 			});
 

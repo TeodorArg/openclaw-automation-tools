@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-session-bloat-warning",
 	"name": "OpenClaw Session Bloat Warning",
-	"description": "OpenClaw plugin for compaction warnings and visible early session-heaviness warnings with bundled session-bloat-warning guidance.",
+	"description": "OpenClaw plugin for compaction warnings, earlier visible session-heaviness warnings, and timeout/lane-pressure warning heuristics with bundled session-bloat-warning guidance.",
 	"version": "0.1.1",
 	"skills": ["./skills"],
 	"configSchema": {
@@ -32,7 +32,7 @@
 			},
 			"enableEarlyWarning": {
 				"type": "boolean",
-				"description": "Whether to track early session-heaviness signals from llm_input and llm_output and deliver visible early warnings on before_agent_reply. Defaults to true."
+				"description": "Whether to track early session-heaviness, timeout-risk, and lane-pressure signals from llm_input and llm_output and deliver visible warnings on before_agent_reply. Defaults to true."
 			},
 			"cooldownTurns": {
 				"type": "integer",
@@ -42,12 +42,22 @@
 			"warningCharThreshold": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Approximate combined prompt-plus-history character threshold for early warning heuristics. Defaults to 120000."
+				"description": "Approximate combined prompt-plus-history character threshold for elevated heaviness classification. Defaults to 120000."
 			},
 			"warningMessageCountThreshold": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Approximate history message-count threshold for early warning heuristics. Defaults to 80."
+				"description": "Approximate history message-count threshold for elevated heaviness classification. Defaults to 80."
+			},
+			"earlyWarningCharThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Approximate combined prompt-plus-history character threshold for earlier visible warning before near-compaction pressure. Defaults to 90000."
+			},
+			"earlyWarningMessageCountThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Approximate history message-count threshold for earlier visible warning before near-compaction pressure. Defaults to 60."
 			},
 			"warningInputTokensThreshold": {
 				"type": "integer",
@@ -63,6 +73,31 @@
 				"type": "integer",
 				"minimum": 1,
 				"description": "Observed llm_output usage.input threshold that marks a critical heavy turn. Defaults to 170000."
+			},
+			"timeoutRiskStreakThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Number of repeated timeout-like observations required before classifying timeout risk. Defaults to 2."
+			},
+			"lanePressureStreakThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Number of repeated lane-pressure observations required before classifying queue pressure. Defaults to 1."
+			},
+			"noReplyStreakThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Number of repeated no-reply observations required before classifying reply failure pressure. Defaults to 2."
+			},
+			"timeoutRiskMsThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Minimum observed timeout duration used for timeout-risk classification. Defaults to 45000."
+			},
+			"lanePressureMsThreshold": {
+				"type": "integer",
+				"minimum": 1,
+				"description": "Minimum observed lane wait duration used for lane-pressure classification. Defaults to 10000."
 			}
 		}
 	}
