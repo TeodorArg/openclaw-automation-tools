@@ -1,6 +1,10 @@
 ---
 name: openclaw-workflow-planner
 description: Use when the user needs to create an idea, attach typed research, pass Idea Gate, create or refresh an accepted plan in WORKFLOW_PLAN.md, track tasks, and prepare a bounded implementation handoff.
+user-invocable: true
+command-dispatch: tool
+command-tool: workflow_planner_action
+command-arg-mode: raw
 ---
 
 # OpenClaw Workflow Planner

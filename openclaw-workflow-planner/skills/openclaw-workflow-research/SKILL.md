@@ -1,6 +1,10 @@
 ---
 name: openclaw-workflow-research
 description: Use when a planner idea needs typed research before Idea Gate: value, risk, overlap with existing surface, and nearby prior solutions.
+user-invocable: true
+command-dispatch: tool
+command-tool: workflow_planner_action
+command-arg-mode: raw
 ---
 
 # OpenClaw Workflow Research
