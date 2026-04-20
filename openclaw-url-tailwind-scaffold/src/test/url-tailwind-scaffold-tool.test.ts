@@ -11,7 +11,8 @@ function buildHtmlResponse(input: {
 	body?: string;
 }) {
 	const response = new Response(
-		input.body ?? "<html><head><title>Dashboard</title></head><body></body></html>",
+		input.body ??
+			"<html><head><title>Dashboard</title></head><body><header><nav><a>Home</a></nav></header><aside aria-label='Primary sidebar'><a>Projects</a></aside><main><h1>Overview</h1><button>Refresh</button></main><footer>Footer</footer></body></html>",
 		{
 			status: input.status ?? 200,
 			headers: {
@@ -66,8 +67,13 @@ describe("createUrlTailwindScaffoldTool", () => {
 		expect(payload.normalizedShell.frameworkTarget).toBe("html");
 		expect(payload.normalizedShell.tailwindVersion).toBe("v4");
 		expect(
+			payload.normalizedShell.regions.map(
+				(region: { sourceBacked: boolean }) => region.sourceBacked,
+			),
+		).toEqual([true, true, true, true, true]);
+		expect(
 			payload.normalizedShell.regions.every(
-				(region: { sourceBacked: boolean }) => region.sourceBacked === false,
+				(region: { sourceBacked: boolean }) => region.sourceBacked === true,
 			),
 		).toBe(true);
 		expect(
@@ -85,6 +91,9 @@ describe("createUrlTailwindScaffoldTool", () => {
 			"Acquisition mode: fetch-backed",
 		);
 		expect(payload.summary.keyPoints[2]).toContain("HTTP status: 200");
+		expect(payload.summary.keyPoints[3]).toContain(
+			"Matched shell regions: 5/5",
+		);
 		expect(payload.pageContract).toBeUndefined();
 	});
 
@@ -92,7 +101,7 @@ describe("createUrlTailwindScaffoldTool", () => {
 		fetchMock.mockResolvedValue(
 			buildHtmlResponse({
 				url: "https://example.com/dashboard?view=resolved",
-				body: "<html><head><title>Example Dashboard</title></head><body></body></html>",
+				body: "<html><head><title>Example Dashboard</title></head><body><header><nav><a>Home</a></nav></header><aside aria-label='Primary sidebar'><a>Projects</a></aside><main><h1>Overview</h1><button>Refresh</button></main><footer>Footer</footer></body></html>",
 			}),
 		);
 		const tool = createUrlTailwindScaffoldTool();
@@ -116,7 +125,9 @@ describe("createUrlTailwindScaffoldTool", () => {
 			"https://example.com/dashboard",
 		);
 		expect(payload.pageContract.source.fetchStatus).toBe("fetched");
-		expect(payload.pageContract.source.document.title).toBe("Example Dashboard");
+		expect(payload.pageContract.source.document.title).toBe(
+			"Example Dashboard",
+		);
 		expect(payload.pageContract.page.composition).toEqual([
 			"app-shell",
 			"sidebar",
@@ -125,12 +136,22 @@ describe("createUrlTailwindScaffoldTool", () => {
 			"footer",
 		]);
 		expect(payload.pageContract.islands[0].selectors.css).toBe(
-			'[data-openclaw-region="app-shell"]',
+			"html:nth-of-type(1) > body:nth-of-type(1)",
+		);
+		expect(payload.pageContract.islands[1].selectors.css).toContain("aside");
+		expect(payload.pageContract.islands[2].anchors.textMarkers).toContain(
+			"Home",
+		);
+		expect(payload.pageContract.islands[3].keyNodes[1].selector).toBe(
+			"html:nth-of-type(1) > body:nth-of-type(1) > main:nth-of-type(1) > button:nth-of-type(1)",
 		);
 		expect(payload.pageContract.boundaries.multiAgentOrchestration).toBe(
 			"external-only",
 		);
-		expect(payload.pageContract.islands[0].evidence).toContain("fetched-html");
+		expect(payload.pageContract.islands[0].evidence).toContain("dom-parse");
+		expect(payload.pageContract.islands[0].layout.status).toBe(
+			"source-backed-dom",
+		);
 	});
 
 	it("keeps page_contract source URLs coherent when fetch follows redirects", async () => {
@@ -248,6 +269,11 @@ describe("createUrlTailwindScaffoldTool", () => {
 				(region: { name: string }) => region.name,
 			),
 		).toEqual(["app-shell", "header", "content", "footer"]);
+		expect(
+			payload.normalizedShell.regions.map(
+				(region: { sourceBacked: boolean }) => region.sourceBacked,
+			),
+		).toEqual([true, true, true, true]);
 	});
 
 	it("accepts page_contract output mode from a raw JSON command payload", async () => {
@@ -269,6 +295,9 @@ describe("createUrlTailwindScaffoldTool", () => {
 			"footer",
 		]);
 		expect(payload.pageContract.islands).toHaveLength(3);
+		expect(payload.pageContract.islands[1].layout.status).toBe(
+			"source-backed-dom",
+		);
 	});
 
 	it("rejects unsupported outputMode in a raw JSON command payload", async () => {
@@ -313,22 +342,23 @@ describe("createUrlTailwindScaffoldTool", () => {
 			value: "live-dom",
 			message: "Unsupported command.acquisitionMode: live-dom.",
 		},
-	])(
-		"rejects unsupported raw JSON enum-like values for $field",
-		async ({ field, value, message }) => {
-			const tool = createUrlTailwindScaffoldTool();
+	])("rejects unsupported raw JSON enum-like values for $field", async ({
+		field,
+		value,
+		message,
+	}) => {
+		const tool = createUrlTailwindScaffoldTool();
 
-			await expect(
-				tool.execute("call-5b", {
-					command: `{"url":"https://example.com/dashboard","${field}":"${value}"}`,
-					commandName: "openclaw-url-tailwind-scaffold",
-					skillName: "openclaw-url-tailwind-scaffold",
-				} as UrlTailwindScaffoldRequest),
-			).rejects.toThrow(message);
+		await expect(
+			tool.execute("call-5b", {
+				command: `{"url":"https://example.com/dashboard","${field}":"${value}"}`,
+				commandName: "openclaw-url-tailwind-scaffold",
+				skillName: "openclaw-url-tailwind-scaffold",
+			} as UrlTailwindScaffoldRequest),
+		).rejects.toThrow(message);
 
-			expect(fetchMock).not.toHaveBeenCalled();
-		},
-	);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
 
 	it("returns bounded acquisition failure details when fetch fails", async () => {
 		fetchMock.mockRejectedValue(new Error("connect ECONNREFUSED"));
@@ -377,5 +407,105 @@ describe("createUrlTailwindScaffoldTool", () => {
 		expect(payload.acquisition.sourceBacked).toBe(false);
 		expect(payload.acquisition.failure).toContain("application/json");
 		expect(payload.pageContract.source.document.title).toBeUndefined();
+	});
+
+	it("extracts shell regions from aria-role fallback markup", async () => {
+		fetchMock.mockResolvedValue(
+			buildHtmlResponse({
+				body: `
+					<html>
+						<head><title>Role Layout</title></head>
+						<body>
+							<div role="banner"><h1>Workspace</h1></div>
+							<div role="complementary" aria-label="Side menu"><a>Inbox</a></div>
+							<div role="main"><h2>Reports</h2><table><tr><td>Cell</td></tr></table></div>
+							<div role="contentinfo">Footer info</div>
+						</body>
+					</html>
+				`,
+			}),
+		);
+		const tool = createUrlTailwindScaffoldTool();
+
+		const result = await tool.execute("call-8", {
+			action: "analyze_reference_page",
+			command: "analyze reference page",
+			commandName: "url_tailwind_scaffold_action",
+			skillName: "openclaw-url-tailwind-scaffold",
+			url: "https://example.com/roles",
+			outputMode: "page_contract",
+			acquisitionMode: "fetch-backed",
+		});
+
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(payload.pageContract.islands[1].selectors.css).toContain(
+			'[role="complementary"]',
+		);
+		expect(payload.pageContract.islands[3].anchors.textMarkers).toContain(
+			"Reports",
+		);
+		expect(payload.pageContract.islands[4].layout.status).toBe(
+			"source-backed-dom",
+		);
+	});
+
+	it("keeps unmatched shell regions inferred when only part of the DOM shell is present", async () => {
+		fetchMock.mockResolvedValue(
+			buildHtmlResponse({
+				body: `
+					<html>
+						<head><title>Partial Layout</title></head>
+						<body>
+							<header><nav><a>Home</a></nav></header>
+							<main><h1>Overview</h1><button>Refresh</button></main>
+						</body>
+					</html>
+				`,
+			}),
+		);
+		const tool = createUrlTailwindScaffoldTool();
+
+		const result = await tool.execute("call-9", {
+			action: "analyze_reference_page",
+			command: "analyze reference page",
+			commandName: "url_tailwind_scaffold_action",
+			skillName: "openclaw-url-tailwind-scaffold",
+			url: "https://example.com/partial",
+			outputMode: "page_contract",
+			acquisitionMode: "fetch-backed",
+		});
+
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(payload.summary.keyPoints[3]).toContain(
+			"Matched shell regions: 3/5",
+		);
+		expect(
+			payload.normalizedShell.regions.map(
+				(region: { name: string; sourceBacked: boolean }) => ({
+					name: region.name,
+					sourceBacked: region.sourceBacked,
+				}),
+			),
+		).toEqual([
+			{ name: "app-shell", sourceBacked: true },
+			{ name: "sidebar", sourceBacked: false },
+			{ name: "header", sourceBacked: true },
+			{ name: "content", sourceBacked: true },
+			{ name: "footer", sourceBacked: false },
+		]);
+		expect(payload.pageContract.islands[1].layout.status).toBe(
+			"synthetic-request-mode",
+		);
+		expect(payload.pageContract.islands[4].layout.status).toBe(
+			"synthetic-request-mode",
+		);
+		expect(payload.normalizedShell.unresolvedAreas).toContain(
+			"sidebar could not be matched confidently from fetched HTML in the current static DOM slice.",
+		);
+		expect(payload.normalizedShell.unresolvedAreas).toContain(
+			"footer could not be matched confidently from fetched HTML in the current static DOM slice.",
+		);
 	});
 });

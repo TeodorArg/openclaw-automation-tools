@@ -41,7 +41,8 @@ This package is an analyzer core, not a multi-agent orchestrator.
 V1 is intentionally narrow:
 
 - `fetch-backed` now performs bounded static HTML acquisition for publicly reachable pages
-- DOM region extraction, selector derivation, and token extraction are still separate later slices
+- the current slice also performs bounded static DOM/island extraction for shell landmarks when fetched HTML is usable
+- browser rendering, JS-heavy page analysis, and token extraction from live styles are still separate later slices
 - no pixel-perfect clone claim
 - no shipped browser-assisted or auth-gated analysis claim
 - no donor CSS-class reuse claim
@@ -87,3 +88,5 @@ Structured calls still use the command-dispatch envelope and must include `comma
 
 - `scaffold_summary` for the existing bounded text summary
 - `page_contract` for structured analyzer output intended to feed higher-level skills or agent workflows
+
+In the current slice, `page_contract` can include source-backed selectors, DOM paths, text markers, and key nodes for matched shell islands from static HTML landmarks. Unmatched regions stay explicit and inferred.

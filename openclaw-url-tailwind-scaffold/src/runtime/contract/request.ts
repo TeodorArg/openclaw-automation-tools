@@ -11,10 +11,7 @@ export const SUPPORTED_COMPONENT_SPLIT = [
 	"content",
 	"footer",
 ] as const;
-const SUPPORTED_OUTPUT_MODE = [
-	"scaffold_summary",
-	"page_contract",
-] as const;
+const SUPPORTED_OUTPUT_MODE = ["scaffold_summary", "page_contract"] as const;
 const SUPPORTED_FRAMEWORK_HINT = ["html"] as const;
 const SUPPORTED_ACQUISITION_MODE = [
 	"fetch-backed",
@@ -162,7 +159,7 @@ function hasOwn(
 	value: Record<string, unknown>,
 	key: string,
 ): key is keyof typeof value {
-	return Object.prototype.hasOwnProperty.call(value, key);
+	return Object.hasOwn(value, key);
 }
 
 function optionalComponentSplit(value: unknown): ComponentSplit[] | undefined {
@@ -249,9 +246,7 @@ function resolveAcquisitionMode(
 ): AcquisitionMode | undefined {
 	if (value !== undefined) {
 		const candidate = requireString(value, "acquisitionMode");
-		if (
-			(SUPPORTED_ACQUISITION_MODE as readonly string[]).includes(candidate)
-		) {
+		if ((SUPPORTED_ACQUISITION_MODE as readonly string[]).includes(candidate)) {
 			return candidate as AcquisitionMode;
 		}
 
@@ -263,9 +258,7 @@ function resolveAcquisitionMode(
 			commandObject.acquisitionMode,
 			"command.acquisitionMode",
 		);
-		if (
-			(SUPPORTED_ACQUISITION_MODE as readonly string[]).includes(candidate)
-		) {
+		if ((SUPPORTED_ACQUISITION_MODE as readonly string[]).includes(candidate)) {
 			return candidate as AcquisitionMode;
 		}
 
@@ -317,7 +310,10 @@ function resolveOutputMode(
 	}
 
 	if (commandObject && hasOwn(commandObject, "outputMode")) {
-		const candidate = requireString(commandObject.outputMode, "command.outputMode");
+		const candidate = requireString(
+			commandObject.outputMode,
+			"command.outputMode",
+		);
 		if ((SUPPORTED_OUTPUT_MODE as readonly string[]).includes(candidate)) {
 			return candidate as OutputMode;
 		}

@@ -121,9 +121,8 @@ export async function acquireReferencePage(
 				note: !response.ok
 					? "Static fetch-backed acquisition reached the URL but did not get a successful HTTP response. DOM region extraction was skipped."
 					: usableHtml
-						? "Static fetch-backed acquisition downloaded the reference page HTML. DOM region extraction and selector derivation remain a separate later slice."
-						: "Static fetch-backed acquisition reached the URL, but the response was not usable HTML. DOM region extraction was skipped."
-				,
+						? "Static fetch-backed acquisition downloaded the reference page HTML and enabled bounded shell landmark extraction."
+						: "Static fetch-backed acquisition reached the URL, but the response was not usable HTML. DOM region extraction was skipped.",
 				failure: !response.ok
 					? `Fetch returned HTTP ${response.status}.`
 					: usableHtml

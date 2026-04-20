@@ -3,6 +3,7 @@ import type {
 	NormalizedUrlTailwindScaffoldRequest,
 } from "../contract/request.js";
 import type { AcquisitionMetadata } from "./acquisition.js";
+import type { ExtractedDomIslands } from "./extract-dom-islands.js";
 
 export type NormalizedTailwindAppShell = {
 	schemaVersion: 1;
@@ -33,6 +34,7 @@ export type NormalizedTailwindAppShell = {
 export function buildNormalizedTailwindAppShell(
 	request: NormalizedUrlTailwindScaffoldRequest,
 	acquisition: AcquisitionMetadata,
+	extraction: ExtractedDomIslands,
 ): NormalizedTailwindAppShell {
 	const componentSplit = request.componentSplit ?? [
 		"app-shell",
@@ -50,13 +52,21 @@ export function buildNormalizedTailwindAppShell(
 			url: acquisition.sourceUrl,
 			acquisitionMode: acquisition.mode,
 		},
-		regions: componentSplit.map((name) => ({
-			name,
-			sourceBacked: false,
-			note: acquisition.sourceBacked
-				? `${name} remains inferred in the current slice. The plugin acquired source HTML, but region extraction and selector derivation are not implemented yet.`
-				: `${name} is kept as an inferred placeholder because live page extraction did not produce usable HTML evidence for this request.`,
-		})),
+		regions: componentSplit.map((name) => {
+			const matchedIsland = extraction.islands.find(
+				(island) => island.regionType === name,
+			);
+
+			return {
+				name,
+				sourceBacked: Boolean(matchedIsland),
+				note: matchedIsland
+					? matchedIsland.note
+					: acquisition.sourceBacked
+						? `${name} stayed unresolved after static HTML parsing. No confident DOM landmark matched this region in the current slice.`
+						: `${name} is kept as an inferred placeholder because live page extraction did not produce usable HTML evidence for this request.`,
+			};
+		}),
 		tokens: {
 			colors: {
 				status: "inferred",
@@ -82,11 +92,18 @@ export function buildNormalizedTailwindAppShell(
 			],
 		},
 		optionalSurfaces: ["settings drawer", "notifications", "overlays"],
-		unresolvedAreas:
-			acquisition.sourceBacked
-				? []
-				: [
-						"Static acquisition did not yield usable source HTML. Region extraction, selector derivation, and token extraction remain unresolved.",
-					],
+		unresolvedAreas: acquisition.sourceBacked
+			? componentSplit
+					.filter(
+						(name) =>
+							!extraction.islands.some((island) => island.regionType === name),
+					)
+					.map(
+						(name) =>
+							`${name} could not be matched confidently from fetched HTML in the current static DOM slice.`,
+					)
+			: [
+					"Static acquisition did not yield usable source HTML. Region extraction, selector derivation, and token extraction remain unresolved.",
+				],
 	};
 }

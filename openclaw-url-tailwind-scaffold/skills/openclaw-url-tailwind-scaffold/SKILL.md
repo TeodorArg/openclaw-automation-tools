@@ -28,10 +28,11 @@ The skill should stay narrow:
 ## Supported V1 Scope
 
 - reference-URL-driven scaffold synthesis with bounded static HTML acquisition for `fetch-backed`
+- bounded static DOM/island extraction for shell landmarks from usable fetched HTML
 - default shell split: `app-shell`, `sidebar`, `header`, `content`, `footer`
 - Tailwind CSS v4 summary output or `page_contract` output
 - componentized HTML-first target unless `frameworkHint` explicitly narrows it
-- region extraction remains inferred until a later DOM/island slice lands
+- unmatched regions remain explicit and inferred when no confident static DOM landmark is found
 
 ## Preferred Raw Command Forms
 

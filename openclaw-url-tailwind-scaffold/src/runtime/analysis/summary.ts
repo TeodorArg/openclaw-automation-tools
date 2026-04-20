@@ -31,6 +31,7 @@ export function buildTailwindAppShellSummary(input: {
 			input.acquisition.http.status === null
 				? "HTTP status: unavailable"
 				: `HTTP status: ${input.acquisition.http.status}`,
+			`Matched shell regions: ${input.normalizedShell.regions.filter((region) => region.sourceBacked).length}/${input.normalizedShell.regions.length}`,
 			"Keep Tailwind output semantic, mobile-first, and free from donor CSS class reuse.",
 		],
 		recommendedFiles: input.normalizedShell.componentPlan.generatedFiles,

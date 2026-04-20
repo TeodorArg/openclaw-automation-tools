@@ -1,8 +1,12 @@
 import type { NormalizedUrlTailwindScaffoldRequest } from "../contract/request.js";
 import {
-	acquireReferencePage,
 	type AcquisitionMetadata,
+	acquireReferencePage,
 } from "./acquisition.js";
+import {
+	type ExtractedDomIslands,
+	extractDomIslands,
+} from "./extract-dom-islands.js";
 import {
 	buildNormalizedTailwindAppShell,
 	type NormalizedTailwindAppShell,
@@ -17,6 +21,7 @@ export type AnalyzeReferencePageResult = {
 	tool: "url_tailwind_scaffold_action";
 	flow: "analyze_reference_page";
 	acquisition: AcquisitionMetadata;
+	extraction: ExtractedDomIslands;
 	normalizedShell: NormalizedTailwindAppShell;
 	pageContract?: ReferencePageContract;
 	summary: ReturnType<typeof buildTailwindAppShellSummary>;
@@ -25,13 +30,22 @@ export type AnalyzeReferencePageResult = {
 export async function analyzeReferencePage(
 	request: NormalizedUrlTailwindScaffoldRequest,
 ): Promise<AnalyzeReferencePageResult> {
-	const { acquisition } = await acquireReferencePage(request);
-	const normalizedShell = buildNormalizedTailwindAppShell(request, acquisition);
+	const { acquisition, html } = await acquireReferencePage(request);
+	const extraction = extractDomIslands({
+		html,
+		componentSplit: request.componentSplit,
+	});
+	const normalizedShell = buildNormalizedTailwindAppShell(
+		request,
+		acquisition,
+		extraction,
+	);
 	const pageContract =
 		request.outputMode === "page_contract"
 			? buildReferencePageContract({
 					request,
 					acquisition,
+					extraction,
 					normalizedShell,
 				})
 			: undefined;
@@ -40,6 +54,7 @@ export async function analyzeReferencePage(
 		tool: "url_tailwind_scaffold_action",
 		flow: "analyze_reference_page",
 		acquisition,
+		extraction,
 		normalizedShell,
 		pageContract,
 		summary: buildTailwindAppShellSummary({

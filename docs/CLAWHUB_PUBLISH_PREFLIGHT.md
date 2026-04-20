@@ -37,7 +37,8 @@ URL-tailwind scaffold package entrypoints:
 - typed tool `url_tailwind_scaffold_action`
 - working action `analyze_reference_page`
 - static fetch-backed acquisition for publicly reachable HTML pages is the only live source-backed mode in the current slice
-- normalized shell regions remain inferred placeholders until a later DOM/island extraction slice lands
+- bounded static DOM/island extraction is available for shell landmarks when usable fetched HTML exists
+- unmatched shell regions remain inferred placeholders when no confident static DOM landmark is found
 - output may be either a Tailwind CSS v4 scaffold summary or a structured `page_contract`
 - multi-step orchestration, subagent coordination, and file persistence remain outside the plugin boundary
 
@@ -276,7 +277,8 @@ Current URL-tailwind scaffold package coverage to publish:
 - bundled skill `openclaw-url-tailwind-scaffold`
 - bounded static fetch-backed acquisition metadata including HTTP and document signals for a reference URL input
 - normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
-- normalized shell regions and Tailwind mappings remain inferred in the current slice
+- source-backed shell landmark extraction for matched static DOM regions
+- normalized shell regions and Tailwind mappings remain inferred only where no confident static DOM landmark is found
 - bounded Tailwind CSS v4 scaffold summary or structured `page_contract` output
 - plugin boundary keeps multi-step orchestration, subagent coordination, and file persistence external-only
 - raw slash-command dispatch through either a plain URL or a compact JSON payload
