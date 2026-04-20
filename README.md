@@ -1,6 +1,6 @@
 # openclaw-automation-tools
 
-Multi-package OpenClaw repository for four active publishable plugin packages.
+Multi-package OpenClaw repository for five active publishable plugin packages.
 
 ## Repo Docs
 
@@ -26,6 +26,7 @@ The package-shape canon is broader than runtime/test layout alone, and the style
 | [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea and plan lifecycle |
 | [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory and bounded sync fixes |
 | [openclaw-session-bloat-warning/README.md](openclaw-session-bloat-warning/README.md) | publishable plugin-plus-skill package | Compaction-warning package for calm pre/post compaction session-bloat notices |
+| [openclaw-url-tailwind-scaffold/README.md](openclaw-url-tailwind-scaffold/README.md) | publishable plugin-plus-skill package | URL-driven package for bounded scaffold normalization/synthesis and Tailwind CSS v4 scaffold summaries |
 
 ## Plugin Packages
 
@@ -93,6 +94,22 @@ The live slice stays bounded to calm warning copy, visible early warning, persis
 
 Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/hooks/`, `src/runtime/state/`, and `src/runtime/text/`, with flat default tests under `src/test/`.
 
+`openclaw-url-tailwind-scaffold/` is the active URL-analysis plugin-plus-skill package in this repo.
+Its shipped surface centers on one typed tool and one bundled skill:
+- `url_tailwind_scaffold_action`
+- bundled skill `openclaw-url-tailwind-scaffold`
+- working action `analyze_reference_page`
+
+Its current shipped slice covers:
+- reference-URL-driven scaffold synthesis without live page fetch or inspection
+- bounded declared acquisition metadata from the request contract
+- normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
+- explicit synthetic `sourceBacked` versus `inferred` status fields derived from request mode
+- Tailwind CSS v4 scaffold summary output with a generated file-tree suggestion
+- raw slash-command dispatch through either a plain URL or a small JSON payload
+
+Its runtime layout is currently grouped under `src/runtime/analysis/` and `src/runtime/contract/`, with flat default tests under `src/test/`.
+
 ## Gateway Vs Node Host
 
 In this repo the canonical baseline is the Gateway, not a repo-owned node-host package.
@@ -124,6 +141,7 @@ openclaw plugins install -l ./openclaw-host-git-workflow
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-workflow-planner/` when working on the planner package.
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-canon/` when working on the canon package.
 Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-session-bloat-warning/` when working on the compaction-warning package.
+Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-url-tailwind-scaffold/` when working on the URL-driven scaffold package.
 
 For a Docker gateway with local plugin directories mounted into `/home/node/tools`, do not batch multiple linked installs inside one long-lived `docker exec ... sh -lc '...'` shell. A config-changing `openclaw plugins install -l ...` can trigger gateway reload and kill that shell after the first install.
 
@@ -166,6 +184,7 @@ openclaw plugins install clawhub:@openclaw/openclaw-host-git-workflow
 openclaw plugins install clawhub:@openclaw/openclaw-workflow-planner
 openclaw plugins install clawhub:@openclaw/openclaw-canon
 openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
+openclaw plugins install clawhub:@openclaw/openclaw-url-tailwind-scaffold
 ```
 
 ## Verification
@@ -214,6 +233,17 @@ pnpm test
 pnpm pack:smoke
 ```
 
+For `openclaw-url-tailwind-scaffold/`:
+
+```bash
+cd openclaw-url-tailwind-scaffold
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
 For publish workflow details and the manual pre-publish gate beyond CI minimum, use [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md).
 
 ## Repo Facts
@@ -221,7 +251,7 @@ For publish workflow details and the manual pre-publish gate beyond CI minimum, 
 - The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
 - Local development is pinned to Node `24.13.0` via `.nvmrc`.
 - Repo-local planning scratch files belong only under ignored `.local-planning/`.
-- The repo currently ships four publishable plugin packages: `openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, and `openclaw-session-bloat-warning/`.
+- The repo currently ships five publishable plugin packages: `openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, `openclaw-session-bloat-warning/`, and `openclaw-url-tailwind-scaffold/`.
 - Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.

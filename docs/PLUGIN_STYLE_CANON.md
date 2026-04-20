@@ -15,11 +15,12 @@ Repo-wide machine enforcement is still partial.
 
 Until a shared repo-level Biome configuration is materialized, enforcement remains split between existing package scripts, TypeScript strict mode, review, and follow-up canon rollout work.
 
-The four live plugin packages already reflect the current domain-subdirectory runtime canon:
+The five live plugin packages already reflect the current domain-subdirectory runtime canon:
 - `openclaw-host-git-workflow/`
 - `openclaw-workflow-planner/`
 - `openclaw-canon/`
 - `openclaw-session-bloat-warning/`
+- `openclaw-url-tailwind-scaffold/`
 
 Remaining convergence is primarily about broader repo-level machine enforcement rather than those packages' baseline layout.
 
