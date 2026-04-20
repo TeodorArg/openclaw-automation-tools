@@ -1,36 +1,35 @@
-# OpenClaw Workflow Planner
+# @openclaw/openclaw-workflow-planner
 
-`openclaw-workflow-planner` is a planning-first OpenClaw plugin.
+The execution layer between prompt and delivery.
 
-It packages the orchestration pattern that exists in this repository as a
-product-facing OpenClaw surface:
+`@openclaw/openclaw-workflow-planner` turns vague work into an executable OpenClaw workflow with explicit decisions, structured plans, tracked tasks, and a clean implementation handoff. It is built for work that matters enough to need continuity, clarity, and a real path from idea to finished outcome.
 
-- create and track explicit planner ideas
-- attach typed research before Idea Gate
-- turn an idea into an explicit `Idea Gate`
-- decide whether the work should start now, be deferred, or be rejected
-- create and refresh a structured accepted plan
-- persist planner state in a readable markdown file
-- track manual tasks without losing them on plan refresh
-- hand off a bounded implementation brief
-- close an idea with an explicit outcome note
+This is not just another planner or task list. It is the control layer that keeps long-running AI-assisted work from dissolving into chat history, scratch notes, and half-remembered decisions. Create an idea, attach research, run an Idea Gate, accept or reject the work, generate a structured plan, preserve manual task edits safely, hand off an implementation brief, and close the slice with an explicit outcome.
 
-The package intentionally starts as a planning-first surface, but persisted current brief presence now also drives the runtime from `planning` into `execution` for the current slice.
+The package exists for work that is too important, too multi-step, or too easy to lose in conversation. It persists one readable planner file and rebuilds structured state from that source of truth, so planning stays inspectable for humans, durable across sessions, and usable by runtime tools without turning execution state into opaque hidden metadata.
 
-It now uses a file-backed planner state, inspired by the `openclaw-todo`
-pattern: the plugin persists a single readable markdown file `WORKFLOW_PLAN.md`
-by default and keeps structured state embedded at the top for safe round-trips,
-stale-write detection, and guarded concurrent updates.
+Once an idea is accepted, the planner keeps plan state, task state, and current implementation brief state coherent enough that a session, helper skill, or follow-on operator can continue without guessing what is approved, what is open, or what done should mean. That makes it a practical execution backbone for serious OpenClaw delivery, not just a drafting surface.
 
-That file is the only persisted planner artifact. Control-plane request,
-entity, and pointer metadata, including derived `ExecutionBrief` records from
-persisted `currentBriefBySlice` summaries, is rebuilt from the state inside
-`WORKFLOW_PLAN.md`, and the plugin does not materialize separate plan, task,
-or execution-brief files alongside it.
+## Why install this
 
-It does not claim to ship the repository's local Codex `.codex/subagents/**`
-topology as runtime agents. Those files stay repo-local governance and donor
-material only.
+- Turn ambiguous requests into structured execution with gates, plans, tasks, and handoff.
+- Keep research, decisions, task tracking, and implementation context coherent across sessions.
+- Reduce drift in long-running AI-assisted work where approved scope is easy to lose.
+- Make multi-phase delivery easier to resume, review, delegate, and close cleanly.
+- Give OpenClaw a durable execution backbone instead of relying on chat memory alone.
+
+## Common use cases
+
+- Turn a rough initiative into a gated workflow with a real accepted plan.
+- Convert research into an implementation path the next execution slice can actually use.
+- Track execution tasks while preserving stable task identity across plan updates.
+- Generate an implementation brief for a helper skill, subagent lane, or follow-on session.
+- Keep long-running delivery aligned across sessions and contributors without losing context.
+- Close a shipped slice with an explicit outcome instead of leaving execution state ambiguous.
+
+## One-line example request
+
+`Take this vague request and turn it into an executable workflow with a real handoff to implementation.`
 
 ## Bundled Skills
 

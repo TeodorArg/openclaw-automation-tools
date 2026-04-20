@@ -1,24 +1,28 @@
-# OpenClaw Canon
+# @openclaw/openclaw-canon
 
-`openclaw-canon` is an operational canon plugin for OpenClaw.
+Single source of truth for long-running OpenClaw work.
 
-It productizes the repo's canon/drift workflow into a small typed runtime
-surface instead of keeping it as prose-only main-session ritual.
+`@openclaw/openclaw-canon` helps teams and solo operators keep docs, memory, and workspace truth aligned before drift turns into confusion. It is built for long-running OpenClaw work where stale context, conflicting notes, and quietly diverging standards create hidden drag.
 
-Initial shipped contract:
-- `canon_status`
-- `canon_doctor`
-- `canon_fix`
+Instead of relying on ad hoc cleanup and good intentions, it gives you a bounded, preview-first way to inspect canon health, diagnose drift, and apply safe fixes where the current runtime actually has authority.
 
-Initial scope:
-- latest-known canon summary with lightweight freshness checks
-- bounded diagnosis for `source`, `memory`, and `sync`
-- preview-first `canon_fix` for `memory` and bounded `sync`
+## Why install this
 
-Retained backlog, not shipped in the initial contract:
-- `canon_fix` for `source`
-- umbrella `scope=all`
-- standalone follow-up or cron tools
+- Keep workspace truth aligned across docs, memory, and ongoing execution.
+- Catch drift before it spreads into confusion and rework.
+- Replace fragile maintenance habits with a clearer source of truth.
+- Make long-running work easier to resume, review, and trust.
+
+## Common use cases
+
+- Check whether docs and memory still reflect current working truth.
+- Reduce drift across long-running multi-session work.
+- Keep standards, rules, and project guidance aligned for operators and teammates.
+- Clean up before a new implementation pass or handoff.
+
+## One-line example request
+
+`Check whether our workspace truth has drifted and show me what needs to be aligned.`
 
 ## Bundled Skills
 
