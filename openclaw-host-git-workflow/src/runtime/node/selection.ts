@@ -28,9 +28,20 @@ export type HostNodeSelection = {
 		| "selection_required"
 		| "selector_unresolved"
 		| "no_node_available"
+		| "node_disconnected"
 		| "unsupported_system_run";
 	runtimeBindingTarget: ReturnType<typeof describeNodeBindingTarget> | null;
 	note: string;
+	blocker: {
+		code:
+			| "selection_required"
+			| "selector_unresolved"
+			| "no_node_available"
+			| "node_disconnected"
+			| "unsupported_system_run";
+		message: string;
+		remediation: string[];
+	} | null;
 };
 
 export type HostNodeSelectionConfig = {
@@ -188,6 +199,15 @@ export async function resolveHostNodeSelection(
 			runtimeBindingStatus: "no_node_available",
 			runtimeBindingTarget: null,
 			note: "No paired host node is available for the bounded host workflow runtime.",
+			blocker: {
+				code: "no_node_available",
+				message:
+					"No paired host node is currently available for host-backed git execution.",
+				remediation: [
+					"Start or reconnect the intended host node.",
+					"Then retry the bounded host git workflow.",
+				],
+			},
 		};
 	}
 
@@ -209,6 +229,38 @@ export async function resolveHostNodeSelection(
 				runtimeBindingStatus: "selector_unresolved",
 				runtimeBindingTarget: null,
 				note: `Node selector resolved to ${nodeId}, but that node is no longer present in the gateway node list.`,
+				blocker: {
+					code: "selector_unresolved",
+					message:
+						"Configured node selector did not resolve to a currently visible node.",
+					remediation: [
+						"Check the configured nodeSelector value.",
+						"Reconnect the intended host node if it went away.",
+					],
+				},
+			};
+		}
+
+		const bindingTarget = describeNodeBindingTarget(
+			node,
+			requestedSelector ? "selector" : "implicit_singleton",
+		);
+
+		if (node.connected !== true) {
+			return {
+				...normalized,
+				runtimeBindingStatus: "node_disconnected",
+				runtimeBindingTarget: bindingTarget,
+				note: `Resolved node ${node.nodeId} is currently disconnected, so host-backed git execution cannot continue until it reconnects.`,
+				blocker: {
+					code: "node_disconnected",
+					message:
+						"The selected host node is visible but disconnected, so it is not usable for host-backed execution.",
+					remediation: [
+						"Reconnect or restart the selected host node.",
+						"Verify the gateway shows connected=true for that node.",
+					],
+				},
 			};
 		}
 
@@ -216,24 +268,28 @@ export async function resolveHostNodeSelection(
 			return {
 				...normalized,
 				runtimeBindingStatus: "unsupported_system_run",
-				runtimeBindingTarget: describeNodeBindingTarget(
-					node,
-					requestedSelector ? "selector" : "implicit_singleton",
-				),
+				runtimeBindingTarget: bindingTarget,
 				note: `Resolved node ${node.nodeId} does not advertise system.run, so host-backed git execution cannot continue on that node.`,
+				blocker: {
+					code: "unsupported_system_run",
+					message:
+						"The selected host node does not expose system.run, so bounded host execution is unavailable.",
+					remediation: [
+						"Use a host node that exposes system.run.",
+						"Or adjust nodeSelector to a compatible node.",
+					],
+				},
 			};
 		}
 
 		return {
 			...normalized,
 			runtimeBindingStatus: "bound",
-			runtimeBindingTarget: describeNodeBindingTarget(
-				node,
-				requestedSelector ? "selector" : "implicit_singleton",
-			),
+			runtimeBindingTarget: bindingTarget,
 			note: requestedSelector
 				? `Host workflow is bound to node ${node.nodeId} via the configured selector and executes shell commands through node.invoke system.run.`
 				: `Host workflow is bound to the only available node ${node.nodeId} and executes shell commands through node.invoke system.run.`,
+			blocker: null,
 		};
 	} catch (error) {
 		return {
@@ -245,6 +301,25 @@ export async function resolveHostNodeSelection(
 			note: normalized.usedDefault
 				? "Multiple host nodes are available; configure nodeSelector so the bounded workflow can bind to one concrete host."
 				: `Configured node selector could not be resolved against the current gateway node list: ${error instanceof Error ? error.message : String(error)}`,
+			blocker: normalized.usedDefault
+				? {
+						code: "selection_required",
+						message:
+							"Multiple host nodes are available, so bounded execution needs an explicit nodeSelector.",
+						remediation: [
+							"Set plugin config nodeSelector to the intended host node.",
+							"Then retry the bounded host git workflow.",
+						],
+					}
+				: {
+						code: "selector_unresolved",
+						message:
+							"Configured node selector could not be resolved against the current gateway node list.",
+						remediation: [
+							"Check the configured nodeSelector value.",
+							"Ensure the intended host node is paired, visible, and connected=true.",
+						],
+					},
 		};
 	}
 }

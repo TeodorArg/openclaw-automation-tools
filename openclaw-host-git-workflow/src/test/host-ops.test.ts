@@ -12,6 +12,7 @@ import {
 	syncMainBranch,
 	waitForPullRequestChecks,
 } from "../runtime/host/ops.js";
+import type { HostCommandRunner } from "../runtime/node/execution.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
@@ -134,6 +135,18 @@ printf '%s\\n' "$@" >> "${ghLogPath}"
 if [ "$1" = "auth" ] && [ "$2" = "status" ]; then
   exit 0
 fi
+if [ "$1" = "repo" ] && [ "$2" = "view" ]; then
+  echo '{"nameWithOwner":"test/repo"}'
+  exit 0
+fi
+if [ "$1" = "pr" ] && [ "$2" = "list" ]; then
+  if [ "$FAKE_GH_EXISTING_PR" = "1" ]; then
+    echo '[{"number":123,"url":"https://github.com/test/repo/pull/123","headRefName":"feat/host-workflow-test","baseRefName":"main","state":"OPEN"}]'
+  else
+    echo '[]'
+  fi
+  exit 0
+fi
 if [ "$1" = "pr" ] && [ "$2" = "view" ]; then
   echo '{"number":123,"url":"https://github.com/test/repo/pull/123","headRefName":"feat/host-workflow-test","baseRefName":"main","state":"OPEN"}'
   exit 0
@@ -157,9 +170,46 @@ exit 0
 	return { binDir, ghLogPath };
 }
 
+function createGithubReadyRunner(): HostCommandRunner {
+	return {
+		async run(command, args, options) {
+			if (
+				command === "git" &&
+				args[0] === "remote" &&
+				args[1] === "get-url" &&
+				args[2] === "origin"
+			) {
+				return {
+					stdout: "git@github.com:test/repo.git",
+					stderr: "",
+				};
+			}
+
+			if (
+				command === "ssh" &&
+				args[0] === "-T" &&
+				args[1] === "git@github.com"
+			) {
+				return {
+					stdout: "",
+					stderr:
+						"Hi test-user! You've successfully authenticated, but GitHub does not provide shell access.",
+				};
+			}
+
+			const result = await execFileAsync(command, args, { cwd: options.cwd });
+			return {
+				stdout: result.stdout?.trim() ?? "",
+				stderr: result.stderr?.trim() ?? "",
+			};
+		},
+	};
+}
+
 afterEach(async () => {
 	delete process.env.OPENCLAW_HOST_GIT_WORKFLOW_GIT_BIN;
 	delete process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN;
+	delete process.env.FAKE_GH_EXISTING_PR;
 
 	await Promise.all(
 		tempDirs
@@ -296,10 +346,11 @@ describe("host push and pr ops", () => {
 	it("pushes the current branch to origin with bounded args", async () => {
 		const { repoPath, remotePath } = await createRepo();
 		const { binDir } = await createFakeGh(repoPath);
+		const runner = createGithubReadyRunner();
 
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
-		const result = await pushCurrentBranch(repoPath);
+		const result = await pushCurrentBranch(repoPath, runner);
 		const remoteHead = await execFileAsync(
 			"git",
 			["rev-parse", "refs/heads/feat/host-workflow-test"],
@@ -309,7 +360,10 @@ describe("host push and pr ops", () => {
 		expect(result).toMatchObject({
 			status: "pushed",
 			currentBranch: "feat/host-workflow-test",
-			originUrl: remotePath,
+			originUrl: "git@github.com:test/repo.git",
+			remote: "origin",
+			branch: "feat/host-workflow-test",
+			upstream: "origin/feat/host-workflow-test",
 		});
 		expect(remoteHead.stdout.trim()).not.toBe("");
 	});
@@ -317,15 +371,19 @@ describe("host push and pr ops", () => {
 	it("creates a PR into main from the current branch using latest commit metadata", async () => {
 		const { repoPath } = await createRepo();
 		const { binDir, ghLogPath } = await createFakeGh(repoPath);
+		const runner = createGithubReadyRunner();
 
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
-		const result = await createPullRequest(repoPath);
+		const result = await createPullRequest(repoPath, runner);
 		const ghLog = await fs.readFile(ghLogPath, "utf8");
 
 		expect(result).toMatchObject({
 			status: "pr_opened",
 			baseBranch: "main",
+			headBranch: "feat/host-workflow-test",
+			prNumber: 123,
+			prUrl: "https://github.com/test/repo/pull/123",
 			currentBranch: "feat/host-workflow-test",
 			prTitle: "feat(openclaw-host-git-workflow): add host push and pr slice",
 			prBody: [
@@ -335,8 +393,13 @@ describe("host push and pr ops", () => {
 				"- Cover the new runtime files with direct unit tests.",
 				"- Preserve bounded behavior without arbitrary gh passthrough.",
 			].join("\n"),
+			prLookup: {
+				attempted: true,
+				outcome: "no_existing_pr_found_then_created",
+			},
 		});
 		expect(ghLog).toContain("pr");
+		expect(ghLog).toContain("list");
 		expect(ghLog).toContain("create");
 		expect(ghLog).toContain("--base");
 		expect(ghLog).toContain("main");
@@ -345,13 +408,39 @@ describe("host push and pr ops", () => {
 		expect(ghLog).toContain("--fill-verbose");
 	});
 
+	it("reuses an existing open PR before attempting creation", async () => {
+		const { repoPath } = await createRepo();
+		const { binDir, ghLogPath } = await createFakeGh(repoPath);
+		const runner = createGithubReadyRunner();
+
+		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
+		process.env.FAKE_GH_EXISTING_PR = "1";
+
+		const result = await createPullRequest(repoPath, runner);
+		const ghLog = await fs.readFile(ghLogPath, "utf8");
+
+		expect(result).toMatchObject({
+			status: "pr_reused",
+			headBranch: "feat/host-workflow-test",
+			prNumber: 123,
+			prLookup: {
+				attempted: true,
+				outcome: "existing_pr_reused",
+			},
+		});
+		expect(ghLog).toContain("list");
+		expect(ghLog).not.toContain("create");
+		delete process.env.FAKE_GH_EXISTING_PR;
+	});
+
 	it("waits for required checks on the bounded current-branch PR", async () => {
 		const { repoPath } = await createRepo();
 		const { binDir, ghLogPath } = await createFakeGh(repoPath);
+		const runner = createGithubReadyRunner();
 
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
-		const result = await waitForPullRequestChecks(repoPath);
+		const result = await waitForPullRequestChecks(repoPath, runner);
 		const ghLog = await fs.readFile(ghLogPath, "utf8");
 
 		expect(result).toMatchObject({
@@ -366,11 +455,7 @@ describe("host push and pr ops", () => {
 		expect(ghLog).toContain("pr");
 		expect(ghLog).toContain("view");
 		expect(ghLog).toContain("--json");
-		expect(ghLog).toContain("--json\nnumber");
-		expect(ghLog).toContain("--json\nurl");
-		expect(ghLog).toContain("--json\nheadRefName");
-		expect(ghLog).toContain("--json\nbaseRefName");
-		expect(ghLog).toContain("--json\nstate");
+		expect(ghLog).toContain("number,url,headRefName,baseRefName,state");
 		expect(ghLog).toContain("checks");
 		expect(ghLog).toContain("--required");
 		expect(ghLog).toContain("--watch");
@@ -380,10 +465,11 @@ describe("host push and pr ops", () => {
 	it("merges the bounded current-branch PR with head SHA matching", async () => {
 		const { repoPath } = await createRepo();
 		const { binDir, ghLogPath } = await createFakeGh(repoPath);
+		const runner = createGithubReadyRunner();
 
 		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
 
-		const result = await mergePullRequest(repoPath);
+		const result = await mergePullRequest(repoPath, runner);
 		const ghLog = await fs.readFile(ghLogPath, "utf8");
 		const headSha = await execFileAsync("git", ["rev-parse", "HEAD"], {
 			cwd: repoPath,

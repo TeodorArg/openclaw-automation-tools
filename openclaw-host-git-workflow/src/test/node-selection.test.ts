@@ -145,6 +145,37 @@ describe("host node selection", () => {
 		expect(result).toMatchObject({
 			runtimeBindingStatus: "no_node_available",
 			runtimeBindingTarget: null,
+			blocker: {
+				code: "no_node_available",
+			},
+		});
+	});
+
+	it("returns node_disconnected when the selected node is visible but disconnected", async () => {
+		const result = await resolveHostNodeSelection({
+			pluginConfig: {
+				nodeSelector: "host-a",
+			},
+			nodes: [
+				{
+					nodeId: "node-a",
+					displayName: "host-a",
+					commands: ["system.run"],
+					connected: false,
+				},
+			],
+		});
+
+		expect(result).toMatchObject({
+			runtimeBindingStatus: "node_disconnected",
+			runtimeBindingTarget: {
+				nodeId: "node-a",
+				bindingSource: "selector",
+				connected: false,
+			},
+			blocker: {
+				code: "node_disconnected",
+			},
 		});
 	});
 
@@ -175,6 +206,7 @@ describe("host node selection", () => {
 					nodeId: "node-a",
 					displayName: "host-a",
 					commands: ["other.command"],
+					connected: true,
 				},
 			],
 		});
@@ -184,6 +216,9 @@ describe("host node selection", () => {
 			runtimeBindingTarget: {
 				nodeId: "node-a",
 				bindingSource: "selector",
+			},
+			blocker: {
+				code: "unsupported_system_run",
 			},
 		});
 	});

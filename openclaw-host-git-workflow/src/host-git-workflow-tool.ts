@@ -8,7 +8,11 @@ import {
 	syncMainBranch,
 	waitForPullRequestChecks,
 } from "./runtime/host/ops.js";
-import { preflightHostOps } from "./runtime/host/preflight.js";
+import {
+	type HostPreflight,
+	isHostWorkflowBlockerError,
+	preflightHostOps,
+} from "./runtime/host/preflight.js";
 import {
 	assertBoundNodeSelection,
 	createNodeHostCommandRunner,
@@ -31,6 +35,7 @@ const ToolSchema = Type.Object(
 			Type.Literal("plan_with_branches"),
 			Type.Literal("commit_prep"),
 			Type.Literal("validate_confirmed_plan"),
+			Type.Literal("execute_confirmed_plan"),
 			Type.Literal("preflight"),
 			Type.Literal("enter_branch"),
 			Type.Literal("push_branch"),
@@ -55,6 +60,7 @@ type ToolParams = {
 		| "plan_with_branches"
 		| "commit_prep"
 		| "validate_confirmed_plan"
+		| "execute_confirmed_plan"
 		| "preflight"
 		| "enter_branch"
 		| "push_branch"
@@ -72,6 +78,8 @@ type ToolParams = {
 type HostGitWorkflowToolOptions = {
 	pluginConfig?: {
 		nodeSelector?: unknown;
+		hostRepoPath?: unknown;
+		pathMappings?: unknown;
 	};
 	toolContext?: {
 		agentId?: string;
@@ -99,13 +107,24 @@ function normalizeConfirmedPlanInput(raw: unknown): unknown {
 export function createHostGitWorkflowTool(
 	options: HostGitWorkflowToolOptions = {},
 ) {
+	function jsonResult(payload: unknown) {
+		return {
+			content: [
+				{
+					type: "text" as const,
+					text: JSON.stringify(payload, null, 2),
+				},
+			],
+		};
+	}
+
 	return {
 		name: "host_git_workflow_action",
 		description:
 			"Bounded host git workflow for setup doctor, repo-aware planning, branch-aware planning, commit prep, repo resolution, node selection, host preflight, branch entry, confirmed-plan validation, push, PR creation, wait-for-checks, merge, and sync-main.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
-			const repoTarget = resolveRepoTarget();
+			const repoTarget = resolveRepoTarget(process.env, options.pluginConfig);
 			const nodeSelection = await resolveHostNodeSelection({
 				pluginConfig: options.pluginConfig,
 			});
@@ -144,6 +163,132 @@ export function createHostGitWorkflowTool(
 				);
 			}
 
+			if (params.action === "execute_confirmed_plan") {
+				if (params.confirmedPlan === undefined) {
+					throw new Error(
+						"confirmedPlan is required for execute_confirmed_plan action.",
+					);
+				}
+
+				const normalizedPlan = normalizeConfirmedPlanInput(
+					params.confirmedPlan,
+				);
+				const validatedPlan = validateConfirmedPlan(normalizedPlan, repoPath);
+
+				if (nodeSelection.runtimeBindingStatus !== "bound") {
+					return jsonResult({
+						ok: false,
+						action: params.action,
+						intent,
+						status: "blocked",
+						stage: "bind_node",
+						repoResolution: repoTarget,
+						nodeSelection,
+						confirmedPlan: validatedPlan,
+						blocker:
+							nodeSelection.blocker ??
+							({
+								code: nodeSelection.runtimeBindingStatus,
+								message: nodeSelection.note,
+								remediation: [],
+							} as const),
+					});
+				}
+
+				const runner = requireNodeRunner();
+
+				let preflight: HostPreflight;
+				try {
+					preflight = await preflightHostOps(
+						repoPath,
+						{
+							requireGhAuth: true,
+							requireNonMainBranch: true,
+							requireRemotePushReadiness: true,
+						},
+						runner,
+					);
+				} catch (error) {
+					if (!isHostWorkflowBlockerError(error)) {
+						throw error;
+					}
+					return jsonResult({
+						ok: false,
+						action: params.action,
+						intent,
+						status: "blocked",
+						stage: "preflight",
+						repoResolution: repoTarget,
+						nodeSelection,
+						confirmedPlan: validatedPlan,
+						blocker: error.blocker,
+					});
+				}
+
+				const executionGroup =
+					validatedPlan.groups.find(
+						(group) => group.branch === preflight.currentBranch,
+					) ?? null;
+				if (!executionGroup) {
+					return jsonResult({
+						ok: false,
+						action: params.action,
+						intent,
+						status: "blocked",
+						stage: "confirmed_plan",
+						repoResolution: repoTarget,
+						nodeSelection,
+						confirmedPlan: validatedPlan,
+						preflight,
+						blocker: {
+							code: "plan_branch_mismatch",
+							message:
+								"Validated confirmed plan does not contain the current non-main branch, so bounded execution cannot continue.",
+							remediation: validatedPlan.groups.map(
+								(group) => `git checkout ${group.branch}`,
+							),
+						},
+					});
+				}
+
+				const pushResult = await pushCurrentBranch(repoPath, runner);
+				const prResult = await createPullRequest(repoPath, runner);
+
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					status: "completed",
+					repoResolution: repoTarget,
+					nodeSelection,
+					confirmedPlan: validatedPlan,
+					executionGroup,
+					preflight: {
+						repoRoot: preflight.repoRoot,
+						currentBranch: preflight.currentBranch,
+						originUrl: preflight.originUrl,
+						remoteReadiness: preflight.remoteReadiness,
+					},
+					push: {
+						status: pushResult.status,
+						remote: pushResult.remote,
+						branch: pushResult.branch,
+						upstream: pushResult.upstream,
+						pushMode: pushResult.pushMode,
+					},
+					pullRequest: {
+						status: prResult.status,
+						baseBranch: prResult.baseBranch,
+						headBranch: prResult.headBranch,
+						prNumber: prResult.prNumber,
+						prUrl: prResult.prUrl,
+						prLookup: prResult.prLookup,
+					},
+					nextStep: "wait_for_checks",
+					note: "Confirmed-plan execution completed through bounded host push and PR create/reuse.",
+				});
+			}
+
 			if (params.action === "doctor") {
 				const doctor = await runHostWorkflowDoctor({
 					repoResolution: repoTarget,
@@ -151,24 +296,13 @@ export function createHostGitWorkflowTool(
 					runner: nodeRunner,
 				});
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									...doctor,
-									note: "Doctor is a lightweight setup/readiness surface. It keeps repo targeting, host-node binding, git/gh checks, and origin readiness explicit before the bounded execution kernel starts.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					...doctor,
+					note: "Doctor is a lightweight setup/readiness surface. It keeps repo targeting, host-node binding, git/gh checks, and origin readiness explicit before the bounded execution kernel starts.",
+				});
 			}
 
 			if (params.action === "plan" || params.action === "plan_with_branches") {
@@ -178,39 +312,26 @@ export function createHostGitWorkflowTool(
 					sourceCommand: intent,
 				});
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									repoPath,
-									repoResolution: repoTarget,
-									nodeSelection,
-									mode:
-										params.action === "plan"
-											? "plan-only"
-											: "branch-aware-planning",
-									intent,
-									commandName: params.commandName,
-									command: params.command,
-									currentBranch: planResult.currentBranch,
-									changedFiles: planResult.changedFiles,
-									groups: planResult.groups,
-									confirmedPlanCandidate: planResult.confirmedPlanCandidate,
-									note:
-										params.action === "plan_with_branches"
-											? "This action returns branch-aware planning output with package-aware branch and commit metadata; separate bounded actions in the same package handle confirmed-plan validation, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync."
-											: "This action returns repo-aware planning output; separate bounded actions in the same package handle confirmed-plan validation, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					repoPath,
+					repoResolution: repoTarget,
+					nodeSelection,
+					mode:
+						params.action === "plan" ? "plan-only" : "branch-aware-planning",
+					intent,
+					commandName: params.commandName,
+					command: params.command,
+					currentBranch: planResult.currentBranch,
+					changedFiles: planResult.changedFiles,
+					groups: planResult.groups,
+					confirmedPlanCandidate: planResult.confirmedPlanCandidate,
+					note:
+						params.action === "plan_with_branches"
+							? "This action returns branch-aware planning output with package-aware branch and commit metadata; separate bounded actions in the same package handle confirmed-plan validation, confirmed-plan execution, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync."
+							: "This action returns repo-aware planning output; separate bounded actions in the same package handle confirmed-plan validation, confirmed-plan execution, preflight, branch entry, push, PR creation, required-check waiting, merge, and local main sync.",
+				});
 			}
 
 			if (params.action === "commit_prep") {
@@ -221,24 +342,13 @@ export function createHostGitWorkflowTool(
 					sourceCommand: intent,
 				});
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									...commitPrep,
-									note: "Commit prep is an explicit bounded surface for ownership grouping, branch and commit metadata, current-state mapping, and recommended small-session choreography.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					...commitPrep,
+					note: "Commit prep is an explicit bounded surface for ownership grouping, branch and commit metadata, current-state mapping, and recommended small-session choreography.",
+				});
 			}
 
 			if (params.action === "enter_branch") {
@@ -252,104 +362,78 @@ export function createHostGitWorkflowTool(
 					requireNodeRunner(),
 				);
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...branchResult,
-									note: "Bounded branch entry can start from main, create or switch the requested local working branch, may carry uncommitted changes only for main -> new branch creation, and keeps later push/pr/merge actions on a non-main branch.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...branchResult,
+					note: "Bounded branch entry can start from main, create or switch the requested local working branch, may carry uncommitted changes only for main -> new branch creation, and keeps later push/pr/merge actions on a non-main branch.",
+				});
 			}
 
 			if (params.action === "push_branch") {
+				await preflightHostOps(
+					repoPath,
+					{
+						requireGhAuth: true,
+						requireNonMainBranch: true,
+						requireRemotePushReadiness: true,
+					},
+					requireNodeRunner(),
+				);
 				const pushResult = await pushCurrentBranch(
 					repoPath,
 					requireNodeRunner(),
 				);
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...pushResult,
-									note: "Current branch push completed with bounded origin/current-branch behavior.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...pushResult,
+					note: "Current branch push completed with bounded origin/current-branch behavior.",
+				});
 			}
 
 			if (params.action === "create_pr") {
+				await preflightHostOps(
+					repoPath,
+					{
+						requireGhAuth: true,
+						requireNonMainBranch: true,
+						requireRemotePushReadiness: true,
+					},
+					requireNodeRunner(),
+				);
 				const prResult = await createPullRequest(repoPath, requireNodeRunner());
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...prResult,
-									note: "Pull request creation is bounded to the current branch into main and derives title/body from the latest commit.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...prResult,
+					note: "Pull request creation is bounded to the current branch into main and derives title/body from the latest commit.",
+				});
 			}
 
 			if (params.action === "sync_main") {
 				const syncResult = await syncMainBranch(repoPath, requireNodeRunner());
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...syncResult,
-									note: "Local main sync is bounded to origin/main with a clean worktree check and fast-forward-only update behavior.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...syncResult,
+					note: "Local main sync is bounded to origin/main with a clean worktree check and fast-forward-only update behavior.",
+				});
 			}
 
 			if (params.action === "wait_for_checks") {
@@ -358,26 +442,15 @@ export function createHostGitWorkflowTool(
 					requireNodeRunner(),
 				);
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...checksResult,
-									note: "Required checks are watched only for the bounded current-branch pull request into main.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...checksResult,
+					note: "Required checks are watched only for the bounded current-branch pull request into main.",
+				});
 			}
 
 			if (params.action === "merge_pr") {
@@ -386,26 +459,15 @@ export function createHostGitWorkflowTool(
 					requireNodeRunner(),
 				);
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...mergeResult,
-									note: "PR merge is bounded to the open current-branch pull request into main with HEAD SHA matching.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...mergeResult,
+					note: "PR merge is bounded to the open current-branch pull request into main with HEAD SHA matching.",
+				});
 			}
 
 			if (params.action === "preflight") {
@@ -414,30 +476,20 @@ export function createHostGitWorkflowTool(
 					{
 						requireGhAuth: true,
 						requireNonMainBranch: false,
+						requireRemotePushReadiness: true,
 					},
 					requireNodeRunner(),
 				);
 
-				return {
-					content: [
-						{
-							type: "text",
-							text: JSON.stringify(
-								{
-									ok: true,
-									action: params.action,
-									intent,
-									repoResolution: repoTarget,
-									nodeSelection,
-									...preflight,
-									note: "Host workflow preflight passed for repo access, git/gh availability, origin remote, current branch, and GitHub CLI auth.",
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return jsonResult({
+					ok: true,
+					action: params.action,
+					intent,
+					repoResolution: repoTarget,
+					nodeSelection,
+					...preflight,
+					note: "Host workflow preflight passed for repo access, git/gh availability, origin remote, current branch, GitHub CLI auth, and remote push/PR readiness.",
+				});
 			}
 
 			if (params.action !== "validate_confirmed_plan") {
@@ -453,28 +505,17 @@ export function createHostGitWorkflowTool(
 			const normalizedPlan = normalizeConfirmedPlanInput(params.confirmedPlan);
 			const validatedPlan = validateConfirmedPlan(normalizedPlan, repoPath);
 
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(
-							{
-								ok: true,
-								action: params.action,
-								repoPath,
-								repoResolution: repoTarget,
-								nodeSelection,
-								status: "validated",
-								intent,
-								confirmedPlan: validatedPlan,
-								note: "Confirmed plan validation passed. The validated plan can now drive the package's separate bounded preflight, branch-entry, push, PR, checks, merge, and local main sync actions.",
-							},
-							null,
-							2,
-						),
-					},
-				],
-			};
+			return jsonResult({
+				ok: true,
+				action: params.action,
+				repoPath,
+				repoResolution: repoTarget,
+				nodeSelection,
+				status: "validated",
+				intent,
+				confirmedPlan: validatedPlan,
+				note: "Confirmed plan validation passed. The validated plan can now drive the package's confirmed-plan execution action plus the separate bounded preflight, branch-entry, push, PR, checks, merge, and local main sync actions.",
+			});
 		},
 	};
 }

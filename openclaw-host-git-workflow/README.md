@@ -33,13 +33,13 @@ The bundled skill surface is intentionally collapsed to one primary user-facing 
 ## Current Runtime Coverage
 
 This package currently ships:
-- setup doctor for repo target, node binding, and host readiness
+- setup doctor for repo target, node binding, host readiness, and remote push/PR readiness
 - repo-aware planning
 - branch-aware planning
 - explicit commit prep for ownership grouping and commit contracts
 - repo resolution
 - live host node binding
-- host preflight
+- host preflight, including remote push/PR readiness checks with host remediation commands when blocked
 - bounded branch entry from `main` or another clean local branch into a requested non-main working branch
 - confirmed-plan validation
 - bounded push of the current non-main branch
@@ -79,6 +79,7 @@ Routine bounded steps are expected to behave proactively:
 - do the work first
 - do not narrate each upcoming probe or tool call
 - only emit a short user update when a major phase changes or a real blocker appears
+- when push/PR readiness is blocked, fail early with a concrete host-side remediation list instead of attempting a blind remote action
 - keep chain-of-thought and speculative step-by-step commentary out of the user-visible flow
 
 ## Hard Boundaries
@@ -88,6 +89,7 @@ Routine bounded steps are expected to behave proactively:
 - no arbitrary `gh` passthrough
 - no git or GitHub authentication inside the runtime/container surface
 - push and PR creation stay on the bound host node through `node.invoke` `system.run.prepare` / `system.run`
+- push and PR creation must first pass bounded remote readiness checks for origin protocol, GitHub CLI auth, and when applicable SSH trust/auth to GitHub
 - branch entry is bounded to a validated non-main local branch name
 - branch entry may carry uncommitted changes only for `main -> new local branch` creation
 - push is bounded to the current local non-main branch and `origin`
@@ -208,13 +210,42 @@ Enable the plugin in `openclaw.json` and set `config.nodeSelector` when more tha
       "openclaw-host-git-workflow": {
         "enabled": true,
         "config": {
-          "nodeSelector": "openclaw-docker-host-git"
+          "nodeSelector": "openclaw-docker-host-git",
+          "hostRepoPath": "/Users/svarnoy85/teodorArg/openclaw-automation-tools",
+          "pathMappings": [
+            {
+              "containerPath": "/home/node/tools/openclaw-host-git-workflow",
+              "hostPath": "/Users/svarnoy85/teodorArg/openclaw-automation-tools/openclaw-host-git-workflow"
+            }
+          ]
         }
       }
     }
   }
 }
 ```
+
+`hostRepoPath` is the canonical host-side repo path for bounded execution. When it is set, the plugin uses it ahead of `OPENCLAW_HOST_GIT_WORKFLOW_REPO` or `OPENCLAW_PROJECT_DIR`, so host-backed `git` and `gh` execution does not depend on a container-local default path. `pathMappings` is optional and only matters when discovery surfaces a container path that must be translated into a host path before execution.
+
+## Chat-Driven Confirmed-Plan Flow
+
+For chat-driven delivery after planning, the bounded execution surface now includes `execute_confirmed_plan`.
+
+The flow is:
+
+1. resolve repo target from plugin config and path mapping
+2. bind a concrete connected host node
+3. validate confirmed plan against the active repo
+4. run bounded host preflight for repo, branch, remote, GitHub access, and existing PR readiness
+5. push the current non-main branch to `origin`
+6. create a PR into `main` or reuse the existing open PR for that branch
+
+The consolidated result is designed for chat and reports one of these outcomes:
+
+- `push success`: the current non-main branch was pushed to `origin` with upstream set
+- `pr opened`: no open PR existed and a new PR into `main` was created
+- `pr reused`: an open PR for the current branch into `main` already existed and was reused
+- `blocked with remediation`: node binding, confirmed-plan matching, or preflight stopped execution and returned a structured blocker plus host-side remediation
 
 ## Verify
 

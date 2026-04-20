@@ -10,7 +10,8 @@ export type HostDoctorCheck = {
 		| "host_repo"
 		| "git_binary"
 		| "origin_remote"
-		| "github_cli_auth";
+		| "github_cli_auth"
+		| "remote_push_readiness";
 	status: "ready" | "attention" | "blocked";
 	summary: string;
 };
@@ -28,6 +29,13 @@ export type HostDoctorResult = {
 		currentBranch: string;
 		originUrl: string;
 		ghAuthStatus: "ready";
+		remoteReadiness: {
+			protocol: "ssh" | "https" | "other";
+			sshAuthStatus: "ready" | "blocked" | "skipped";
+			knownHostsStatus: "ready" | "blocked" | "skipped";
+			issues: string[];
+			remediationCommands: string[];
+		};
 	} | null;
 	nextSuggestedAction: "plan_with_branches" | "fix_doctor_findings";
 };
@@ -101,6 +109,23 @@ export async function runHostWorkflowDoctor(params: {
 				status: "ready",
 				summary: `GitHub CLI auth is ready on the bound host node via ${preflight.ghBin}.`,
 			},
+			{
+				id: "remote_push_readiness",
+				status:
+					preflight.remoteReadiness.issues.length === 0 ? "ready" : "attention",
+				summary:
+					preflight.remoteReadiness.issues.length === 0
+						? `Remote ${preflight.remoteReadiness.protocol} push/PR readiness checks passed on the bound host node.`
+						: [
+								`Remote ${preflight.remoteReadiness.protocol} push/PR readiness needs attention.`,
+								...preflight.remoteReadiness.issues,
+								preflight.remoteReadiness.remediationCommands.length > 0
+									? `Run on the host: ${preflight.remoteReadiness.remediationCommands.join(" ; ")}`
+									: "",
+							]
+								.filter(Boolean)
+								.join(" "),
+			},
 		);
 
 		return {
@@ -139,6 +164,12 @@ export async function runHostWorkflowDoctor(params: {
 				status: "attention",
 				summary:
 					"GitHub CLI auth readiness is reported from the same bounded host preflight loop.",
+			},
+			{
+				id: "remote_push_readiness",
+				status: "attention",
+				summary:
+					"Remote push/PR readiness is reported from the same bounded host preflight loop and should surface concrete host remediation commands when blocked.",
 			},
 		);
 
