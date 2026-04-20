@@ -2,7 +2,11 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { HostCommandRunner } from "../node/execution.js";
 import { resolveHostGhBin, resolveHostGitBin } from "./binaries.js";
-import { type HostPreflight, preflightHostOps } from "./preflight.js";
+import {
+	type HostPreflight,
+	lookupExistingPullRequest,
+	preflightHostOps,
+} from "./preflight.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -30,26 +34,39 @@ export type EnterBranchResult = HostPreflight & {
 
 export type PushResult = PushPreflight & {
 	status: "pushed";
+	remote: "origin";
+	branch: string;
+	upstream: string;
+	pushMode: "set_upstream_current_branch";
 	stdout: string;
 	stderr: string;
 };
 
-export type CreatePrResult = PushPreflight & {
-	status: "pr_opened";
-	baseBranch: "main";
-	prTitle: string;
-	prBody: string;
-	stdout: string;
-	stderr: string;
-};
-
-export type CurrentPullRequest = {
+export type PullRequestLookupResult = {
 	number: number;
 	url: string;
 	headRefName: string;
 	baseRefName: string;
 	state: "OPEN" | "CLOSED" | "MERGED";
 };
+
+export type CreatePrResult = PushPreflight & {
+	status: "pr_opened" | "pr_reused";
+	baseBranch: "main";
+	headBranch: string;
+	prNumber: number;
+	prUrl: string;
+	prTitle: string;
+	prBody: string;
+	prLookup: {
+		attempted: true;
+		outcome: "existing_pr_reused" | "no_existing_pr_found_then_created";
+	};
+	stdout: string;
+	stderr: string;
+};
+
+export type CurrentPullRequest = PullRequestLookupResult;
 
 export type WaitForChecksResult = PushPreflight & {
 	status: "checks_passed";
@@ -92,8 +109,6 @@ async function runBinary(
 	args: string[],
 	repoPath: string,
 ): Promise<{ stdout: string; stderr: string }> {
-	// Let execFile inherit the ambient environment implicitly so linked plugin
-	// installs do not trip static "env + network send" safety heuristics.
 	const result = await execFileAsync(command, args, {
 		cwd: repoPath,
 	});
@@ -221,6 +236,45 @@ async function assertValidWorkingBranchName(
 	}
 }
 
+async function readCurrentPullRequest(
+	repoPath: string,
+	currentBranch: string,
+	runner: HostCommandRunner,
+): Promise<CurrentPullRequest> {
+	const result = await runner.run(
+		resolveHostGhBin(),
+		[
+			"pr",
+			"view",
+			currentBranch,
+			"--json",
+			"number,url,headRefName,baseRefName,state",
+		],
+		{ cwd: repoPath },
+	);
+	const pr = JSON.parse(result.stdout) as CurrentPullRequest;
+
+	if (pr.headRefName !== currentBranch) {
+		throw new Error(
+			`Bounded PR lookup resolved head ${pr.headRefName} instead of current branch ${currentBranch}.`,
+		);
+	}
+
+	if (pr.baseRefName !== "main") {
+		throw new Error(
+			`Bounded PR actions require base branch main, received ${pr.baseRefName}.`,
+		);
+	}
+
+	if (pr.state !== "OPEN") {
+		throw new Error(
+			`Bounded PR actions require an open pull request, received state ${pr.state}.`,
+		);
+	}
+
+	return pr;
+}
+
 export async function enterWorkingBranch(
 	repoPath: string,
 	branchName: string,
@@ -297,6 +351,7 @@ export async function preflightPushPr(
 		{
 			requireGhAuth: true,
 			requireNonMainBranch: true,
+			requireRemotePushReadiness: true,
 		},
 		runner,
 	);
@@ -316,6 +371,10 @@ export async function pushCurrentBranch(
 	return {
 		...preflight,
 		status: "pushed",
+		remote: "origin",
+		branch: preflight.currentBranch,
+		upstream: `origin/${preflight.currentBranch}`,
+		pushMode: "set_upstream_current_branch",
 		stdout: result.stdout,
 		stderr: result.stderr,
 	};
@@ -327,100 +386,71 @@ export async function createPullRequest(
 ): Promise<CreatePrResult> {
 	const preflight = await preflightPushPr(repoPath, runner);
 	const latestCommit = await readLatestCommit(repoPath, runner);
-	try {
-		const result = await runner.run(
-			resolveHostGhBin(),
-			[
-				"pr",
-				"create",
-				"--base",
-				"main",
-				"--head",
-				preflight.currentBranch,
-				"--fill-verbose",
-			],
-			{ cwd: repoPath },
-		);
-
-		return {
-			...preflight,
-			status: "pr_opened",
-			baseBranch: "main",
-			prTitle: latestCommit.title,
-			prBody: latestCommit.body || latestCommit.title,
-			stdout: result.stdout,
-			stderr: result.stderr,
-		};
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		if (!message.includes("already exists")) {
-			throw error;
-		}
-
-		const existingPr = await readCurrentPullRequest(
+	const existingPr =
+		(await lookupExistingPullRequest(
 			repoPath,
 			preflight.currentBranch,
 			runner,
-		);
+		)) ?? preflight.remoteReadiness.existingPullRequest;
 
+	if (
+		existingPr &&
+		existingPr.baseRefName === "main" &&
+		existingPr.state === "OPEN"
+	) {
 		return {
 			...preflight,
-			status: "pr_opened",
+			status: "pr_reused",
 			baseBranch: "main",
+			headBranch: preflight.currentBranch,
+			prNumber: existingPr.number,
+			prUrl: existingPr.url,
 			prTitle: latestCommit.title,
 			prBody: latestCommit.body || latestCommit.title,
+			prLookup: {
+				attempted: true,
+				outcome: "existing_pr_reused",
+			},
 			stdout: existingPr.url,
-			stderr:
-				"Pull request already existed; returned the current bounded branch PR.",
+			stderr: "Reused existing open PR for the current branch.",
 		};
 	}
-}
 
-async function readCurrentPullRequest(
-	repoPath: string,
-	currentBranch: string,
-	runner: HostCommandRunner,
-): Promise<CurrentPullRequest> {
-	const readField = async <T>(field: string): Promise<T> => {
-		const result = await runner.run(
-			resolveHostGhBin(),
-			["pr", "view", currentBranch, "--json", field],
-			{ cwd: repoPath },
-		);
-		const payload = JSON.parse(result.stdout) as Record<string, T>;
-		if (!(field in payload)) {
-			throw new Error(`Bounded PR lookup missing field '${field}'.`);
-		}
-		return payload[field] as T;
+	const result = await runner.run(
+		resolveHostGhBin(),
+		[
+			"pr",
+			"create",
+			"--base",
+			"main",
+			"--head",
+			preflight.currentBranch,
+			"--fill-verbose",
+		],
+		{ cwd: repoPath },
+	);
+	const createdPr = await readCurrentPullRequest(
+		repoPath,
+		preflight.currentBranch,
+		runner,
+	);
+
+	return {
+		...preflight,
+		status: "pr_opened",
+		baseBranch: "main",
+		headBranch: preflight.currentBranch,
+		prNumber: createdPr.number,
+		prUrl: createdPr.url,
+		prTitle: latestCommit.title,
+		prBody: latestCommit.body || latestCommit.title,
+		prLookup: {
+			attempted: true,
+			outcome: "no_existing_pr_found_then_created",
+		},
+		stdout: result.stdout,
+		stderr: result.stderr,
 	};
-
-	const pr: CurrentPullRequest = {
-		number: await readField<number>("number"),
-		url: await readField<string>("url"),
-		headRefName: await readField<string>("headRefName"),
-		baseRefName: await readField<string>("baseRefName"),
-		state: await readField<CurrentPullRequest["state"]>("state"),
-	};
-
-	if (pr.headRefName !== currentBranch) {
-		throw new Error(
-			`Bounded PR lookup resolved head ${pr.headRefName} instead of current branch ${currentBranch}.`,
-		);
-	}
-
-	if (pr.baseRefName !== "main") {
-		throw new Error(
-			`Bounded PR actions require base branch main, received ${pr.baseRefName}.`,
-		);
-	}
-
-	if (pr.state !== "OPEN") {
-		throw new Error(
-			`Bounded PR actions require an open pull request, received state ${pr.state}.`,
-		);
-	}
-
-	return pr;
 }
 
 export async function waitForPullRequestChecks(

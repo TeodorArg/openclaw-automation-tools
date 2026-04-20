@@ -1,6 +1,10 @@
 ---
 name: openclaw-workflow-implementer
 description: Use when Idea Gate is already passed, the accepted plan lives in WORKFLOW_PLAN.md, and the current slice needs a narrow implementation handoff rather than a new whole-project plan.
+user-invocable: true
+command-dispatch: tool
+command-tool: workflow_planner_action
+command-arg-mode: raw
 ---
 
 # OpenClaw Workflow Implementer

@@ -119,6 +119,15 @@ describe("host preflight", () => {
 				if (args[0] === "auth" && args[1] === "status") {
 					return { stdout: "github.com\n  ✓ Logged in", stderr: "" };
 				}
+				if (args[0] === "repo" && args[1] === "view") {
+					return {
+						stdout: '{"nameWithOwner":"TeodorArg/openclaw-automation-tools"}',
+						stderr: "",
+					};
+				}
+				if (args[0] === "pr" && args[1] === "list") {
+					return { stdout: "[]", stderr: "" };
+				}
 				throw new Error(`Unexpected command: ${command} ${args.join(" ")}`);
 			},
 		};
@@ -138,6 +147,10 @@ describe("host preflight", () => {
 			currentBranch: "feat/openclaw-host-git-workflow-live-check",
 			originUrl: "git@github.com:TeodorArg/openclaw-automation-tools.git",
 			ghAuthStatus: "ready",
+			remoteReadiness: {
+				protocol: "ssh",
+				githubRepoSlug: "TeodorArg/openclaw-automation-tools",
+			},
 		});
 	});
 
@@ -202,5 +215,139 @@ describe("host preflight", () => {
 		).rejects.toThrow(
 			"GitHub CLI auth is not ready for bounded host workflow actions.",
 		);
+	});
+
+	it("fails with concrete remediation commands when SSH remote readiness is blocked", async () => {
+		const remoteRunner: HostCommandRunner = {
+			async run(command, args) {
+				if (args[0] === "--version") {
+					return { stdout: `${command} version test`, stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--show-toplevel") {
+					return { stdout: "/Users/tester/repo", stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
+					return {
+						stdout: "feat/openclaw-host-git-workflow-live-check",
+						stderr: "",
+					};
+				}
+				if (args[0] === "remote" && args[1] === "get-url") {
+					return {
+						stdout: "git@github.com:TeodorArg/openclaw-automation-tools.git",
+						stderr: "",
+					};
+				}
+				if (args[0] === "auth" && args[1] === "status") {
+					return { stdout: "github.com\n  ✓ Logged in", stderr: "" };
+				}
+				if (args[0] === "repo" && args[1] === "view") {
+					return {
+						stdout: '{"nameWithOwner":"TeodorArg/openclaw-automation-tools"}',
+						stderr: "",
+					};
+				}
+				if (args[0] === "pr" && args[1] === "list") {
+					return { stdout: "[]", stderr: "" };
+				}
+				if (command === "ssh" && args[0] === "-T") {
+					throw new Error(
+						"ssh -T git@github.com: Host key verification failed.",
+					);
+				}
+				throw new Error(`Unexpected command: ${command} ${args.join(" ")}`);
+			},
+		};
+
+		await expect(
+			preflightHostOps(
+				"/Users/tester/repo",
+				{
+					requireGhAuth: true,
+					requireNonMainBranch: true,
+					requireRemotePushReadiness: true,
+				},
+				remoteRunner,
+			),
+		).rejects.toThrow(
+			/Remote push\/PR readiness is blocked because SSH trust or auth to github.com is not ready on the bound host node\./,
+		);
+		await expect(
+			preflightHostOps(
+				"/Users/tester/repo",
+				{
+					requireGhAuth: true,
+					requireNonMainBranch: true,
+					requireRemotePushReadiness: true,
+				},
+				remoteRunner,
+			),
+		).rejects.toThrow(/ssh-keyscan github.com >> ~\/\.ssh\/known_hosts/);
+	});
+
+	it("detects an existing PR for the current branch through explicit lookup", async () => {
+		const remoteRunner: HostCommandRunner = {
+			async run(command, args) {
+				if (args[0] === "--version") {
+					return { stdout: `${command} version test`, stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--show-toplevel") {
+					return { stdout: "/Users/tester/repo", stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
+					return {
+						stdout: "feat/openclaw-host-git-workflow-live-check",
+						stderr: "",
+					};
+				}
+				if (args[0] === "remote" && args[1] === "get-url") {
+					return {
+						stdout: "git@github.com:TeodorArg/openclaw-automation-tools.git",
+						stderr: "",
+					};
+				}
+				if (args[0] === "auth" && args[1] === "status") {
+					return { stdout: "github.com\n  ✓ Logged in", stderr: "" };
+				}
+				if (args[0] === "repo" && args[1] === "view") {
+					return {
+						stdout: '{"nameWithOwner":"TeodorArg/openclaw-automation-tools"}',
+						stderr: "",
+					};
+				}
+				if (command === "ssh" && args[0] === "-T") {
+					return {
+						stdout: "",
+						stderr:
+							"Hi test-user! You've successfully authenticated, but GitHub does not provide shell access.",
+					};
+				}
+				if (args[0] === "pr" && args[1] === "list") {
+					return {
+						stdout:
+							'[{"number":123,"url":"https://github.com/test/repo/pull/123","headRefName":"feat/openclaw-host-git-workflow-live-check","baseRefName":"main","state":"OPEN"}]',
+						stderr: "",
+					};
+				}
+				throw new Error(`Unexpected command: ${command} ${args.join(" ")}`);
+			},
+		};
+
+		const result = await preflightHostOps(
+			"/Users/tester/repo",
+			{
+				requireGhAuth: true,
+				requireNonMainBranch: true,
+				requireRemotePushReadiness: true,
+			},
+			remoteRunner,
+		);
+
+		expect(result.remoteReadiness.existingPullRequest).toMatchObject({
+			number: 123,
+			baseRefName: "main",
+			headRefName: "feat/openclaw-host-git-workflow-live-check",
+			state: "OPEN",
+		});
 	});
 });
