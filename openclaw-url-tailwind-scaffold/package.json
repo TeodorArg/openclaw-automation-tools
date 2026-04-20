@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-url-tailwind-scaffold",
 	"version": "0.1.0",
-	"description": "Native OpenClaw plugin that accepts a reference page URL and returns a bounded Tailwind CSS v4 app-shell scaffold summary.",
+	"description": "Native OpenClaw plugin that accepts a reference page URL and returns a bounded Tailwind CSS v4 scaffold summary or page contract.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",

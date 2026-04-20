@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-url-tailwind-scaffold",
 	"name": "OpenClaw URL Tailwind Scaffold",
-	"description": "Native OpenClaw plugin that accepts a reference page URL and returns a bounded Tailwind CSS v4 app-shell scaffold summary.",
+	"description": "Native OpenClaw plugin that accepts a reference page URL and returns a bounded Tailwind CSS v4 scaffold summary or page contract.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
 	"configSchema": {
