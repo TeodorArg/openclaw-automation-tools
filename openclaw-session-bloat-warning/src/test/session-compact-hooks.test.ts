@@ -427,7 +427,14 @@ describe("session compact hooks", () => {
 	it("prefers stored token signals over char heuristics when building delivery copy", async () => {
 		const fixture = await createFixture();
 		const compactionHooks = createCompactionWarningHooks(fixture.config);
-		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks({
+			...fixture.config,
+			contextWindowTokens: 200000,
+			warningInputTokensRatio: 0.6,
+			elevatedInputTokensRatio: 0.725,
+			criticalInputTokensRatio: 0.85,
+			maxWarningsPerSession: 3,
+		});
 
 		await compactionHooks.llmOutput(
 			{
@@ -583,6 +590,10 @@ async function createFixture() {
 		warningInputTokensThreshold: 120000,
 		elevatedInputTokensThreshold: 145000,
 		criticalInputTokensThreshold: 170000,
+		contextWindowTokens: 200000,
+		warningInputTokensRatio: 0.6,
+		elevatedInputTokensRatio: 0.725,
+		criticalInputTokensRatio: 0.85,
 		timeoutRiskStreakThreshold: 2,
 		lanePressureStreakThreshold: 1,
 		noReplyStreakThreshold: 2,

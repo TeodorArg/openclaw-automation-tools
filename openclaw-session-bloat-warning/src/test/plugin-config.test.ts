@@ -29,6 +29,10 @@ describe("plugin config", () => {
 		expect(config.noReplyStreakThreshold).toBe(2);
 		expect(config.timeoutRiskMsThreshold).toBe(45000);
 		expect(config.lanePressureMsThreshold).toBe(10000);
+		expect(config.contextWindowTokens).toBe(200000);
+		expect(config.warningInputTokensRatio).toBe(0.6);
+		expect(config.elevatedInputTokensRatio).toBe(0.725);
+		expect(config.criticalInputTokensRatio).toBe(0.85);
 	});
 
 	it("accepts explicit overrides", () => {
@@ -52,6 +56,10 @@ describe("plugin config", () => {
 			noReplyStreakThreshold: 4,
 			timeoutRiskMsThreshold: 30000,
 			lanePressureMsThreshold: 8000,
+			contextWindowTokens: 128000,
+			warningInputTokensRatio: 0.55,
+			elevatedInputTokensRatio: 0.7,
+			criticalInputTokensRatio: 0.82,
 		});
 
 		expect(config.stateFilePath).toContain("tmp/custom-state.json");
@@ -73,6 +81,10 @@ describe("plugin config", () => {
 		expect(config.noReplyStreakThreshold).toBe(4);
 		expect(config.timeoutRiskMsThreshold).toBe(30000);
 		expect(config.lanePressureMsThreshold).toBe(8000);
+		expect(config.contextWindowTokens).toBe(128000);
+		expect(config.warningInputTokensRatio).toBe(0.55);
+		expect(config.elevatedInputTokensRatio).toBe(0.7);
+		expect(config.criticalInputTokensRatio).toBe(0.82);
 	});
 
 	it("keeps manifest config keys aligned with runtime defaults", () => {
@@ -102,5 +114,8 @@ describe("plugin config", () => {
 		expect(
 			manifest.configSchema.properties.timeoutRiskMsThreshold?.description,
 		).toContain("Defaults to 45000.");
+		expect(
+			manifest.configSchema.properties.criticalInputTokensRatio?.description,
+		).toContain("Defaults to 0.85.");
 	});
 });
