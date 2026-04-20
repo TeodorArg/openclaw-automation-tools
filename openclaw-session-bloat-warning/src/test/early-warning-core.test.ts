@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { createEarlyWarningDecision } from "../runtime/core/early-warning-core.js";
 import { resolvePluginConfig } from "../runtime/config/plugin-config.js";
+import { createEarlyWarningDecision } from "../runtime/core/early-warning-core.js";
 
 describe("early warning token thresholds", () => {
 	it("uses ratio-derived critical threshold for 200k context by default", () => {

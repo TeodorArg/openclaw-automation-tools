@@ -96,8 +96,14 @@ export function resolvePluginConfig(
 			input?.lanePressureMsThreshold,
 			10000,
 		),
-		contextWindowTokens: readPositiveInteger(input?.contextWindowTokens, 200000),
-		warningInputTokensRatio: readUnitInterval(input?.warningInputTokensRatio, 0.6),
+		contextWindowTokens: readPositiveInteger(
+			input?.contextWindowTokens,
+			200000,
+		),
+		warningInputTokensRatio: readUnitInterval(
+			input?.warningInputTokensRatio,
+			0.6,
+		),
 		elevatedInputTokensRatio: readUnitInterval(
 			input?.elevatedInputTokensRatio,
 			0.725,
@@ -132,7 +138,10 @@ function readPositiveInteger(value: unknown, fallback: number) {
 }
 
 function readUnitInterval(value: unknown, fallback: number) {
-	return typeof value === "number" && Number.isFinite(value) && value > 0 && value <= 1
+	return typeof value === "number" &&
+		Number.isFinite(value) &&
+		value > 0 &&
+		value <= 1
 		? value
 		: fallback;
 }
