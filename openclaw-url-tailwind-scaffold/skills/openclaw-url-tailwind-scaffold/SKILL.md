@@ -24,6 +24,7 @@ The skill should stay narrow:
 - return acquisition metadata, normalized shell regions, bounded source-document signals, synthesized Tailwind v4 token candidates, and either a scaffold summary or a structured page contract
 - keep optional surfaces reported as optional or unresolved instead of fabricating them
 - keep multi-agent orchestration outside the plugin boundary
+- hand off to `openclaw-url-tailwind-scaffold-orchestrator` when the user wants per-island fan-out or persisted artifact collection above `page_contract`
 
 ## Supported V1 Scope
 

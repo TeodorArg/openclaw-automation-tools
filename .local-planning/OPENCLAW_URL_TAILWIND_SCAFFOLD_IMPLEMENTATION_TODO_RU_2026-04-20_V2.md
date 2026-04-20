@@ -24,6 +24,7 @@
 - [x] подготовить tests first для contract parsing и output shape
 - [x] завести bounded static DOM/island extraction для shell landmarks поверх fetched HTML
 - [x] добавить bounded token synthesis и Tailwind v4 utility-candidate mapping поверх shell structure
+- [x] добавить bundled orchestration skill и artifact contract для top-layer island fan-out поверх `page_contract`
 
 ## Not In This Slice
 

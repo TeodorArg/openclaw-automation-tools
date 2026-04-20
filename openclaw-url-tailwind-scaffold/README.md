@@ -8,14 +8,15 @@ This package ships one primary tool:
 
 - `url_tailwind_scaffold_action`
 
-And one primary bundled skill:
+And two bundled skills:
 
 - `openclaw-url-tailwind-scaffold`
+- `openclaw-url-tailwind-scaffold-orchestrator`
 
 The shipped surface is intentionally minimal:
 
 - one tool entrypoint
-- one bundled skill
+- one analyzer skill plus one orchestration skill
 - no plugin config
 - no extra hooks
 - one narrow working action: `analyze_reference_page`
@@ -27,6 +28,7 @@ This package is an analyzer core, not a multi-agent orchestrator.
 - the plugin may feed a wider skill or agent workflow
 - the plugin does not spawn or coordinate subagents
 - file persistence and multi-step orchestration stay outside the plugin boundary
+- the bundled orchestration skill teaches the outer workflow shape, but session tools still do the actual fan-out
 
 ## Tool Contract
 
@@ -38,6 +40,7 @@ This package is an analyzer core, not a multi-agent orchestrator.
 - real static acquisition metadata for `fetch-backed` requests, including bounded HTTP and document signals
 - bounded Tailwind v4 token candidates and utility candidates synthesized from shell structure
 - either a Tailwind CSS v4 scaffold summary with a generated file tree suggestion or a structured `page_contract`
+- a companion orchestration skill that explains how to turn `page_contract.islands[]` into bounded island lanes and aggregated artifacts
 
 V1 is intentionally narrow:
 
@@ -92,3 +95,17 @@ Structured calls still use the command-dispatch envelope and must include `comma
 - `page_contract` for structured analyzer output intended to feed higher-level skills or agent workflows
 
 In the current slice, `page_contract` can include source-backed selectors, DOM paths, text markers, and key nodes for matched shell islands from static HTML landmarks. Tailwind tokens and utility mappings are still bounded synthesized candidates, and unmatched regions stay explicit and inferred.
+
+## Higher-Level Workflow
+
+Use `openclaw-url-tailwind-scaffold` when the user wants the analyzer output itself.
+
+Use `openclaw-url-tailwind-scaffold-orchestrator` when the user wants a layer above the plugin that:
+
+- calls `url_tailwind_scaffold_action`
+- reads `page_contract.islands[]`
+- splits islands into bounded follow-up tasks
+- uses session tools for subagent fan-out when the host runtime exposes them
+- aggregates `md/json` artifacts
+
+The packaged artifact contract for that outer layer lives at [ARTIFACT_CONTRACT.md](./skills/openclaw-url-tailwind-scaffold-orchestrator/ARTIFACT_CONTRACT.md).

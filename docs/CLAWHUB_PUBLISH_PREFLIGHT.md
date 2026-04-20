@@ -274,14 +274,14 @@ Current session-bloat warning package coverage to publish:
 Current URL-tailwind scaffold package coverage to publish:
 - typed tool `url_tailwind_scaffold_action`
 - working action `analyze_reference_page`
-- bundled skill `openclaw-url-tailwind-scaffold`
+- bundled skills `openclaw-url-tailwind-scaffold` and `openclaw-url-tailwind-scaffold-orchestrator`
 - bounded static fetch-backed acquisition metadata including HTTP and document signals for a reference URL input
 - normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
 - source-backed shell landmark extraction for matched static DOM regions
 - synthesized Tailwind v4 token candidates and utility candidates remain bounded and inferred from shell structure rather than from donor CSS or computed styles
 - normalized shell regions remain inferred only where no confident static DOM landmark is found
 - bounded Tailwind CSS v4 scaffold summary or structured `page_contract` output
-- plugin boundary keeps multi-step orchestration, subagent coordination, and file persistence external-only
+- packaged orchestration skill and artifact contract describe the outer workflow, while plugin boundary keeps actual multi-step orchestration, subagent coordination, and file persistence external-only
 - raw slash-command dispatch through either a plain URL or a compact JSON payload
 
 ## Commands

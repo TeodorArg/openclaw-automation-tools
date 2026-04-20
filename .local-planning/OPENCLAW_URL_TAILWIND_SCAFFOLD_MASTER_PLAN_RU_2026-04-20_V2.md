@@ -17,7 +17,7 @@ Decision: старый комплект архивировать как исто
 - shipped package now has bounded static fetch-backed acquisition plus shell landmark extraction and still avoids browser render
 - текущий outputMode supports both `scaffold_summary` and `page_contract`
 - `componentSplit` ограничен `app-shell`, `sidebar`, `header`, `content`, `footer`
-- summary and `page_contract` now carry real bounded HTTP/document acquisition metadata, source-backed shell landmark evidence where static DOM extraction succeeds, and synthesized Tailwind v4 token candidates plus utility candidates
+- summary and `page_contract` now carry real bounded HTTP/document acquisition metadata, source-backed shell landmark evidence where static DOM extraction succeeds, synthesized Tailwind v4 token candidates plus utility candidates, and a bundled orchestration skill plus artifact contract for the layer above the plugin
 
 ## Target Boundary
 
@@ -85,7 +85,7 @@ Checklist:
 - [x] Slice 2: basic fetch-backed DOM acquisition for public static pages
 - [x] Slice 3: island segmentation and key-node extraction
 - [x] Slice 4: token synthesis plus Tailwind v4 mapping
-- [ ] Slice 5: optional skill/orchestration planning for artifacts and subagents
+- [x] Slice 5: optional skill/orchestration planning for artifacts and subagents
 Done when:
 - каждый slice можно реализовать и проверить отдельно
 
