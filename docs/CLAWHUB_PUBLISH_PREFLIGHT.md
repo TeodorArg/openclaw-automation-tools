@@ -12,6 +12,7 @@ Plugin packages listed there and currently expected here in lockstep:
 - `openclaw-workflow-planner/`
 - `openclaw-canon/`
 - `openclaw-session-bloat-warning/`
+- `openclaw-url-tailwind-scaffold/`
 
 Primary host-backed package entrypoint:
 - `send_to_git` / `отправь в гит`
@@ -30,6 +31,11 @@ Session-bloat warning package entrypoints:
 - official compaction lifecycle hooks `before_compaction` and `after_compaction`
 - observe-only hooks `llm_input` and `llm_output`
 - visible early-warning delivery on `before_agent_reply`
+
+URL-tailwind scaffold package entrypoints:
+- bundled skill `openclaw-url-tailwind-scaffold`
+- typed tool `url_tailwind_scaffold_action`
+- working action `analyze_reference_page`
 
 Non-publishable repo docs:
 - `README.md`
@@ -79,6 +85,17 @@ Run for `openclaw-session-bloat-warning/`:
 
 ```bash
 cd openclaw-session-bloat-warning
+pnpm lint
+pnpm typecheck
+pnpm build
+pnpm test
+pnpm pack:smoke
+```
+
+Run for `openclaw-url-tailwind-scaffold/`:
+
+```bash
+cd openclaw-url-tailwind-scaffold
 pnpm lint
 pnpm typecheck
 pnpm build
@@ -249,6 +266,16 @@ Current session-bloat warning package coverage to publish:
 - plugin-owned per-session dedupe and cooldown state
 - bundled `session-bloat-warning` instruction layer
 
+Current URL-tailwind scaffold package coverage to publish:
+- typed tool `url_tailwind_scaffold_action`
+- working action `analyze_reference_page`
+- bundled skill `openclaw-url-tailwind-scaffold`
+- declared acquisition metadata echoed from the request contract for a reference URL input
+- normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
+- explicit synthetic source-backed versus inferred status labels derived from request mode
+- bounded Tailwind CSS v4 scaffold summary with generated file-tree guidance
+- raw slash-command dispatch through either a plain URL or a compact JSON payload
+
 ## Commands
 
 Release prep automation:
@@ -279,6 +306,7 @@ clawhub package publish ./openclaw-host-git-workflow --dry-run
 clawhub package publish ./openclaw-workflow-planner --dry-run
 clawhub package publish ./openclaw-canon --dry-run
 clawhub package publish ./openclaw-session-bloat-warning --dry-run
+clawhub package publish ./openclaw-url-tailwind-scaffold --dry-run
 ```
 
 Plugin publish:
@@ -288,6 +316,7 @@ clawhub package publish ./openclaw-host-git-workflow
 clawhub package publish ./openclaw-workflow-planner
 clawhub package publish ./openclaw-canon
 clawhub package publish ./openclaw-session-bloat-warning
+clawhub package publish ./openclaw-url-tailwind-scaffold
 ```
 
 Notes:

@@ -20,6 +20,7 @@ Current live publishable plugin packages:
 - `openclaw-workflow-planner/`
 - `openclaw-canon/`
 - `openclaw-session-bloat-warning/`
+- `openclaw-url-tailwind-scaffold/`
 
 CI package matrices, publish/preflight docs, and local governance must stay in lockstep with this list.
 
@@ -48,6 +49,10 @@ In the live session-bloat warning package, the current runtime domains are group
 - `src/runtime/hooks/`
 - `src/runtime/state/`
 - `src/runtime/text/`
+
+In the live URL-tailwind scaffold package, the current runtime domains are grouped under:
+- `src/runtime/analysis/`
+- `src/runtime/contract/`
 
 Future plugin packages in this repository should follow the same package-shape baseline unless a narrower canon update replaces it.
 

@@ -19,6 +19,7 @@ jobs:
           - openclaw-workflow-planner
           - openclaw-canon
           - openclaw-session-bloat-warning
+          - openclaw-url-tailwind-scaffold
     defaults:
       run:
         working-directory: ${{ matrix.package }}

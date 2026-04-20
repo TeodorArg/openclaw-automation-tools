@@ -58,3 +58,4 @@ Current package release ledgers:
 - `docs/releases/openclaw-workflow-planner/README.md`
 - `docs/releases/openclaw-canon/README.md`
 - `docs/releases/openclaw-session-bloat-warning/README.md`
+- `docs/releases/openclaw-url-tailwind-scaffold/README.md`
