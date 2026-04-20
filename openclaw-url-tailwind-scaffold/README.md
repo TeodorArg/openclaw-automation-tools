@@ -36,13 +36,15 @@ This package is an analyzer core, not a multi-agent orchestrator.
 - acquisition metadata
 - a normalized shell contract for `app-shell`, `sidebar`, `header`, `content`, and `footer`
 - real static acquisition metadata for `fetch-backed` requests, including bounded HTTP and document signals
+- bounded Tailwind v4 token candidates and utility candidates synthesized from shell structure
 - either a Tailwind CSS v4 scaffold summary with a generated file tree suggestion or a structured `page_contract`
 
 V1 is intentionally narrow:
 
 - `fetch-backed` now performs bounded static HTML acquisition for publicly reachable pages
 - the current slice also performs bounded static DOM/island extraction for shell landmarks when fetched HTML is usable
-- browser rendering, JS-heavy page analysis, and token extraction from live styles are still separate later slices
+- the current slice also synthesizes bounded Tailwind v4 token candidates and utility candidates from shell structure without cloning donor CSS
+- browser rendering, JS-heavy page analysis, and token extraction from live computed styles are still separate later slices
 - no pixel-perfect clone claim
 - no shipped browser-assisted or auth-gated analysis claim
 - no donor CSS-class reuse claim
@@ -89,4 +91,4 @@ Structured calls still use the command-dispatch envelope and must include `comma
 - `scaffold_summary` for the existing bounded text summary
 - `page_contract` for structured analyzer output intended to feed higher-level skills or agent workflows
 
-In the current slice, `page_contract` can include source-backed selectors, DOM paths, text markers, and key nodes for matched shell islands from static HTML landmarks. Unmatched regions stay explicit and inferred.
+In the current slice, `page_contract` can include source-backed selectors, DOM paths, text markers, and key nodes for matched shell islands from static HTML landmarks. Tailwind tokens and utility mappings are still bounded synthesized candidates, and unmatched regions stay explicit and inferred.

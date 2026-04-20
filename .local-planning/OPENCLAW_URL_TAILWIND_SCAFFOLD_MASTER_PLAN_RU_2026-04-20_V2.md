@@ -17,7 +17,7 @@ Decision: старый комплект архивировать как исто
 - shipped package now has bounded static fetch-backed acquisition plus shell landmark extraction and still avoids browser render
 - текущий outputMode supports both `scaffold_summary` and `page_contract`
 - `componentSplit` ограничен `app-shell`, `sidebar`, `header`, `content`, `footer`
-- summary and `page_contract` now carry real bounded HTTP/document acquisition metadata and source-backed shell landmark evidence where static DOM extraction succeeds
+- summary and `page_contract` now carry real bounded HTTP/document acquisition metadata, source-backed shell landmark evidence where static DOM extraction succeeds, and synthesized Tailwind v4 token candidates plus utility candidates
 
 ## Target Boundary
 
@@ -53,9 +53,9 @@ Checklist:
 - [x] island-level schema for shell regions: `id`, `regionType`, `selectors`, `anchors`, `layout`, `confidence`
 - [x] key-node schema for bounded shell extraction: headings, buttons, tables, nav items, forms
 - [ ] expand island taxonomy beyond shell regions toward open-ended `islandType` and `detectedRole`
-- [ ] expand token schema: spacing, colors, radius, typography, shadows
+- [x] expand token schema: spacing, colors, radius, typography, shadows
 - [x] evidence schema: `source-backed`, `inferred`, `unsupported`, evidence array
-- [ ] Tailwind mapping schema separated from raw observed styles
+- [x] Tailwind mapping schema separated from raw observed styles
 Done when:
 - output может служить и для skill orchestration, и для later scaffold generation without relying on shell-only placeholders
 
@@ -68,7 +68,7 @@ Evidence:
 - current README wording
 Checklist:
 - [ ] `reference-url` mode остается текущим shipped behavior
-- [x] `fetch-backed` becomes real only after implementation, not as wording shortcut
+- [x] `fetch-backed` is shipped behavior and should stay described as such, not as future wording shortcut
 - [ ] `browser-render` stays future-scoped until verified
 - [ ] unsupported/js-heavy/auth-gated states get explicit result markers
 Done when:
@@ -84,7 +84,7 @@ Checklist:
 - [x] Slice 1: contract reset and tests for `page_contract` without live fetch
 - [x] Slice 2: basic fetch-backed DOM acquisition for public static pages
 - [x] Slice 3: island segmentation and key-node extraction
-- [ ] Slice 4: token synthesis plus Tailwind v4 mapping
+- [x] Slice 4: token synthesis plus Tailwind v4 mapping
 - [ ] Slice 5: optional skill/orchestration planning for artifacts and subagents
 Done when:
 - каждый slice можно реализовать и проверить отдельно

@@ -12,4 +12,4 @@ Current shipped package boundary:
 - slug: `openclaw-url-tailwind-scaffold`
 - primary tool: `url_tailwind_scaffold_action`
 - current working action: `analyze_reference_page`
-- current slice: bounded reference-URL analysis with static fetch-backed HTML acquisition for publicly reachable pages, source-backed shell landmark extraction where usable DOM exists, explicit inferred fallback for unmatched regions, either Tailwind CSS v4 scaffold summary or structured `page_contract` output, and plugin boundary fields that keep orchestration and file persistence external-only
+- current slice: bounded reference-URL analysis with static fetch-backed HTML acquisition for publicly reachable pages, source-backed shell landmark extraction where usable DOM exists, synthesized Tailwind v4 token and utility candidates, explicit inferred fallback for unmatched regions, either Tailwind CSS v4 scaffold summary or structured `page_contract` output, and plugin boundary fields that keep orchestration and file persistence external-only

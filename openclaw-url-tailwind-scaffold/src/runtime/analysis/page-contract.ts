@@ -5,6 +5,11 @@ import type {
 	ExtractedDomIslands,
 } from "./extract-dom-islands.js";
 import type { NormalizedTailwindAppShell } from "./normalize-shell.js";
+import {
+	buildTailwindIslandMapping,
+	type TailwindIslandMapping,
+	type TailwindTokenSet,
+} from "./tailwind-tokens.js";
 
 export type ReferencePageContract = {
 	schemaVersion: 1;
@@ -51,26 +56,11 @@ export type ReferencePageContract = {
 			label: string;
 			selector: string;
 		}>;
-		tailwindMapping: {
-			container: string[];
-		};
+		tailwindMapping: TailwindIslandMapping;
 		confidence: number;
 		evidence: string[];
 	}>;
-	tokens: {
-		colors: {
-			status: "source-backed" | "inferred";
-			note: string;
-		};
-		spacing: {
-			status: "source-backed" | "inferred";
-			note: string;
-		};
-		typography: {
-			status: "source-backed" | "inferred";
-			note: string;
-		};
-	};
+	tokens: TailwindTokenSet;
 	boundaries: {
 		multiAgentOrchestration: "external-only";
 		filePersistence: "external-only";
@@ -107,23 +97,6 @@ function toDetectedRole(regionType: string): string {
 			return "page-footer";
 		default:
 			return "application-shell";
-	}
-}
-
-function toContainerClasses(regionType: string): string[] {
-	switch (regionType) {
-		case "app-shell":
-			return ["min-h-screen", "bg-slate-950", "text-slate-50"];
-		case "sidebar":
-			return ["w-72", "shrink-0", "border-r", "border-white/10"];
-		case "header":
-			return ["flex", "items-center", "justify-between", "gap-4"];
-		case "content":
-			return ["flex-1", "space-y-6", "p-6"];
-		case "footer":
-			return ["border-t", "border-white/10", "px-6", "py-4"];
-		default:
-			return ["space-y-4"];
 	}
 }
 
@@ -164,9 +137,9 @@ export function buildReferencePageContract(input: {
 					selector: `[data-openclaw-region="${region.name}"]`,
 				},
 			],
-			tailwindMapping: {
-				container: toContainerClasses(region.name),
-			},
+			tailwindMapping: buildTailwindIslandMapping({
+				regionType: region.name,
+			}),
 			confidence: input.acquisition.sourceBacked ? 0.3 : 0.2,
 			evidence: input.acquisition.sourceBacked
 				? ["fetched-html", "normalized-shell", "inferred-region"]
@@ -190,9 +163,10 @@ export function buildReferencePageContract(input: {
 				note: island.note,
 			},
 			keyNodes: island.keyNodes,
-			tailwindMapping: {
-				container: toContainerClasses(island.regionType),
-			},
+			tailwindMapping: buildTailwindIslandMapping({
+				regionType: island.regionType,
+				island,
+			}),
 			confidence: island.confidence,
 			evidence: island.evidence,
 		};

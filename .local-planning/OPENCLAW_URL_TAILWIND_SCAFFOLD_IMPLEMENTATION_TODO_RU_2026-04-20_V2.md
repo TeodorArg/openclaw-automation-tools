@@ -23,6 +23,7 @@
 - [x] определить минимальный static-page acquisition slice без browser orchestration
 - [x] подготовить tests first для contract parsing и output shape
 - [x] завести bounded static DOM/island extraction для shell landmarks поверх fetched HTML
+- [x] добавить bounded token synthesis и Tailwind v4 utility-candidate mapping поверх shell structure
 
 ## Not In This Slice
 

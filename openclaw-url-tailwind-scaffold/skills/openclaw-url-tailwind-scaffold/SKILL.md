@@ -21,7 +21,7 @@ The skill should stay narrow:
 
 - accept the canonical action `analyze_reference_page`
 - work from a reference page URL as input and, for `fetch-backed`, perform bounded static HTML acquisition
-- return acquisition metadata, normalized shell regions, bounded source-document signals, and either a Tailwind CSS v4 scaffold summary or a structured page contract
+- return acquisition metadata, normalized shell regions, bounded source-document signals, synthesized Tailwind v4 token candidates, and either a scaffold summary or a structured page contract
 - keep optional surfaces reported as optional or unresolved instead of fabricating them
 - keep multi-agent orchestration outside the plugin boundary
 
@@ -29,6 +29,7 @@ The skill should stay narrow:
 
 - reference-URL-driven scaffold synthesis with bounded static HTML acquisition for `fetch-backed`
 - bounded static DOM/island extraction for shell landmarks from usable fetched HTML
+- bounded Tailwind v4 token synthesis and utility-candidate mapping from shell structure
 - default shell split: `app-shell`, `sidebar`, `header`, `content`, `footer`
 - Tailwind CSS v4 summary output or `page_contract` output
 - componentized HTML-first target unless `frameworkHint` explicitly narrows it

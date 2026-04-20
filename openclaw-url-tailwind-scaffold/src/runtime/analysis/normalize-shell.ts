@@ -4,6 +4,10 @@ import type {
 } from "../contract/request.js";
 import type { AcquisitionMetadata } from "./acquisition.js";
 import type { ExtractedDomIslands } from "./extract-dom-islands.js";
+import {
+	buildTailwindTokenSet,
+	type TailwindTokenSet,
+} from "./tailwind-tokens.js";
 
 export type NormalizedTailwindAppShell = {
 	schemaVersion: 1;
@@ -19,11 +23,7 @@ export type NormalizedTailwindAppShell = {
 		sourceBacked: boolean;
 		note: string;
 	}>;
-	tokens: {
-		colors: { status: "source-backed" | "inferred"; note: string };
-		spacing: { status: "source-backed" | "inferred"; note: string };
-		typography: { status: "source-backed" | "inferred"; note: string };
-	};
+	tokens: TailwindTokenSet;
 	componentPlan: {
 		generatedFiles: string[];
 	};
@@ -67,20 +67,11 @@ export function buildNormalizedTailwindAppShell(
 						: `${name} is kept as an inferred placeholder because live page extraction did not produce usable HTML evidence for this request.`,
 			};
 		}),
-		tokens: {
-			colors: {
-				status: "inferred",
-				note: "Color tokens stay semantic and map into Tailwind CSS v4 `@theme` variables. The current slice does not derive them from fetched HTML yet.",
-			},
-			spacing: {
-				status: "inferred",
-				note: "Spacing scale is normalized into a reusable shell rhythm rather than donor CSS classes.",
-			},
-			typography: {
-				status: "inferred",
-				note: "Typography defaults to a bounded app-shell hierarchy instead of page-clone fidelity.",
-			},
-		},
+		tokens: buildTailwindTokenSet({
+			acquisition,
+			extraction,
+			componentSplit,
+		}),
 		componentPlan: {
 			generatedFiles: [
 				"app.css",

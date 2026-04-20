@@ -19,6 +19,12 @@ export function buildTailwindAppShellSummary(input: {
 	normalizedShell: NormalizedTailwindAppShell;
 }): TailwindAppShellSummary {
 	const subject = deriveSubject(input.request);
+	const tokenCandidateCount =
+		input.normalizedShell.tokens.colors.candidates.length +
+		input.normalizedShell.tokens.spacing.candidates.length +
+		input.normalizedShell.tokens.typography.candidates.length +
+		input.normalizedShell.tokens.radius.candidates.length +
+		input.normalizedShell.tokens.shadows.candidates.length;
 
 	return {
 		headline: `Tailwind v4 app shell scaffold for ${subject}`,
@@ -32,6 +38,7 @@ export function buildTailwindAppShellSummary(input: {
 				? "HTTP status: unavailable"
 				: `HTTP status: ${input.acquisition.http.status}`,
 			`Matched shell regions: ${input.normalizedShell.regions.filter((region) => region.sourceBacked).length}/${input.normalizedShell.regions.length}`,
+			`Token candidates: ${tokenCandidateCount} inferred Tailwind v4 theme and utility suggestions from shell structure.`,
 			"Keep Tailwind output semantic, mobile-first, and free from donor CSS class reuse.",
 		],
 		recommendedFiles: input.normalizedShell.componentPlan.generatedFiles,

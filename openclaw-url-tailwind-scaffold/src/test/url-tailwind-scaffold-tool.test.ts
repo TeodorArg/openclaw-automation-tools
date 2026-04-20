@@ -94,6 +94,17 @@ describe("createUrlTailwindScaffoldTool", () => {
 		expect(payload.summary.keyPoints[3]).toContain(
 			"Matched shell regions: 5/5",
 		);
+		expect(payload.summary.keyPoints[4]).toContain("Token candidates: 16");
+		expect(payload.normalizedShell.tokens.colors.status).toBe("inferred");
+		expect(
+			payload.normalizedShell.tokens.colors.candidates[0].themeVariable,
+		).toBe("--color-shell-bg");
+		expect(
+			payload.normalizedShell.tokens.spacing.candidates[0].utilityCandidates,
+		).toContain("p-6");
+		expect(
+			payload.normalizedShell.tokens.typography.candidates[0].utilityCandidates,
+		).toContain("text-3xl");
 		expect(payload.pageContract).toBeUndefined();
 	});
 
@@ -151,6 +162,25 @@ describe("createUrlTailwindScaffoldTool", () => {
 		expect(payload.pageContract.islands[0].evidence).toContain("dom-parse");
 		expect(payload.pageContract.islands[0].layout.status).toBe(
 			"source-backed-dom",
+		);
+		expect(
+			payload.pageContract.tokens.radius.candidates[0].utilityCandidates,
+		).toContain("rounded-xl");
+		expect(
+			payload.pageContract.tokens.shadows.candidates[0].utilityCandidates,
+		).toContain("shadow-sm");
+		expect(payload.pageContract.islands[3].tailwindMapping.spacing).toContain(
+			"p-6",
+		);
+		expect(payload.pageContract.islands[3].tailwindMapping.tokenRefs).toContain(
+			"type-shell-title",
+		);
+		expect(payload.pageContract.islands[3].tailwindMapping.keyNodes[0]).toEqual(
+			{
+				keyNodeId: "key-node-1",
+				role: "h1",
+				utilities: ["text-3xl", "font-semibold", "tracking-tight"],
+			},
 		);
 	});
 
@@ -498,8 +528,15 @@ describe("createUrlTailwindScaffoldTool", () => {
 		expect(payload.pageContract.islands[1].layout.status).toBe(
 			"synthetic-request-mode",
 		);
+		expect(payload.pageContract.islands[1].tailwindMapping.note).toContain(
+			"remain inferred",
+		);
 		expect(payload.pageContract.islands[4].layout.status).toBe(
 			"synthetic-request-mode",
+		);
+		expect(payload.pageContract.tokens.colors.status).toBe("inferred");
+		expect(payload.pageContract.tokens.colors.candidates[0].source).toBe(
+			"source-backed-dom",
 		);
 		expect(payload.normalizedShell.unresolvedAreas).toContain(
 			"sidebar could not be matched confidently from fetched HTML in the current static DOM slice.",
