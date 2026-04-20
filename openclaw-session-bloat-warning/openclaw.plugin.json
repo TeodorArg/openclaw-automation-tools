@@ -2,7 +2,7 @@
 	"id": "openclaw-session-bloat-warning",
 	"name": "OpenClaw Session Bloat Warning",
 	"description": "OpenClaw plugin for compaction warnings, earlier visible session-heaviness warnings, and timeout/lane-pressure warning heuristics with bundled session-bloat-warning guidance.",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"skills": ["./skills"],
 	"configSchema": {
 		"type": "object",
