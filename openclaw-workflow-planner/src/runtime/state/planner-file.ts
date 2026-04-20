@@ -1,7 +1,9 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, open, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import {
 	createEmptyPlannerState,
+	hydratePlannerState,
 	type PlannerIdea,
 	type PlannerPlanBlock,
 	type PlannerState,
@@ -10,6 +12,40 @@ import {
 
 const STATE_START = "<!-- openclaw-workflow-planner-state";
 const STATE_END = "-->";
+const LOCKFILE_SUFFIX = ".lock";
+const TEMPFILE_SUFFIX = ".tmp";
+
+export class PlannerConcurrentModificationError extends Error {
+	constructor(filePath: string) {
+		super(
+			`Planner state changed on disk before save completed for ${filePath}. Reload WORKFLOW_PLAN.md and retry the action.`,
+		);
+		this.name = "PlannerConcurrentModificationError";
+	}
+}
+
+function hashPlannerMarkdown(markdown: string): string {
+	return createHash("sha256").update(markdown).digest("hex");
+}
+
+async function readPlannerMarkdownIfPresent(
+	filePath: string,
+): Promise<string | null> {
+	try {
+		return await readFile(filePath, "utf8");
+	} catch (error) {
+		if (
+			error &&
+			typeof error === "object" &&
+			"code" in error &&
+			error.code === "ENOENT"
+		) {
+			return null;
+		}
+
+		throw error;
+	}
+}
 
 function renderTask(task: PlannerTask): string {
 	return `- [${task.done ? "x" : " "}] ${task.text} (\`${task.id}\`, ${task.origin})`;
@@ -137,6 +173,9 @@ export function renderPlannerMarkdown(state: PlannerState): string {
 		"",
 		`Updated at: ${state.updatedAt}`,
 		`Ideas tracked: ${ideaCount}`,
+		`Requests tracked: ${Object.keys(state.controlPlane.requestRuntime).length}`,
+		`Entity records: ${Object.keys(state.controlPlane.entityRegistry.records).length}`,
+		`Artifact records: ${Object.keys(state.controlPlane.artifactRegistry.records).length}`,
 		"",
 		...(ideaCount > 0
 			? state.ideas.flatMap((idea) => [...renderIdea(idea), ""])
@@ -167,13 +206,31 @@ export function parsePlannerMarkdown(markdown: string): PlannerState {
 		return createEmptyPlannerState();
 	}
 
-	const parsed = JSON.parse(jsonText) as PlannerState;
+	const parsed = JSON.parse(jsonText) as
+		| PlannerState
+		| { version?: number; updatedAt?: string; ideas?: PlannerIdea[] };
 
-	if (parsed.version !== 1 || !Array.isArray(parsed.ideas)) {
+	if (!Array.isArray(parsed.ideas)) {
 		throw new Error("Planner state block has an unsupported shape.");
 	}
 
-	return parsed;
+	if (parsed.version === 2) {
+		return hydratePlannerState({
+			ideas: parsed.ideas,
+			updatedAt:
+				typeof parsed.updatedAt === "string"
+					? parsed.updatedAt
+					: new Date().toISOString(),
+		});
+	}
+
+	return hydratePlannerState({
+		ideas: parsed.ideas,
+		updatedAt:
+			typeof parsed.updatedAt === "string"
+				? parsed.updatedAt
+				: new Date().toISOString(),
+	});
 }
 
 export async function loadPlannerState(pluginConfig?: {
@@ -181,49 +238,71 @@ export async function loadPlannerState(pluginConfig?: {
 }): Promise<{
 	filePath: string;
 	state: PlannerState;
+	revision: string;
 }> {
 	const filePath = resolvePlannerFilePath(pluginConfig);
+	const markdown = await readPlannerMarkdownIfPresent(filePath);
 
-	try {
-		const markdown = await readFile(filePath, "utf8");
+	if (markdown === null) {
 		return {
 			filePath,
-			state: parsePlannerMarkdown(markdown),
+			state: createEmptyPlannerState(),
+			revision: "missing",
 		};
-	} catch (error) {
-		if (
-			error &&
-			typeof error === "object" &&
-			"code" in error &&
-			error.code === "ENOENT"
-		) {
-			return {
-				filePath,
-				state: createEmptyPlannerState(),
-			};
-		}
-
-		throw error;
 	}
+
+	return {
+		filePath,
+		state: parsePlannerMarkdown(markdown),
+		revision: hashPlannerMarkdown(markdown),
+	};
 }
 
 export async function savePlannerState(
 	state: PlannerState,
 	pluginConfig?: {
 		plannerFilePath?: unknown;
+		expectedRevision?: string;
 	},
 ): Promise<{
 	filePath: string;
 	markdown: string;
+	revision: string;
 }> {
 	const filePath = resolvePlannerFilePath(pluginConfig);
 	const markdown = renderPlannerMarkdown(state);
+	const revision = hashPlannerMarkdown(markdown);
+	const lockPath = `${filePath}${LOCKFILE_SUFFIX}`;
+	const tempPath = `${filePath}.${process.pid}.${Date.now().toString(36)}${TEMPFILE_SUFFIX}`;
 
 	await mkdir(dirname(filePath), { recursive: true });
-	await writeFile(filePath, markdown, "utf8");
+	const lockHandle = await open(lockPath, "wx");
+
+	try {
+		const currentMarkdown = await readPlannerMarkdownIfPresent(filePath);
+		const currentRevision =
+			currentMarkdown === null
+				? "missing"
+				: hashPlannerMarkdown(currentMarkdown);
+
+		if (
+			typeof pluginConfig?.expectedRevision === "string" &&
+			currentRevision !== pluginConfig.expectedRevision
+		) {
+			throw new PlannerConcurrentModificationError(filePath);
+		}
+
+		await writeFile(tempPath, markdown, "utf8");
+		await rename(tempPath, filePath);
+	} finally {
+		await lockHandle.close();
+		await rm(lockPath, { force: true });
+		await rm(tempPath, { force: true });
+	}
 
 	return {
 		filePath,
 		markdown,
+		revision,
 	};
 }

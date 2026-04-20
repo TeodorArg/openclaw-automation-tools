@@ -1,3 +1,17 @@
+import { createEmptyArtifactRegistry } from "./artifact-registry.js";
+import {
+	createCurrentPointerRecord,
+	createEmptyCurrentPointerRegistry,
+	upsertCurrentPointerRecord,
+} from "./current-pointers.js";
+import {
+	createEmptyEntityRegistry,
+	createEntityVersionRecord,
+	upsertEntityRecord,
+} from "./entity-registry.js";
+import { createRequestRuntimeRecord } from "./request-runtime.js";
+import type { WorkflowControlPlane } from "./workflow-state.js";
+
 export type PlannerTaskOrigin = "generated" | "manual";
 
 export type PlannerTask = {
@@ -81,16 +95,140 @@ export type PlannerIdea = {
 };
 
 export type PlannerState = {
-	version: 1;
+	version: 2;
 	updatedAt: string;
 	ideas: PlannerIdea[];
+	controlPlane: WorkflowControlPlane;
 };
+
+function createEmptyControlPlane(): WorkflowControlPlane {
+	return {
+		requestRuntime: {},
+		entityRegistry: createEmptyEntityRegistry(),
+		artifactRegistry: createEmptyArtifactRegistry(),
+		currentPointers: createEmptyCurrentPointerRegistry(),
+	};
+}
+
+export function rebuildControlPlaneFromIdeas(
+	ideas: PlannerIdea[],
+): WorkflowControlPlane {
+	const controlPlane = createEmptyControlPlane();
+
+	for (const idea of ideas) {
+		const requestId = `req_${idea.slug}`;
+		const researchId = idea.research ? `research_${idea.slug}` : undefined;
+		const planId = idea.plan ? `plan_${idea.slug}` : undefined;
+		const taskSetId = idea.tasks.length > 0 ? `tasks_${idea.slug}` : undefined;
+		const currentBriefBySlice = {};
+
+		const artifactRefIds: string[] = [];
+
+		controlPlane.requestRuntime[requestId] = createRequestRuntimeRecord({
+			requestId,
+			title: idea.name,
+			currentResearchId: researchId,
+			currentPlanId: planId,
+			currentTaskSetId: taskSetId,
+			currentBriefBySlice,
+			status: idea.status,
+			hasResearch: Boolean(idea.research),
+			hasPlan: Boolean(idea.plan),
+			hasTasks: idea.tasks.length > 0,
+			hasCloseNote: Boolean(idea.closeNote),
+			updatedAt: idea.updatedAt,
+		});
+
+		controlPlane.entityRegistry = upsertEntityRecord(
+			controlPlane.entityRegistry,
+			createEntityVersionRecord({
+				entityId: requestId,
+				entityType: "Request",
+				createdAt: idea.createdAt,
+				updatedAt: idea.updatedAt,
+				governingRequestId: requestId,
+				summary: idea.requestedOutcome,
+				artifactRefIds,
+			}),
+		);
+
+		if (researchId) {
+			controlPlane.entityRegistry = upsertEntityRecord(
+				controlPlane.entityRegistry,
+				createEntityVersionRecord({
+					entityId: researchId,
+					entityType: "PlannerResearch",
+					createdAt: idea.createdAt,
+					updatedAt: idea.updatedAt,
+					governingRequestId: requestId,
+					summary: idea.research?.summary ?? "",
+				}),
+			);
+		}
+
+		if (planId && idea.plan) {
+			controlPlane.entityRegistry = upsertEntityRecord(
+				controlPlane.entityRegistry,
+				createEntityVersionRecord({
+					entityId: planId,
+					entityType: "PlannerPlan",
+					createdAt: idea.createdAt,
+					updatedAt: idea.updatedAt,
+					governingRequestId: requestId,
+					summary: idea.plan.goal,
+				}),
+			);
+		}
+
+		if (taskSetId) {
+			controlPlane.entityRegistry = upsertEntityRecord(
+				controlPlane.entityRegistry,
+				createEntityVersionRecord({
+					entityId: taskSetId,
+					entityType: "TaskSet",
+					createdAt: idea.createdAt,
+					updatedAt: idea.updatedAt,
+					governingRequestId: requestId,
+					summary: `${idea.tasks.length} tasks tracked`,
+				}),
+			);
+		}
+
+		controlPlane.currentPointers = upsertCurrentPointerRecord(
+			controlPlane.currentPointers,
+			createCurrentPointerRecord({
+				requestId,
+				currentResearchId: researchId,
+				currentPlanId: planId,
+				currentTaskSetId: taskSetId,
+				currentBriefBySlice,
+				lastResolvedAt: idea.updatedAt,
+				unresolvedReasons: [],
+			}),
+		);
+	}
+
+	return controlPlane;
+}
 
 export function createEmptyPlannerState(): PlannerState {
 	return {
-		version: 1,
+		version: 2,
 		updatedAt: new Date().toISOString(),
 		ideas: [],
+		controlPlane: createEmptyControlPlane(),
+	};
+}
+
+export function hydratePlannerState(input: {
+	ideas: PlannerIdea[];
+	updatedAt?: string;
+}): PlannerState {
+	return {
+		version: 2,
+		updatedAt: input.updatedAt ?? new Date().toISOString(),
+		ideas: input.ideas,
+		controlPlane: rebuildControlPlaneFromIdeas(input.ideas),
 	};
 }
 
@@ -130,12 +268,8 @@ export function mergePlannerTasks(
 	previousTasks: PlannerTask[],
 ): PlannerTask[] {
 	const previousById = new Map(previousTasks.map((task) => [task.id, task]));
-	const previousByText = new Map(
-		previousTasks.map((task) => [task.text, task]),
-	);
 	const mergedTasks = nextTasks.map(
-		(task) =>
-			previousById.get(task.id) ?? previousByText.get(task.text) ?? task,
+		(task) => previousById.get(task.id) ?? task,
 	);
 	const mergedIds = new Set(mergedTasks.map((task) => task.id));
 	const extraPreviousTasks = previousTasks.filter(
@@ -150,13 +284,10 @@ export function syncPlanBlockChecklistWithTasks(
 	tasks: PlannerTask[],
 ): PlannerPlanBlock[] {
 	const taskById = new Map(tasks.map((task) => [task.id, task]));
-	const taskByText = new Map(tasks.map((task) => [task.text, task]));
 
 	return planBlocks.map((block) => ({
 		...block,
-		checklist: block.checklist.map(
-			(task) => taskById.get(task.id) ?? taskByText.get(task.text) ?? task,
-		),
+		checklist: block.checklist.map((task) => taskById.get(task.id) ?? task),
 	}));
 }
 
@@ -179,9 +310,10 @@ export function upsertIdea(
 				);
 
 	return {
-		version: 1,
+		version: 2,
 		updatedAt: updatedIdea.updatedAt,
 		ideas,
+		controlPlane: rebuildControlPlaneFromIdeas(ideas),
 	};
 }
 
@@ -201,9 +333,14 @@ export function updateIdea(
 		updatedAt: new Date().toISOString(),
 	};
 
+	const ideas = state.ideas.map((idea) =>
+		idea.slug === slug ? updatedIdea : idea,
+	);
+
 	return {
-		version: 1,
+		version: 2,
 		updatedAt: updatedIdea.updatedAt,
-		ideas: state.ideas.map((idea) => (idea.slug === slug ? updatedIdea : idea)),
+		ideas,
+		controlPlane: rebuildControlPlaneFromIdeas(ideas),
 	};
 }

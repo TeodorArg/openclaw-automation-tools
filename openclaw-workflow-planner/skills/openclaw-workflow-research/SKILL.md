@@ -21,7 +21,10 @@ description: Use when a planner idea needs typed research before Idea Gate: valu
 Своди результат к короткому evidence block, который можно передать в:
 
 - `workflow_planner_action` -> `research_attach`
-- `workflow_planner_action` -> `idea_gate`
-- `workflow_planner_action` -> `idea_get`
+
+После `research_attach` этот материал уже живёт в persisted state, и дальше:
+
+- `workflow_planner_action` -> `idea_gate` оценивает уже сохранённый research
+- `workflow_planner_action` -> `idea_get` только читает текущее состояние
 
 Не превращай research в бесконечный обзор. Нужен материал для решения, а не архив ссылок.

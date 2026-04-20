@@ -1,6 +1,8 @@
 *
+!dist/
 !dist/**
 !openclaw.plugin.json
+!skills/
 !skills/**
 !README.md
 !LICENSE

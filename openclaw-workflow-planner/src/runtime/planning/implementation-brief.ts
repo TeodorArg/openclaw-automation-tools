@@ -1,5 +1,14 @@
 import type { PlannerIdea } from "../state/planner-state.js";
 
+export type ImplementationBriefTask = {
+	id: string;
+	taskIndex: number;
+	selectorHint: string;
+	text: string;
+	origin: string;
+	done: false;
+};
+
 export type ImplementationBriefInput = {
 	ideaSlug: string;
 	currentSlice: string;
@@ -7,10 +16,30 @@ export type ImplementationBriefInput = {
 	scope: string[];
 	avoid: string[];
 	doneWhen: string;
+	remainingOpenTaskCount: number;
+	remainingOpenTaskGuidance: string;
 	taskRefs: string[];
+	openTasks: ImplementationBriefTask[];
 };
 
 export type ImplementationBriefResult = ImplementationBriefInput;
+
+export function summarizeRemainingOpenTasks(tasks: PlannerIdea["tasks"]): {
+	remainingOpenTaskCount: number;
+	remainingOpenTaskGuidance: string;
+} {
+	const openTasks = tasks
+		.map((task, index) => ({ task, taskIndex: index + 1 }))
+		.filter(({ task }) => !task.done);
+	const nextOpenTask = openTasks[0];
+
+	return {
+		remainingOpenTaskCount: openTasks.length,
+		remainingOpenTaskGuidance: nextOpenTask
+			? `${openTasks.length} open task${openTasks.length === 1 ? "" : "s"} remain. Start with ${nextOpenTask.task.text} using taskId=${nextOpenTask.task.id} or taskIndex=${nextOpenTask.taskIndex}.`
+			: "No open tasks remain. Verify the slice against doneWhen, then use idea_close to record the delivered outcome.",
+	};
+}
 
 export function buildImplementationBriefFromIdea(
 	idea: PlannerIdea,
@@ -21,7 +50,10 @@ export function buildImplementationBriefFromIdea(
 		);
 	}
 
-	const openTasks = idea.tasks.filter((task) => !task.done);
+	const openTasks = idea.tasks
+		.map((task, index) => ({ task, taskIndex: index + 1 }))
+		.filter(({ task }) => !task.done);
+	const remainingOpenTasks = summarizeRemainingOpenTasks(idea.tasks);
 
 	return {
 		ideaSlug: idea.slug,
@@ -30,7 +62,10 @@ export function buildImplementationBriefFromIdea(
 		scope: [
 			`Goal: ${idea.plan.goal}`,
 			...idea.plan.scope,
-			...openTasks.map((task) => `Open task: ${task.text}`),
+			...openTasks.map(
+				({ task, taskIndex }) =>
+					`Open task #${taskIndex}: ${task.text} (${task.id}) [use taskId=${task.id} or taskIndex=${taskIndex}]`,
+			),
 		],
 		avoid: [
 			...idea.plan.outOfScope,
@@ -38,7 +73,16 @@ export function buildImplementationBriefFromIdea(
 			"Do not broaden the slice into unrelated repo-governance cleanup.",
 		],
 		doneWhen: idea.plan.acceptanceTarget,
-		taskRefs: openTasks.map((task) => task.id),
+		...remainingOpenTasks,
+		taskRefs: openTasks.map(({ task }) => task.id),
+		openTasks: openTasks.map(({ task, taskIndex }) => ({
+			id: task.id,
+			taskIndex,
+			selectorHint: `taskId=${task.id} | taskIndex=${taskIndex}`,
+			text: task.text,
+			origin: task.origin,
+			done: false,
+		})),
 	};
 }
 
