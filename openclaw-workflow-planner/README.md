@@ -75,7 +75,8 @@ the typed tool `workflow_planner_action`.
 - writes use lock-and-compare protection so stale concurrent mutations do not blindly overwrite newer planner state
 - active lock contention returns a clean planner concurrency error instead of leaking a raw filesystem `EEXIST`
 - lock contention is expected to be brief, and the plugin intentionally does not auto-retry stale saves; reload current `WORKFLOW_PLAN.md` state before retrying a conflicting action
-- `plan_refresh` updates canonical plan blocks while preserving extra manual tasks
+- `plan_refresh` updates canonical plan blocks while preserving extra manual tasks and dropping stale unmatched generated tasks
+- `idea_create` preserves existing links when `links` is omitted on update
 - `task_done`, `task_remove`, and `task_reopen` prefer stable `taskId`; legacy 1-based `taskIndex` is still supported for older/manual flows
 - `implementation_brief` exposes both selectors plus a command-ready selector hint and remaining-open-task guidance for easier handoff consumption, and marks the current slice as having a persisted current brief in control-plane state
 - successful task-action responses, including `task_add`, return the resolved stable id, resolved 1-based index, shared `targetTask*` context, command-ready `*SelectorHint` fields, and remaining-open-task guidance for immediate next-step follow-through

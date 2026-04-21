@@ -46,4 +46,20 @@ describe("early warning token thresholds", () => {
 		expect(elevated?.severity).toBe("elevated");
 		expect(critical?.severity).toBe("critical");
 	});
+
+	it("classifies the no_reply_streak heuristic when the streak persists", () => {
+		const config = resolvePluginConfig(undefined);
+		const decision = createEarlyWarningDecision(
+			{
+				inputChars: 0,
+				messageCount: 0,
+				noReplyStreak: 2,
+				lastObservedTimeoutMs: 45000,
+			},
+			config,
+		);
+
+		expect(decision?.severity).toBe("critical");
+		expect(decision?.reasonCode).toBe("no_reply_streak");
+	});
 });

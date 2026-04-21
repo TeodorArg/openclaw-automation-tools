@@ -47,6 +47,8 @@ Control-plane request, entity, and pointer metadata, including rebuilt `Executio
 - `WORKFLOW_PLAN.md` is the persisted state boundary; do not describe derived briefs or synthetic artifact records as separate persisted files.
 - planner-file writes are guarded against stale concurrent overwrite; keep the behavior fail-fast rather than adding automatic retry/backoff, because conflicting saves usually need a fresh reload of current state before retrying intentionally
 - if `idea_create` materially retargets an already-researched or already-planned idea, expect the downstream lifecycle state to reset back to `draft`
+- if `idea_create` updates an existing idea without a `links` field, preserve the existing links
+- `plan_refresh` preserves extra manual tasks while dropping stale unmatched generated tasks
 - keep planner use visibly alive during long research, planning, or subagent-backed execution: stay quiet only for short work, then send short progress updates when work runs past about 60 to 90 seconds, on blockers, when the active lane changes, and also periodically during ongoing active work so chat silence does not become ambiguous
 - when the user asks for status during active work, treat it as observational by default: answer briefly, then continue the already-obvious next step unless the user explicitly changes direction
 - when one bounded slice lands and the next obvious step is canon sync or another narrow slice, do not stop idly; explicitly announce that work has resumed, then continue automatically

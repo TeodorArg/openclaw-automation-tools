@@ -78,7 +78,17 @@ function buildNodeError(
 	const reason =
 		parts.join("\n").trim() ||
 		`Node command failed with exit code ${payload.exitCode ?? "unknown"}.`;
-	return new Error(`${formatCommand([command, ...args])}: ${reason}`);
+	const error = new Error(
+		`${formatCommand([command, ...args])}: ${reason}`,
+	) as Error & {
+		stdout?: string;
+		stderr?: string;
+		exitCode?: number | null;
+	};
+	error.stdout = payload.stdout;
+	error.stderr = payload.stderr;
+	error.exitCode = payload.exitCode ?? null;
+	return error;
 }
 
 async function invokePreparedSystemRun(params: {

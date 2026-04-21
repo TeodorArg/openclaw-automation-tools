@@ -223,6 +223,16 @@ export function parsePlannerMarkdown(markdown: string): PlannerState {
 		throw new Error("Planner state block has an unsupported shape.");
 	}
 
+	if (
+		typeof parsed.version === "number" &&
+		parsed.version !== 1 &&
+		parsed.version !== 2
+	) {
+		throw new Error(
+			`Planner state block has an unsupported version: ${parsed.version}.`,
+		);
+	}
+
 	if (parsed.version === 2) {
 		return hydratePlannerState({
 			ideas: parsed.ideas,

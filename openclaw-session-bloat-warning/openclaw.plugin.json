@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-session-bloat-warning",
 	"name": "OpenClaw Session Bloat Warning",
-	"description": "OpenClaw plugin for compaction warnings, earlier visible session-heaviness warnings, and timeout/lane-pressure warning heuristics with bundled session-bloat-warning guidance.",
+	"description": "OpenClaw plugin for compaction warnings, earlier visible session-heaviness warnings, and timeout_risk, lane_pressure, and no_reply_streak heuristics with bundled session-bloat-warning guidance.",
 	"version": "0.1.3",
 	"skills": ["./skills"],
 	"configSchema": {
@@ -77,17 +77,17 @@
 			"timeoutRiskStreakThreshold": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Number of repeated timeout-like observations required before classifying timeout risk. Defaults to 2."
+				"description": "Number of repeated `timeout_risk` observations required before classifying a `timeout_risk` warning. Defaults to 2."
 			},
 			"lanePressureStreakThreshold": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Number of repeated lane-pressure observations required before classifying queue pressure. Defaults to 1."
+				"description": "Number of repeated `lane_pressure` observations required before classifying a `lane_pressure` warning. Defaults to 1."
 			},
 			"noReplyStreakThreshold": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Number of repeated no-reply observations required before classifying reply failure pressure. Defaults to 2."
+				"description": "Number of repeated `no_reply_streak` observations required before classifying a `no_reply_streak` warning. Defaults to 2."
 			},
 			"timeoutRiskMsThreshold": {
 				"type": "integer",

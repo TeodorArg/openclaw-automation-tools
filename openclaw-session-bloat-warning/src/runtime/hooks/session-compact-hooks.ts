@@ -119,6 +119,10 @@ export function createCompactionWarningHooks(
 			await saveWarningState(config.stateFilePath, state);
 		},
 		llmOutput: async (event, ctx) => {
+			if (!config.enableEarlyWarning) {
+				return;
+			}
+
 			const state = await loadWarningState(config.stateFilePath);
 			const session = getSessionState(state, ctx.sessionKey);
 			const observation = observeEarlyWarningOutput({

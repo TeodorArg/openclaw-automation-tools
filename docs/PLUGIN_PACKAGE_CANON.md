@@ -76,7 +76,6 @@ Plugin packages should use this baseline layout:
 - `skills/`
 - `README.md`
 - `LICENSE`
-- `.npmignore`
 - `openclaw.plugin.json`
 - `package.json`
 - `tsconfig.json`
@@ -84,7 +83,9 @@ Plugin packages should use this baseline layout:
 
 `src/index.ts` and package entrypoints are allowed when they reflect the real shipped contract.
 
-For publishable plugin packages in this repo, package-local `.npmignore` should explicitly allow the shipped `dist/**` output and other packed artifacts so repo-root ignores do not strip built files from npm or ClawHub tarballs.
+For publishable plugin packages in this repo, the canonical packed-artifact contract is driven by package `files` allowlists, which must include the shipped `dist/**` output and other runtime artifacts so repo-root ignores do not strip built files from npm or ClawHub tarballs.
+
+Package-local `.npmignore` is optional and may be used as a supplemental packaging control, but it is not a required live baseline for this repo.
 
 For linked local installs into a separate runtime environment such as a Docker gateway:
 - treat `dist/**`, `openclaw.plugin.json`, `package.json`, bundled `skills/**`, `README.md`, and `LICENSE` as the canonical shipped runtime surface

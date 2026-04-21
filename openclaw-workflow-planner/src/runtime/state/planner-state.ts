@@ -292,7 +292,7 @@ export function mergePlannerTasks(
 	);
 	const mergedIds = new Set(mergedTasks.map((task) => task.id));
 	const extraPreviousTasks = previousTasks.filter(
-		(task) => !mergedIds.has(task.id),
+		(task) => !mergedIds.has(task.id) && task.origin === "manual",
 	);
 
 	return mergedTasks.concat(extraPreviousTasks);

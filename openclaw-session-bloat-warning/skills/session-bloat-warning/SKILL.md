@@ -15,6 +15,7 @@ compaction, not canon drift, planning state, or host execution.
   and `after_compaction`
 - observe-only runtime signal capture on `llm_input` and `llm_output`
 - visible early warning on `before_agent_reply` as a synthetic reply
+- runtime heuristics for `timeout_risk`, `lane_pressure`, and `no_reply_streak`
 - calm user-facing warning copy in English or Russian
 - per-session dedupe and cooldown state keyed by `sessionKey`
 
@@ -25,7 +26,8 @@ compaction, not canon drift, planning state, or host execution.
 - no autonomous fresh-session transfer
 - no automatic per-session language detection; language is selected by package
   config
-- no broader repeated tool failure, edit-loop, or timeout-risk heuristics
+- no broader repeated tool failure, edit-loop, or heuristics beyond
+  `timeout_risk`, `lane_pressure`, and `no_reply_streak`
 
 ## Output bar
 

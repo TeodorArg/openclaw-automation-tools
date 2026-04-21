@@ -62,7 +62,7 @@ Its shipped surface centers on file-backed `WORKFLOW_PLAN.md` state plus typed p
 - explicit `Idea Gate` decisions
 - accepted-plan creation and refresh
 - persisted plan snapshots and idea reads
-- manual task add / done tracking
+- manual task add / done / remove / reopen tracking
 - bounded implementation brief generation
 - explicit idea closure
 
@@ -90,7 +90,7 @@ Its shipped surface combines the official compaction lifecycle with bounded visi
 - plugin-owned dedupe plus cooldown state for per-session warning ceilings
 
 Its bundled skill surface currently centers on `session-bloat-warning`.
-The live slice stays bounded to calm warning copy, visible early warning, persisted dedupe/cooldown state, and heuristic timeout/lane-pressure signal reuse rather than runtime-owned recovery or bounded handoff summarization.
+The live slice stays bounded to calm warning copy, visible early warning, persisted dedupe/cooldown state, and timeout/lane-pressure/no-reply runtime-risk signal reuse rather than runtime-owned recovery or bounded handoff summarization.
 
 Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/hooks/`, `src/runtime/state/`, and `src/runtime/text/`, with flat default tests under `src/test/`.
 
@@ -256,6 +256,6 @@ For publish workflow details and the manual pre-publish gate beyond CI minimum, 
 - Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.
 - Repo-local publish/preflight guidance now lives in `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`.
-- The live plugin packages follow the broader local package canon, including domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, required package docs/metadata, and package-local `.npmignore` so packed tarballs keep built `dist/**` artifacts despite the repo-root `dist/` ignore.
+- The live plugin packages follow the broader local package canon, including domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, required package docs/metadata, and package `files` allowlists that keep shipped `dist/**` artifacts in packed tarballs despite the repo-root `dist/` ignore; package-local `.npmignore` is optional rather than a required baseline.
 - In Docker-gateway setups, gateway token configuration and device pairing are separate gates; a valid `gateway.remote.token` does not replace CLI/operator pairing approval.
 - On macOS, config hardening can reduce browser-related node surface, but a generic `node` host can still trigger unrelated TCC prompts unless you isolate it by user/session/VM/host.
