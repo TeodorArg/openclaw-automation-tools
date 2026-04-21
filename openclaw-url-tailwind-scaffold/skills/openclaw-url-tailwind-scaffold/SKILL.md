@@ -38,6 +38,13 @@ The skill should stay narrow:
 
 ## Preferred Raw Command Forms
 
+In hosts that expose bundled skills through `/skill`, invoke this skill as:
+
+- `/skill openclaw-url-tailwind-scaffold https://example.com/dashboard`
+- `/skill openclaw-url-tailwind-scaffold '{"url":"https://example.com/dashboard","outputMode":"page_contract"}'`
+
+The raw payload passed after the skill slug is then forwarded into this skill's command-dispatch envelope.
+
 Pass either:
 
 - a single URL, for example `https://example.com/dashboard`

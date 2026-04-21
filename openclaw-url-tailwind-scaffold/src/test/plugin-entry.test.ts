@@ -31,16 +31,20 @@ describe("plugin entry", () => {
 		});
 
 		expect(registerTool).toHaveBeenCalledTimes(1);
-		expect(registerTool).toHaveBeenCalledWith(expect.any(Function), {
-			optional: true,
-		});
+		expect(registerTool).toHaveBeenCalledWith(
+			expect.objectContaining({
+				name: "url_tailwind_scaffold_action",
+			}),
+			{
+				optional: true,
+			},
+		);
 
-		const toolFactory = registerTool.mock.calls[0][0] as () => {
+		const tool = registerTool.mock.calls[0][0] as {
 			name: string;
 			description: string;
 			parameters: { properties: { action: { enum: string[] } } };
 		};
-		const tool = toolFactory();
 
 		expect(tool.name).toBe("url_tailwind_scaffold_action");
 		expect(tool.parameters.properties.action.enum).toEqual([

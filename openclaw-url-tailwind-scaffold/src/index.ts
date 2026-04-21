@@ -12,14 +12,9 @@ export default definePluginEntry({
 		"Analyzes a reference page URL and returns a bounded Tailwind CSS v4 scaffold summary or page contract.",
 	register(api: OpenClawPluginApi) {
 		api.registerTool(
-			(toolContext: { agentId?: string; sessionKey?: string } = {}) =>
-				createUrlTailwindScaffoldTool({
-					pluginConfig: api.pluginConfig,
-					toolContext: {
-						agentId: toolContext.agentId,
-						sessionKey: toolContext.sessionKey,
-					},
-				}) as unknown as AnyAgentTool,
+			createUrlTailwindScaffoldTool({
+				pluginConfig: api.pluginConfig,
+			}) as unknown as AnyAgentTool,
 			{
 				optional: true,
 			},
