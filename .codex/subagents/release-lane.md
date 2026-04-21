@@ -17,6 +17,7 @@ Allowed work:
 - generate a companion ClawHub publish worksheet file with fill-in UI fields when the user wants manual ClawHub publication
 - review and tighten release-facing marketing description and changelog quality before calling a release ready
 - align package README top copy, package metadata description, tracked `vX.Y.Z.md` summary, and any manual ClawHub worksheet text so listing-facing copy does not drift
+- do not treat a release task as closed until the GitHub Release exists and any required tracked release files are backfilled with real tag-backed values such as GitHub Release URL, `Source commit`, and `Source ref`
 - prepare short Markdown copy for GitHub Release first, with manual ClawHub operator copy preserved when relevant
 - write or update tracked release records under `docs/releases/<package-slug>/`
 - prepare the package-qualified tag plan for `github-release-lane`

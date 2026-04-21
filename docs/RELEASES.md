@@ -16,6 +16,7 @@ Release boundary:
 
 - a merged PR is not a package release by itself
 - for this repo, the default public release closes when the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, and the corresponding `vX.Y.Z.md` record is stored
+- when a release also needs manual ClawHub publication support, do not treat the task as closed until the tracked release artifacts are backfilled with the real GitHub Release URL and any required tag-backed source fields such as `Source commit` and `Source ref`
 - ClawHub publish or manual archive upload is optional by default and remains a separate operator step unless explicitly requested for that release
 - GitHub Releases are public release records for this repo even though ClawHub itself does not require them for package publication
 
