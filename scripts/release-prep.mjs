@@ -53,6 +53,9 @@ const tagName = args.tag ?? `${pkgSlug}/v${targetVersion}`;
 const sourceCommit = args["source-commit"] ?? "";
 const prRef = args.pr ?? "";
 const packageName = typeof packageJson.name === "string" ? packageJson.name : "";
+const displayName = typeof pluginJson.name === "string" ? pluginJson.name : packageName;
+const sourceRepo = resolveSourceRepo(packageJson.repository);
+const needsClawHubWorksheet = /clawhub/iu.test(publishFlow);
 
 if (!packageName) {
 	fail(`Missing package.json name for package "${pkgSlug}".`);
@@ -65,15 +68,36 @@ const releaseBody = buildReleaseNote({
 	releaseDate,
 	tagName,
 	publishFlow,
+	needsClawHubWorksheet,
+	worksheetPath: needsClawHubWorksheet ? `docs/releases/${pkgSlug}/v${targetVersion}.clawhub.md` : "not requested",
 	sourceCommit,
 	prRef,
 	summary,
 });
+const clawhubWorksheetPath = resolve(releaseDir, `v${targetVersion}.clawhub.md`);
+const clawhubWorksheetBody = needsClawHubWorksheet
+	? buildClawHubWorksheet({
+			packageName,
+			displayName,
+			pkgSlug,
+			targetVersion,
+			tagName,
+			publishFlow,
+			sourceCommit,
+			sourceRepo,
+			summary,
+		})
+	: null;
 
 const updatesVersionFiles = targetVersion !== currentVersion;
 const changedFiles = updatesVersionFiles
-	? [packageJsonPath, pluginJsonPath, releasePath]
-	: [releasePath];
+	? [
+			packageJsonPath,
+			pluginJsonPath,
+			releasePath,
+			...(needsClawHubWorksheet ? [clawhubWorksheetPath] : []),
+		]
+	: [releasePath, ...(needsClawHubWorksheet ? [clawhubWorksheetPath] : [])];
 
 if (dryRun) {
 	printSummary({
@@ -95,6 +119,9 @@ if (updatesVersionFiles) {
 	writeFileSync(pluginJsonPath, `${JSON.stringify(pluginJson, null, "\t")}\n`);
 }
 writeFileSync(releasePath, releaseBody);
+if (clawhubWorksheetBody) {
+	writeFileSync(clawhubWorksheetPath, clawhubWorksheetBody);
+}
 
 printSummary({
 	pkgSlug,
@@ -179,11 +206,12 @@ function buildReleaseNote({
 	releaseDate,
 	tagName,
 	publishFlow,
+	needsClawHubWorksheet,
+	worksheetPath,
 	sourceCommit,
 	prRef,
 	summary,
 }) {
-	const needsClawHubWorksheet = /clawhub/iu.test(publishFlow);
 	const verificationLines = ["- `pnpm check`"];
 	if (needsClawHubWorksheet) {
 		verificationLines.push(`- \`clawhub package publish ./${pkgSlug} --dry-run\``);
@@ -206,7 +234,7 @@ function buildReleaseNote({
 - GitHub Release URL:
 - GitHub notes mode: \`tracked file only\`
 - Publish flow: \`${publishFlow}\`
-- ClawHub worksheet: ${needsClawHubWorksheet ? "" : "not requested"}
+- ClawHub worksheet: ${worksheetPath}
 - Source commit: ${sourceCommit}
 - PR: ${prRef}
 
@@ -236,6 +264,54 @@ ${publishResultClawHub}
 `;
 }
 
+function buildClawHubWorksheet({
+	packageName,
+	displayName,
+	pkgSlug,
+	targetVersion,
+	tagName,
+	publishFlow,
+	sourceCommit,
+	sourceRepo,
+	summary,
+}) {
+	return `# ${pkgSlug} v${targetVersion} ClawHub Worksheet
+
+- Package: \`${packageName}\`
+- Slug: \`${pkgSlug}\`
+- Version: \`${targetVersion}\`
+- Publish flow: \`${publishFlow}\`
+- Tarball file:
+- Source repo: \`${sourceRepo}\`
+- Source commit: ${sourceCommit}
+- Source ref: \`${tagName}\`
+- Source path: \`${pkgSlug}\`
+- Owner / publisher:
+- ClawHub package name: \`${packageName}\`
+- Display name: \`${displayName}\`
+
+## Release Summary
+
+- ${summary}
+
+## UI Fields
+
+- Name: \`${packageName}\`
+- Display name: \`${displayName}\`
+- Version: \`${targetVersion}\`
+- Source repo: \`${sourceRepo}\`
+- Source commit: ${sourceCommit}
+- Source ref: \`${tagName}\`
+- Source path: \`${pkgSlug}\`
+
+## Operator Notes
+
+- Verify the published package matches version \`${targetVersion}\`.
+- Keep the GitHub Release URL and the package-qualified tag aligned to the same version.
+- Record the final ClawHub publish result back in \`v${targetVersion}.md\`.
+`;
+}
+
 function printSummary({ pkgSlug, currentVersion, targetVersion, releasePath, changedFiles, dryRun }) {
 	const prefix = dryRun ? "DRY RUN" : "UPDATED";
 	console.log(`${prefix}: ${pkgSlug}`);
@@ -252,6 +328,16 @@ function printHelp() {
   node scripts/release-prep.mjs --package <slug> (--version <x.y.z> | --bump <patch|minor|major>) --date <yyyy-mm-dd> --summary "<text>" [--publish-flow <flow>] [--source-commit <sha>] [--pr <ref>] [--tag <name>] [--dry-run]
 `);
 	console.log("Default publish flow: github release");
+}
+
+function resolveSourceRepo(repository) {
+	if (repository && typeof repository === "object" && typeof repository.url === "string") {
+		const match = repository.url.match(/github\.com[/:]([^/]+\/[^/.]+)(?:\.git)?$/u);
+		if (match) {
+			return match[1];
+		}
+	}
+	return "TeodorArg/openclaw-automation-tools";
 }
 
 function fail(message) {

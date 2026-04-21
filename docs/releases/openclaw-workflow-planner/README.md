@@ -3,6 +3,8 @@
 Tracked public release records:
 
 - [v0.1.0](./v0.1.0.md)
+- [release note template](./TEMPLATE.md)
+- [ClawHub worksheet template](./TEMPLATE_CLAWHUB.md)
 
 Current shipped surface to reflect in release records:
 
@@ -22,4 +24,5 @@ Release prep rules:
 - add `vX.Y.Z.clawhub.md` when the release needs manual ClawHub publication
 - keep `vX.Y.Z.md` as the tracked release record and canonical GitHub Release note source
 - keep `vX.Y.Z.clawhub.md` as the fill-in operator worksheet for manual ClawHub publication when that path is requested
+- use the package-local templates in this directory when drafting a new planner release by hand
 - record version, date, summary, verification evidence, and publish outcome
