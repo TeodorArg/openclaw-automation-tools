@@ -8,6 +8,8 @@ Together, they help you keep a real execution plan, start faster from live refer
 
 If you want OpenClaw to do more than chat, this repo is where the practical tooling lives.
 
+![OpenClaw Stack Overview](./docs/assets/openclaw-stack-overview.svg)
+
 This repo currently ships five publishable plugin packages:
 - `openclaw-host-git-workflow/`
 - `openclaw-workflow-planner/`
@@ -40,6 +42,8 @@ These plugins are intentionally stronger together than they are alone.
 That combination is the real pitch of the repo: not isolated tools, but a curated development stack that gives OpenClaw a serious boost as an execution engine.
 
 It is a strong setup for people who want OpenClaw to become a serious co-driver for development, not just a chat window with good intentions.
+
+![OpenClaw Stack Flow](./docs/assets/openclaw-stack-flow.svg)
 
 ## The Plugin Lineup
 
