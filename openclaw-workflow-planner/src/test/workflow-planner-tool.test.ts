@@ -57,6 +57,26 @@ async function seedAcceptedIdea(
 		skillName: "openclaw-workflow-research",
 		ideaName: "workflow planner",
 	});
+	await tool.execute("call-d", {
+		action: "design_prepare",
+		command: "prepare design",
+		commandName: "plan_workflow",
+		skillName: "openclaw-workflow-planner",
+		ideaName: "workflow planner",
+		targetSurface: "plugin package",
+		constraints: [
+			"Keep WORKFLOW_PLAN.md as the only persisted state file.",
+			"Preserve migration-safe hydration for older planner files.",
+		],
+		selectedApproach:
+			"Introduce a persisted lane-1 design record before plan creation.",
+		alternatives: [
+			"Keep skipping directly from idea_gate to plan_create.",
+			"Infer design implicitly from plan text.",
+		],
+		verificationStrategy:
+			"Cover design gating, pointer rebuild, and downstream reset behavior with tests.",
+	});
 }
 
 async function buildImplementationBrief(
@@ -77,6 +97,7 @@ async function completeAllTasks(
 	taskCount: number,
 ) {
 	for (let taskIndex = 1; taskIndex <= taskCount; taskIndex += 1) {
+		await buildImplementationBrief(tool, `call-brief-${taskIndex}`);
 		await tool.execute(`call-task-${taskIndex}`, {
 			action: "task_done",
 			command: "complete task",
@@ -294,7 +315,7 @@ describe("createWorkflowPlannerTool", () => {
 		);
 
 		expect(payload.decision).toBe("accepted");
-		expect(payload.nextSuggestedAction).toBe("plan_create");
+		expect(payload.nextSuggestedAction).toBe("design_prepare");
 		expect(
 			persisted.controlPlane.requestRuntime["req_workflow-planner"]
 				.currentResearchId,
@@ -354,7 +375,13 @@ describe("createWorkflowPlannerTool", () => {
 		).toBe("planning");
 		expect(
 			Object.keys(persistedAfterCreate.controlPlane.artifactRegistry.records),
-		).toHaveLength(0);
+		).toEqual(
+			expect.arrayContaining([
+				"art_design_workflow-planner",
+				"art_plan_workflow-planner",
+				"art_tasks_workflow-planner",
+			]),
+		);
 		expect(
 			persistedAfterCreate.controlPlane.requestRuntime["req_workflow-planner"]
 				.currentBriefBySlice,
@@ -364,6 +391,33 @@ describe("createWorkflowPlannerTool", () => {
 				"req_workflow-planner"
 			].currentPlanId,
 		).toBe("plan_workflow-planner");
+		expect(
+			persistedAfterCreate.ideas[0]?.design?.artifactRefs?.[0],
+		).toMatchObject({
+			artifactId: "art_design_workflow-planner",
+			artifactType: "design",
+		});
+		expect(
+			persistedAfterCreate.ideas[0]?.plan?.artifactRefs?.[0],
+		).toMatchObject({
+			artifactId: "art_plan_workflow-planner",
+			artifactType: "plan",
+		});
+		expect(
+			persistedAfterCreate.ideas[0]?.taskSet?.artifactRefs?.[0],
+		).toMatchObject({
+			artifactId: "art_tasks_workflow-planner",
+			artifactType: "task_set",
+		});
+		expect(
+			persistedAfterCreate.ideas[0]?.plan?.provenance.governingArtifactRefs,
+		).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					artifactId: "art_design_workflow-planner",
+				}),
+			]),
+		);
 	});
 
 	it("preserves manual extra tasks while dropping stale unmatched generated tasks on plan_refresh", async () => {
@@ -539,9 +593,20 @@ describe("createWorkflowPlannerTool", () => {
 		expect(payload.controlPlane.currentPointers.currentTaskSetId).toBe(
 			"tasks_workflow-planner",
 		);
-		expect(
-			Object.keys(parsed.controlPlane.artifactRegistry.records),
-		).toHaveLength(0);
+		expect(Object.keys(parsed.controlPlane.artifactRegistry.records)).toEqual(
+			expect.arrayContaining([
+				"art_design_workflow-planner",
+				"art_plan_workflow-planner",
+				"art_tasks_workflow-planner",
+			]),
+		);
+		expect(parsed.ideas[0]?.taskSet?.provenance.governingArtifactRefs).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					artifactId: "art_plan_workflow-planner",
+				}),
+			]),
+		);
 	});
 
 	it("marks tasks done by stable task id and syncs persisted plan checklist state", async () => {
@@ -621,7 +686,22 @@ describe("createWorkflowPlannerTool", () => {
 		expect(reloadedPayload.controlPlane.currentPointers.currentTaskSetId).toBe(
 			"tasks_workflow-planner",
 		);
-		expect(reloadedPayload.controlPlane.linkedArtifacts).toEqual([]);
+		expect(reloadedPayload.controlPlane.linkedArtifacts).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					artifactId: "art_design_workflow-planner",
+					artifactType: "design",
+				}),
+				expect.objectContaining({
+					artifactId: "art_plan_workflow-planner",
+					artifactType: "plan",
+				}),
+				expect.objectContaining({
+					artifactId: "art_tasks_workflow-planner",
+					artifactType: "tasks",
+				}),
+			]),
+		);
 	});
 
 	it("derives implementation brief from accepted plan and open tasks", async () => {
@@ -748,17 +828,43 @@ describe("createWorkflowPlannerTool", () => {
 				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
 		});
 		expect(
-			parsed.controlPlane.entityRegistry.records[
-				"brief_workflow-planner_Build the next bounded runtime slice."
-			],
+			Object.values(parsed.controlPlane.entityRegistry.records).find(
+				(record) => record.entityType === "ExecutionBrief",
+			),
 		).toMatchObject({
 			entityType: "ExecutionBrief",
 			summary:
 				"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
 		});
+		expect(Object.keys(parsed.controlPlane.artifactRegistry.records)).toEqual(
+			expect.arrayContaining([
+				"art_design_workflow-planner",
+				"art_plan_workflow-planner",
+				"art_tasks_workflow-planner",
+			]),
+		);
 		expect(
-			Object.keys(parsed.controlPlane.artifactRegistry.records),
-		).toHaveLength(0);
+			parsed.ideas[0]?.executionBriefs?.at(-1)?.artifactRefs?.[0],
+		).toMatchObject({
+			artifactType: "execution_brief",
+		});
+		expect(
+			parsed.ideas[0]?.executionBriefs?.at(-1)?.provenance
+				.governingArtifactRefs,
+		).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ artifactId: "art_design_workflow-planner" }),
+				expect.objectContaining({ artifactId: "art_plan_workflow-planner" }),
+				expect.objectContaining({ artifactId: "art_tasks_workflow-planner" }),
+			]),
+		);
+		expect(
+			parsed.ideas[0]?.currentPointers?.currentExecutionBriefBySliceId?.[
+				parsed.ideas[0]?.plan?.currentSliceId ?? ""
+			]?.targetArtifactRef,
+		).toMatchObject({
+			artifactType: "execution_brief",
+		});
 	});
 
 	it("returns close guidance from implementation_brief when no open tasks remain", async () => {
@@ -792,6 +898,77 @@ describe("createWorkflowPlannerTool", () => {
 		);
 	});
 
+	it("keeps superseded execution-brief history when implementation_brief reruns for the same slice", async () => {
+		const { plannerFilePath, tool } = await createTool();
+
+		await seedAcceptedIdea(tool);
+		await tool.execute("call-7e2", {
+			action: "plan_create",
+			command: "create plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		await buildImplementationBrief(tool, "call-7e3");
+		await buildImplementationBrief(tool, "call-7e4");
+
+		const parsed = parsePlannerMarkdown(
+			await readFile(plannerFilePath, "utf8"),
+		);
+		const currentSliceId = parsed.ideas[0]?.plan?.currentSliceId ?? "";
+		const sliceBriefs =
+			parsed.ideas[0]?.executionBriefs?.filter(
+				(brief) => brief.sliceId === currentSliceId,
+			) ?? [];
+
+		expect(sliceBriefs).toHaveLength(2);
+		expect(sliceBriefs[0]).toMatchObject({ revision: 1, status: "superseded" });
+		expect(sliceBriefs[1]).toMatchObject({ revision: 2, status: "fresh" });
+		expect(
+			parsed.ideas[0]?.currentPointers?.currentExecutionBriefBySliceId?.[
+				currentSliceId
+			],
+		).toMatchObject({
+			resolutionStatus: "resolved",
+			targetEntityRef: {
+				entityType: "execution_brief",
+				entityId: sliceBriefs[1]?.id,
+				entityRevision: 2,
+			},
+			targetArtifactRef: {
+				artifactId: `art_${sliceBriefs[1]?.id}`,
+			},
+		});
+		expect(
+			parsed.controlPlane.entityRegistry.records[sliceBriefs[0]?.id ?? ""],
+		).toMatchObject({
+			entityType: "ExecutionBrief",
+			entityVersion: 1,
+			versionStatus: "superseded",
+		});
+		expect(
+			parsed.controlPlane.entityRegistry.records[sliceBriefs[1]?.id ?? ""],
+		).toMatchObject({
+			entityType: "ExecutionBrief",
+			entityVersion: 2,
+			versionStatus: "current",
+		});
+		expect(
+			parsed.controlPlane.artifactRegistry.records[`art_${sliceBriefs[0]?.id}`],
+		).toMatchObject({
+			artifactVersion: 1,
+			status: "superseded",
+			isCurrent: false,
+		});
+		expect(
+			parsed.controlPlane.artifactRegistry.records[`art_${sliceBriefs[1]?.id}`],
+		).toMatchObject({
+			artifactVersion: 2,
+			status: "current",
+			isCurrent: true,
+		});
+	});
+
 	it("returns close guidance from task_done when the last open task is completed", async () => {
 		const { tool } = await createTool();
 
@@ -815,6 +992,7 @@ describe("createWorkflowPlannerTool", () => {
 		const finalTaskId = payload.idea.tasks[payload.idea.tasks.length - 1].id;
 
 		for (let index = 0; index < payload.idea.tasks.length - 1; index += 1) {
+			await buildImplementationBrief(tool, `call-7f-brief-${index + 1}`);
 			await tool.execute(`call-7f-pre-${index + 1}`, {
 				action: "task_done",
 				command: "complete task",
@@ -825,6 +1003,7 @@ describe("createWorkflowPlannerTool", () => {
 			});
 		}
 
+		await buildImplementationBrief(tool, "call-7f-brief-final");
 		const doneResult = await tool.execute("call-7f2", {
 			action: "task_done",
 			command: "complete task",
@@ -1200,6 +1379,7 @@ describe("createWorkflowPlannerTool", () => {
 			ideaName: "workflow planner",
 			taskId,
 		});
+		await buildImplementationBrief(tool, "call-11ro-c1");
 		const reopenResult = await tool.execute("call-11ro-d", {
 			action: "task_reopen",
 			command: "reopen task",
@@ -1365,6 +1545,7 @@ describe("createWorkflowPlannerTool", () => {
 		});
 		const addPayload = JSON.parse(addResult.content[0].text);
 
+		await buildImplementationBrief(tool, "call-11t-c1");
 		await tool.execute("call-11t-d", {
 			action: "task_done",
 			command: "complete task",
@@ -1476,6 +1657,16 @@ describe("createWorkflowPlannerTool", () => {
 		});
 
 		await expect(
+			secondTool.execute("call-12e2", {
+				action: "plan_create",
+				command: "create plan without design",
+				commandName: "plan_workflow",
+				skillName: "openclaw-workflow-planner",
+				ideaName: "workflow planner",
+			}),
+		).rejects.toThrow("requires design_prepare");
+
+		await expect(
 			secondTool.execute("call-12f", {
 				action: "plan_refresh",
 				command: "refresh plan",
@@ -1483,7 +1674,7 @@ describe("createWorkflowPlannerTool", () => {
 				skillName: "openclaw-workflow-planner",
 				ideaName: "workflow planner",
 			}),
-		).rejects.toThrow("does not have a plan yet");
+		).rejects.toThrow("requires design_prepare");
 	});
 
 	it("rejects invalid implementation brief and task completion requests", async () => {
@@ -1568,13 +1759,19 @@ describe("createWorkflowPlannerTool", () => {
 			].join("\n"),
 		);
 
-		expect(parsed.version).toBe(2);
+		expect(parsed.version).toBe(4);
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"],
 		).toBeDefined();
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"].currentPhase,
 		).toBe("intake");
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].migrationState,
+		).toBe("legacy_hydrated");
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].activeBlockers,
+		).toEqual([]);
 	});
 
 	it("hydrates rich legacy planner state and preserves round-trip state", () => {
@@ -1651,7 +1848,7 @@ describe("createWorkflowPlannerTool", () => {
 		const parsed = parsePlannerMarkdown(legacyMarkdown);
 		const roundTripped = parsePlannerMarkdown(renderPlannerMarkdown(parsed));
 
-		expect(parsed.version).toBe(2);
+		expect(parsed.version).toBe(4);
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"]
 				.currentResearchId,
@@ -1699,14 +1896,33 @@ describe("createWorkflowPlannerTool", () => {
 				"brief_workflow-planner_Build the next bounded runtime slice."
 			],
 		).toBeUndefined();
-		expect(
-			Object.keys(parsed.controlPlane.artifactRegistry.records),
-		).toHaveLength(0);
+		expect(Object.keys(parsed.controlPlane.artifactRegistry.records)).toEqual(
+			expect.arrayContaining([
+				"art_plan_workflow-planner",
+				"art_tasks_workflow-planner",
+			]),
+		);
+		expect(parsed.ideas[0]?.plan?.artifactRefs?.[0]).toMatchObject({
+			artifactId: "art_plan_workflow-planner",
+			artifactType: "plan",
+		});
+		expect(parsed.ideas[0]?.taskSet?.artifactRefs?.[0]).toMatchObject({
+			artifactId: "art_tasks_workflow-planner",
+			artifactType: "task_set",
+		});
 		expect(
 			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"]
 				.currentPlanId,
 		).toBe("plan_workflow-planner");
-		expect(roundTripped).toEqual(parsed);
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].migrationState,
+		).toBe("legacy_hydrated");
+		expect(
+			roundTripped.controlPlane.requestRuntime["req_workflow-planner"]
+				.migrationState,
+		).toBe("canonical");
+		expect(roundTripped.ideas).toEqual(parsed.ideas);
+		expect(renderPlannerMarkdown(parsed)).toContain('"version": 4');
 	});
 
 	it("rebuilds stale version 2 controlPlane data from persisted ideas", () => {
@@ -1841,7 +2057,7 @@ describe("createWorkflowPlannerTool", () => {
 		).toBe("workflow planner");
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"].currentPhase,
-		).toBe("execution");
+		).toBe("planning");
 		expect(
 			parsed.controlPlane.requestRuntime["req_workflow-planner"]
 				.currentBriefBySlice,
@@ -1855,9 +2071,17 @@ describe("createWorkflowPlannerTool", () => {
 		expect(parsed.controlPlane.entityRegistry.records).not.toHaveProperty(
 			"design_workflow-planner",
 		);
+		expect(Object.keys(parsed.controlPlane.artifactRegistry.records)).toEqual(
+			expect.arrayContaining([
+				"art_plan_workflow-planner",
+				"art_tasks_workflow-planner",
+			]),
+		);
 		expect(
-			Object.keys(parsed.controlPlane.artifactRegistry.records),
-		).toHaveLength(0);
+			parsed.ideas[0]?.currentPointers?.currentExecutionBriefBySliceId?.[
+				parsed.ideas[0]?.plan?.currentSliceId ?? ""
+			]?.resolutionStatus,
+		).toBe("resolved");
 		expect(
 			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"]
 				.currentBriefBySlice,
@@ -1868,6 +2092,383 @@ describe("createWorkflowPlannerTool", () => {
 		expect(
 			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"],
 		).not.toHaveProperty("currentDesignId");
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].migrationState,
+		).toBe("legacy_hydrated");
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].activeBlockers,
+		).toEqual([]);
+	});
+
+	it("normalizes partially populated provenance envelopes during hydration", () => {
+		const parsed = parsePlannerMarkdown(
+			[
+				"<!-- openclaw-workflow-planner-state",
+				JSON.stringify({
+					version: 4,
+					updatedAt: "2026-04-20T00:00:00.000Z",
+					ideas: [
+						{
+							slug: "workflow-planner",
+							name: "workflow planner",
+							problem: "Planning flow is not productized yet.",
+							requestedOutcome:
+								"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+							createdAt: "2026-04-20T00:00:00.000Z",
+							updatedAt: "2026-04-20T00:00:00.000Z",
+							status: "accepted",
+							research: {
+								summary: "The repo already has a donor orchestration pattern.",
+								valueAssessment: "high",
+								riskAssessment: "safe",
+								existingCoverage: "strong",
+								fitAssessment: "Fits the current repository direction.",
+								sourcesChecked: ["repo canon", "official OpenClaw docs"],
+							},
+							ideaGate: {
+								decision: "accepted",
+								reasoning: ["Strong fit and low risk."],
+								nextSuggestedAction: "plan_create",
+								decidedAt: "2026-04-20T00:00:00.000Z",
+							},
+							design: {
+								id: "design_workflow-planner",
+								ideaId: "workflow-planner",
+								revision: 1,
+								status: "ready",
+								summary: "Design prepared for plugin package.",
+								targetSurface: "plugin package",
+								constraints: [
+									"Keep WORKFLOW_PLAN.md as the only persisted state file.",
+								],
+								selectedApproach: "Introduce a persisted lane-1 design record.",
+								alternatives: ["Infer design from the plan."],
+								verificationStrategy: "Cover migration-safe hydration.",
+								provenance: {
+									requestId: "req_workflow-planner",
+									governingEntityRefs: [],
+									materialChangeClass: "create",
+									createdFromTransition: "design_prepare",
+								},
+							},
+							plan: {
+								id: "plan_workflow-planner",
+								ideaId: "workflow-planner",
+								revision: 1,
+								goal: "Ship the planner runtime contract.",
+								scope: ["Define runtime state", "Split flows"],
+								outOfScope: ["Rewrite public API"],
+								acceptanceTarget:
+									"Planner contract is implemented and verified.",
+								currentSlice: "Build the next bounded runtime slice.",
+								currentSliceId: "build-the-next-bounded-runtime-slice",
+								planBlocks: [],
+								provenance: {
+									requestId: "req_workflow-planner",
+									governingEntityRefs: [],
+									materialChangeClass: "create",
+									createdFromTransition: "plan_create",
+								},
+							},
+							taskSet: {
+								id: "tasks_workflow-planner",
+								revision: 1,
+								taskIds: ["generated-define-runtime-state"],
+								provenance: {
+									requestId: "req_workflow-planner",
+									governingEntityRefs: [],
+									governingArtifactRefs: [],
+									materialChangeClass: "create",
+									createdFromTransition: "plan_create",
+								},
+							},
+							executionBriefs: [
+								{
+									id: "brief_workflow-planner_build-the-next-bounded-runtime-slice_r1",
+									sliceId: "build-the-next-bounded-runtime-slice",
+									revision: 1,
+									status: "fresh",
+									summary:
+										"Implement the current slice for workflow planner: Build the next bounded runtime slice..",
+									scope: ["Define runtime state"],
+									avoid: ["Rewrite public API"],
+									doneWhen: ["Planner contract is implemented and verified."],
+									taskRefs: ["generated-define-runtime-state"],
+									remainingOpenTaskCount: 1,
+									remainingOpenTaskGuidance: "1 open task remains.",
+									sourceDesignRef: {
+										entityType: "design",
+										entityId: "design_workflow-planner",
+										entityRevision: 1,
+									},
+									sourcePlanRef: {
+										entityType: "plan",
+										entityId: "plan_workflow-planner",
+										entityRevision: 1,
+									},
+									sourceTaskSetRef: {
+										entityType: "task_set",
+										entityId: "tasks_workflow-planner",
+										entityRevision: 1,
+									},
+									provenance: {
+										requestId: "req_workflow-planner",
+										governingEntityRefs: [],
+										materialChangeClass: "create",
+										createdFromTransition: "implementation_brief",
+									},
+								},
+							],
+							tasks: [
+								{
+									id: "generated-define-runtime-state",
+									text: "Define runtime state",
+									origin: "generated",
+									done: false,
+								},
+							],
+						},
+					],
+				}),
+				"-->",
+				"",
+				"# Workflow Planner",
+			].join("\n"),
+		);
+
+		expect(parsed.ideas[0]?.design?.provenance.governingArtifactRefs).toEqual(
+			[],
+		);
+		expect(parsed.ideas[0]?.design?.provenance.sourceDecisionIds).toEqual([]);
+		expect(parsed.ideas[0]?.plan?.provenance.governingArtifactRefs).toEqual([]);
+		expect(parsed.ideas[0]?.plan?.provenance.sourceDecisionIds).toEqual([]);
+		expect(parsed.ideas[0]?.taskSet?.provenance.governingArtifactRefs).toEqual(
+			[],
+		);
+		expect(parsed.ideas[0]?.taskSet?.provenance.sourceDecisionIds).toEqual([]);
+		expect(
+			parsed.ideas[0]?.executionBriefs?.[0]?.provenance.governingArtifactRefs,
+		).toEqual([]);
+		expect(
+			parsed.ideas[0]?.executionBriefs?.[0]?.provenance.sourceDecisionIds,
+		).toEqual([]);
+	});
+
+	it("flags ambiguous legacy brief summaries as migration_required", () => {
+		const parsed = parsePlannerMarkdown(
+			[
+				"<!-- openclaw-workflow-planner-state",
+				JSON.stringify({
+					version: 2,
+					updatedAt: "2026-04-20T00:00:00.000Z",
+					ideas: [
+						{
+							slug: "workflow-planner",
+							name: "workflow planner",
+							problem: "Planning flow is not productized yet.",
+							requestedOutcome:
+								"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+							createdAt: "2026-04-20T00:00:00.000Z",
+							updatedAt: "2026-04-20T00:00:00.000Z",
+							status: "accepted",
+							plan: {
+								goal: "Ship the planner runtime contract.",
+								scope: ["Define runtime state"],
+								outOfScope: ["Rewrite public API"],
+								acceptanceTarget:
+									"Planner contract is implemented and verified.",
+								currentSlice: "Current canonical slice.",
+								planBlocks: [],
+							},
+							currentBriefBySlice: {
+								"Legacy mismatched slice.": "Implement the old slice summary.",
+							},
+							tasks: [],
+						},
+					],
+				}),
+				"-->",
+				"",
+				"# Workflow Planner",
+			].join("\n"),
+		);
+
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].migrationState,
+		).toBe("migration_required");
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"]
+				.aggregateStatus,
+		).toBe("blocked");
+		expect(
+			parsed.controlPlane.requestRuntime["req_workflow-planner"].activeBlockers,
+		).toEqual([
+			"Legacy brief summaries do not match the persisted currentSlice and require operator review before execution gating can be trusted.",
+		]);
+		expect(
+			parsed.controlPlane.currentPointers.byRequestId["req_workflow-planner"]
+				.unresolvedReasons,
+		).toEqual([
+			"Legacy brief summaries do not match the persisted currentSlice and require operator review before execution gating can be trusted.",
+		]);
+		expect(
+			parsed.ideas[0].currentPointers?.currentExecutionBriefBySliceId?.[
+				"slice_current-canonical-slice"
+			],
+		).toMatchObject({
+			pointerType: "current_execution_brief",
+			resolutionStatus: "unresolved",
+			unresolvedReason:
+				"Legacy brief summaries do not match the persisted currentSlice and require operator review before execution gating can be trusted.",
+		});
+	});
+
+	it("blocks execution-state task progress when the current execution-brief pointer is unresolved", async () => {
+		const { plannerFilePath, tool } = await createTool();
+		await writeFile(
+			plannerFilePath,
+			[
+				"<!-- openclaw-workflow-planner-state",
+				JSON.stringify({
+					version: 2,
+					updatedAt: "2026-04-20T00:00:00.000Z",
+					ideas: [
+						{
+							slug: "workflow-planner",
+							name: "workflow planner",
+							problem: "Planning flow is not productized yet.",
+							requestedOutcome:
+								"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+							createdAt: "2026-04-20T00:00:00.000Z",
+							updatedAt: "2026-04-20T00:00:00.000Z",
+							status: "accepted",
+							design: {
+								id: "design_workflow-planner",
+								ideaId: "workflow-planner",
+								revision: 1,
+								status: "ready",
+								summary: "Ready design",
+								targetSurface: "plugin package",
+								constraints: ["Keep WORKFLOW_PLAN.md as persisted canon."],
+								selectedApproach: "Safe migration",
+								alternatives: ["Skip migration truth"],
+								verificationStrategy: "Add tests",
+							},
+							plan: {
+								goal: "Ship the planner runtime contract.",
+								scope: ["Define runtime state"],
+								outOfScope: ["Rewrite public API"],
+								acceptanceTarget:
+									"Planner contract is implemented and verified.",
+								currentSlice: "Current canonical slice.",
+								planBlocks: [],
+							},
+							currentBriefBySlice: {
+								"Legacy mismatched slice.": "Implement the old slice summary.",
+							},
+							tasks: [
+								{
+									id: "generated-define-runtime-state",
+									text: "define runtime state",
+									origin: "generated",
+									done: false,
+								},
+							],
+						},
+					],
+				}),
+				"-->",
+				"",
+				"# Workflow Planner",
+			].join("\n"),
+			"utf8",
+		);
+
+		await expect(
+			tool.execute("call-mptr-1", {
+				action: "task_done",
+				command: "complete task",
+				commandName: "implementation_handoff",
+				skillName: "openclaw-workflow-implementer",
+				ideaName: "workflow planner",
+				taskIndex: 1,
+			}),
+		).rejects.toThrow(
+			"has unresolved current execution-brief pointer state for the current slice",
+		);
+	});
+
+	it("clears legacy migration flags after a canonical save", async () => {
+		const { plannerFilePath, tool } = await createTool();
+		await writeFile(
+			plannerFilePath,
+			[
+				"<!-- openclaw-workflow-planner-state",
+				JSON.stringify({
+					updatedAt: "2026-04-20T00:00:00.000Z",
+					ideas: [
+						{
+							slug: "workflow-planner",
+							name: "workflow planner",
+							problem: "Planning flow is not productized yet.",
+							requestedOutcome:
+								"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+							createdAt: "2026-04-20T00:00:00.000Z",
+							updatedAt: "2026-04-20T00:00:00.000Z",
+							status: "draft",
+							tasks: [],
+						},
+					],
+				}),
+				"-->",
+				"",
+				"# Workflow Planner",
+			].join("\n"),
+			"utf8",
+		);
+
+		const before = await tool.execute("call-m1", {
+			action: "idea_get",
+			command: "get idea",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		const beforePayload = JSON.parse(before.content[0].text);
+		expect(beforePayload.controlPlane.requestRuntime.migrationState).toBe(
+			"legacy_hydrated",
+		);
+
+		await tool.execute("call-m2", {
+			action: "idea_create",
+			command: "update idea",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+			problem: "Planning flow is not productized yet.",
+			requestedOutcome:
+				"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+			notes: "Canonical save should clear migration flags.",
+		});
+
+		const after = await tool.execute("call-m3", {
+			action: "idea_get",
+			command: "get idea",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		const afterPayload = JSON.parse(after.content[0].text);
+		expect(afterPayload.controlPlane.requestRuntime.migrationState).toBe(
+			"canonical",
+		);
+		expect(afterPayload.controlPlane.requestRuntime.activeBlockers).toEqual([]);
+
+		const persistedMarkdown = await readFile(plannerFilePath, "utf8");
+		expect(persistedMarkdown).toContain('"version": 4');
+		expect(persistedMarkdown).not.toContain('"version": 1');
+		expect(persistedMarkdown).not.toContain('"version": 2');
+		expect(persistedMarkdown).not.toContain('"version": 3');
 	});
 
 	it("rejects idea_gate before research is attached", async () => {
@@ -2009,6 +2610,49 @@ describe("createWorkflowPlannerTool", () => {
 
 		expect(donePayload.completedTaskIndex).toBe(1);
 		expect(donePayload.completedTask.done).toBe(true);
+	});
+
+	it("rejects task_reopen when the current implementation_brief is stale", async () => {
+		const { tool } = await createTool();
+
+		await seedAcceptedIdea(tool);
+		await tool.execute("call-15k", {
+			action: "plan_create",
+			command: "create plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		const snapshot = await tool.execute("call-15k0", {
+			action: "plan_snapshot",
+			command: "show plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		const taskId = JSON.parse(snapshot.content[0].text).idea.tasks[0].id;
+		await buildImplementationBrief(tool, "call-15l");
+		await tool.execute("call-15m", {
+			action: "task_done",
+			command: "complete task",
+			commandName: "implementation_handoff",
+			skillName: "openclaw-workflow-implementer",
+			ideaName: "workflow planner",
+			taskId,
+		});
+
+		await expect(
+			tool.execute("call-15n", {
+				action: "task_reopen",
+				command: "reopen task",
+				commandName: "implementation_handoff",
+				skillName: "openclaw-workflow-implementer",
+				ideaName: "workflow planner",
+				taskId,
+			}),
+		).rejects.toThrow(
+			"has unresolved current execution-brief pointer state for the current slice",
+		);
 	});
 
 	it("rejects planner actions from the wrong bundled skills", async () => {
@@ -2274,6 +2918,7 @@ describe("createWorkflowPlannerTool", () => {
 			done: true,
 		});
 
+		await buildImplementationBrief(tool, "call-20c1");
 		const reopen = await tool.execute("call-20d", {
 			action: "task_reopen",
 			command: "reopen task",

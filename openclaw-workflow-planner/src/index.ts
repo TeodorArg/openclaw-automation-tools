@@ -9,7 +9,7 @@ export default definePluginEntry({
 	id: "openclaw-workflow-planner",
 	name: "OpenClaw Workflow Planner",
 	description:
-		"Planning-first OpenClaw workflow for idea creation, typed research, idea gate, accepted plan lifecycle, and implementation handoff.",
+		"Planning-first OpenClaw workflow for idea creation, typed research, idea gate, lane-1 design, accepted plan lifecycle, task tracking, snapshots, and implementation handoff.",
 	register(api: OpenClawPluginApi) {
 		api.registerTool(
 			(toolContext: { agentId?: string; sessionKey?: string }) =>

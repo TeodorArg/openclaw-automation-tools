@@ -91,8 +91,19 @@ export async function handleIdeaCreate(
 			normalizeOptionalText(params.ownerSurface) ?? persistedIdea?.ownerSurface,
 		research: resetLifecycle ? undefined : persistedIdea?.research,
 		ideaGate: resetLifecycle ? undefined : persistedIdea?.ideaGate,
+		design: resetLifecycle ? undefined : persistedIdea?.design,
 		plan: resetLifecycle ? undefined : persistedIdea?.plan,
 		tasks: resetLifecycle ? [] : (persistedIdea?.tasks ?? []),
+		taskSet: resetLifecycle ? undefined : persistedIdea?.taskSet,
+		executionBriefs: resetLifecycle
+			? undefined
+			: persistedIdea?.executionBriefs,
+		currentPointers: resetLifecycle
+			? undefined
+			: persistedIdea?.currentPointers,
+		currentBriefBySlice: resetLifecycle
+			? undefined
+			: persistedIdea?.currentBriefBySlice,
 		closeNote: resetLifecycle ? undefined : persistedIdea?.closeNote,
 	});
 	const saved = await context.save(updatedState, context.pluginConfig);

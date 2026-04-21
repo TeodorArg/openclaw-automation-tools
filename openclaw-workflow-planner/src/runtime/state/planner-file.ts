@@ -8,6 +8,7 @@ import {
 	type PlannerPlanBlock,
 	type PlannerState,
 	type PlannerTask,
+	serializePlannerState,
 } from "./planner-state.js";
 
 const STATE_START = "<!-- openclaw-workflow-planner-state";
@@ -75,6 +76,25 @@ function renderPlanBlock(block: PlannerPlanBlock): string[] {
 	];
 }
 
+function renderArtifactRefs(
+	label: string,
+	artifactRefs:
+		| Array<{ artifactId: string; artifactRevision: number; path?: string }>
+		| undefined,
+): string[] {
+	if (!artifactRefs || artifactRefs.length === 0) {
+		return [`${label}: none`];
+	}
+
+	return [
+		`${label}:`,
+		...artifactRefs.map(
+			(entry) =>
+				`- \`${entry.artifactId}\` @r${entry.artifactRevision}${entry.path ? ` (${entry.path})` : ""}`,
+		),
+	];
+}
+
 function renderIdea(idea: PlannerIdea): string[] {
 	return [
 		`## ${idea.name}`,
@@ -128,11 +148,31 @@ function renderIdea(idea: PlannerIdea): string[] {
 				]
 			: ["No idea gate decision recorded yet."]),
 		"",
+		"### Design",
+		"",
+		...(idea.design
+			? [
+					`- Design id: \`${idea.design.id}\``,
+					`- Revision: \`${idea.design.revision}\``,
+					`- Status: \`${idea.design.status}\``,
+					`- Target surface: ${idea.design.targetSurface}`,
+					`- Summary: ${idea.design.summary}`,
+					"Constraints:",
+					...idea.design.constraints.map((item) => `- ${item}`),
+					`Selected approach: ${idea.design.selectedApproach}`,
+					"Alternatives:",
+					...idea.design.alternatives.map((item) => `- ${item}`),
+					`Verification strategy: ${idea.design.verificationStrategy}`,
+					...renderArtifactRefs("Artifact refs", idea.design.artifactRefs),
+				]
+			: ["No design prepared yet."]),
+		"",
 		"### Tasks",
 		"",
 		...(idea.tasks.length > 0
 			? idea.tasks.map(renderTask)
 			: ["- [ ] No tasks recorded yet."]),
+		...renderArtifactRefs("Task-set artifact refs", idea.taskSet?.artifactRefs),
 		"",
 		"### Plan",
 		"",
@@ -148,10 +188,24 @@ function renderIdea(idea: PlannerIdea): string[] {
 					"",
 					`Acceptance target: ${idea.plan.acceptanceTarget}`,
 					`Current slice: ${idea.plan.currentSlice}`,
+					...renderArtifactRefs("Artifact refs", idea.plan.artifactRefs),
 					"",
 					...idea.plan.planBlocks.flatMap(renderPlanBlock),
 				]
 			: ["No canonical plan created yet."]),
+		"",
+		"### Execution Briefs",
+		"",
+		...(idea.executionBriefs?.length
+			? idea.executionBriefs.flatMap((brief) => [
+					`- Brief id: \`${brief.id}\``,
+					`  - Slice id: \`${brief.sliceId}\``,
+					`  - Revision: \`${brief.revision}\``,
+					`  - Status: \`${brief.status}\``,
+					`  - Summary: ${brief.summary}`,
+					...renderArtifactRefs("  - Artifact refs", brief.artifactRefs),
+				])
+			: ["No execution briefs recorded yet."]),
 	];
 }
 
@@ -167,7 +221,7 @@ export function resolvePlannerFilePath(pluginConfig?: {
 }
 
 export function renderPlannerMarkdown(state: PlannerState): string {
-	const encodedState = JSON.stringify(state, null, 2);
+	const encodedState = JSON.stringify(serializePlannerState(state), null, 2);
 	const ideaCount = state.ideas.length;
 
 	return [
@@ -226,16 +280,19 @@ export function parsePlannerMarkdown(markdown: string): PlannerState {
 	if (
 		typeof parsed.version === "number" &&
 		parsed.version !== 1 &&
-		parsed.version !== 2
+		parsed.version !== 2 &&
+		parsed.version !== 3 &&
+		parsed.version !== 4
 	) {
 		throw new Error(
 			`Planner state block has an unsupported version: ${parsed.version}.`,
 		);
 	}
 
-	if (parsed.version === 2) {
+	if (parsed.version === 2 || parsed.version === 3 || parsed.version === 4) {
 		return hydratePlannerState({
 			ideas: parsed.ideas,
+			sourceVersion: parsed.version,
 			updatedAt:
 				typeof parsed.updatedAt === "string"
 					? parsed.updatedAt
@@ -245,6 +302,7 @@ export function parsePlannerMarkdown(markdown: string): PlannerState {
 
 	return hydratePlannerState({
 		ideas: parsed.ideas,
+		sourceVersion: parsed.version,
 		updatedAt:
 			typeof parsed.updatedAt === "string"
 				? parsed.updatedAt

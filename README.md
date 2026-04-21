@@ -23,7 +23,7 @@ The package-shape canon is broader than runtime/test layout alone, and the style
 | Path | Current shape | Purpose |
 | --- | --- | --- |
 | [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
-| [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea and plan lifecycle |
+| [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea, lane-1 design, and plan lifecycle |
 | [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory and bounded sync fixes |
 | [openclaw-session-bloat-warning/README.md](openclaw-session-bloat-warning/README.md) | publishable plugin-plus-skill package | Compaction-warning package for calm pre/post compaction session-bloat notices |
 | [openclaw-url-tailwind-scaffold/README.md](openclaw-url-tailwind-scaffold/README.md) | publishable plugin-plus-skill package | URL-driven package for bounded scaffold normalization/synthesis and Tailwind CSS v4 scaffold summaries |
@@ -60,6 +60,7 @@ Its shipped surface centers on file-backed `WORKFLOW_PLAN.md` state plus typed p
 - idea creation and listing
 - typed research attachment
 - explicit `Idea Gate` decisions
+- lane-1 design preparation and retrieval
 - accepted-plan creation and refresh
 - persisted plan snapshots and idea reads
 - manual task add / done / remove / reopen tracking

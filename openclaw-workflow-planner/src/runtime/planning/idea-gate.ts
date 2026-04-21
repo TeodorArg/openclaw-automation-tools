@@ -93,8 +93,8 @@ export function evaluateIdeaGate(input: IdeaGateInput): IdeaGateResult {
 	return buildDecision(
 		"accepted",
 		reasoning.concat(
-			"The idea clears the initial gate and can move into explicit plan creation.",
+			"The idea clears the initial gate and can move into explicit design preparation before planning.",
 		),
-		"plan_create",
+		"design_prepare",
 	);
 }

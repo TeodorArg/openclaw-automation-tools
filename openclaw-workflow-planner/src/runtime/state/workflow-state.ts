@@ -19,6 +19,11 @@ export type AggregateVerdict =
 	| "not_done"
 	| "cancelled";
 
+export type MigrationState =
+	| "canonical"
+	| "legacy_hydrated"
+	| "migration_required";
+
 export type ValidityStatus = "current" | "stale" | "invalid";
 export type VersionStatus = "current" | "superseded" | "invalidated";
 export type ArtifactStatus =
@@ -31,6 +36,7 @@ export type ArtifactStatus =
 export type WorkflowEntityType =
 	| "Request"
 	| "PlannerResearch"
+	| "PlannerDesign"
 	| "PlannerPlan"
 	| "TaskSet"
 	| "ExecutionBrief";
@@ -41,7 +47,9 @@ export type RequestRuntimeRecord = {
 	currentPhase: WorkflowPhase;
 	aggregateStatus: AggregateStatus;
 	aggregateVerdict: AggregateVerdict;
+	migrationState: MigrationState;
 	currentResearchId?: string;
+	currentDesignId?: string;
 	currentPlanId?: string;
 	currentTaskSetId?: string;
 	currentBriefBySlice: Record<string, string>;
@@ -95,6 +103,7 @@ export type ArtifactRegistry = {
 export type CurrentPointerRecord = {
 	requestId: string;
 	currentResearchId?: string;
+	currentDesignId?: string;
 	currentPlanId?: string;
 	currentTaskSetId?: string;
 	currentBriefBySlice: Record<string, string>;

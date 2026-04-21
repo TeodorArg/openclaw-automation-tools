@@ -2,7 +2,12 @@ import { Type } from "@sinclair/typebox";
 import { loadPlannerState, savePlannerState } from "../state/planner-file.js";
 import { requireIdeaSlug } from "../state/planner-state.js";
 import { handleImplementationBrief } from "./brief-flow.js";
-import { handleIdeaGate, handleResearchAttach } from "./design-flow.js";
+import {
+	handleDesignGet,
+	handleDesignPrepare,
+	handleIdeaGate,
+	handleResearchAttach,
+} from "./design-flow.js";
 import type { FlowContext, PlannerToolParams } from "./flow-helpers.js";
 import { handlePlanCreateOrRefresh, handlePlanSnapshot } from "./plan-flow.js";
 import {
@@ -29,6 +34,8 @@ const ToolSchema = Type.Object(
 			Type.Literal("idea_create"),
 			Type.Literal("research_attach"),
 			Type.Literal("idea_gate"),
+			Type.Literal("design_prepare"),
+			Type.Literal("design_get"),
 			Type.Literal("plan_create"),
 			Type.Literal("plan_refresh"),
 			Type.Literal("idea_list"),
@@ -77,6 +84,11 @@ const ToolSchema = Type.Object(
 		similarSurfaces: Type.Optional(Type.Array(Type.String())),
 		whyNow: Type.Optional(Type.String()),
 		openQuestions: Type.Optional(Type.Array(Type.String())),
+		targetSurface: Type.Optional(Type.String()),
+		constraints: Type.Optional(Type.Array(Type.String())),
+		selectedApproach: Type.Optional(Type.String()),
+		alternatives: Type.Optional(Type.Array(Type.String())),
+		verificationStrategy: Type.Optional(Type.String()),
 		acceptanceTarget: Type.Optional(Type.String()),
 		currentSlice: Type.Optional(Type.String()),
 		taskText: Type.Optional(Type.String()),
@@ -92,6 +104,8 @@ type ToolParams = PlannerToolParams & {
 		| "idea_create"
 		| "research_attach"
 		| "idea_gate"
+		| "design_prepare"
+		| "design_get"
 		| "plan_create"
 		| "plan_refresh"
 		| "idea_list"
@@ -140,7 +154,7 @@ export function createWorkflowPlannerTool(
 	return {
 		name: "workflow_planner_action",
 		description:
-			"Planning-first workflow tool for idea lifecycle, typed research attachment, accepted-plan creation/refresh, task tracking, snapshots, and implementation handoff.",
+			"Planning-first workflow tool for idea lifecycle, typed research attachment, design preparation, accepted-plan creation/refresh, task tracking, snapshots, and implementation handoff.",
 		parameters: ToolSchema,
 		async execute(_toolCallId: string, params: ToolParams) {
 			const skillName = validatePlannerSkill(params.skillName);
@@ -185,6 +199,16 @@ export function createWorkflowPlannerTool(
 
 			if (params.action === "idea_gate") {
 				return formatContent(await handleIdeaGate(context, params, ideaName));
+			}
+
+			if (params.action === "design_prepare") {
+				return formatContent(
+					await handleDesignPrepare(context, params, ideaName),
+				);
+			}
+
+			if (params.action === "design_get") {
+				return formatContent(await handleDesignGet(context, params, ideaName));
 			}
 
 			if (params.action === "plan_create" || params.action === "plan_refresh") {

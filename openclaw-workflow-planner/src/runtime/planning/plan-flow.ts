@@ -1,8 +1,15 @@
 import {
+	createDefaultPlanArtifactRefs,
+	deriveIdeaGateDecisionIds,
+	markExecutionBriefsStale,
 	mergePlannerTasks,
+	type PlannerPlan,
+	type PlannerProvenanceEnvelope,
 	requireIdeaSlug,
+	slugifyIdeaName,
 	syncPlanBlockChecklistWithTasks,
 	updateIdea,
+	updateTaskSetForTasks,
 } from "../state/planner-state.js";
 import type { FlowContext, PlannerToolParams } from "./flow-helpers.js";
 import {
@@ -28,6 +35,12 @@ export async function handlePlanCreateOrRefresh(
 		);
 	}
 
+	if (!idea.design) {
+		throw new Error(
+			`Idea ${idea.slug} requires design_prepare before ${params.action} can run.`,
+		);
+	}
+
 	if (params.action === "plan_create" && idea.plan) {
 		throw new Error(
 			`Idea ${idea.slug} already has a plan. Use plan_refresh instead of plan_create.`,
@@ -47,17 +60,60 @@ export async function handlePlanCreateOrRefresh(
 		currentSlice: params.currentSlice,
 	} satisfies DraftPlanInput);
 	const mergedTasks = mergePlannerTasks(result.tasks, idea.tasks);
-	const syncedPlan = {
+	const materialChangeClass: PlannerProvenanceEnvelope["materialChangeClass"] =
+		params.action === "plan_create" ? "create" : "refresh";
+	const syncedPlan: PlannerPlan = {
 		...result.plan,
+		id: idea.plan?.id ?? `plan_${idea.slug}`,
+		ideaId: idea.slug,
+		designId: idea.design.id,
+		revision:
+			params.action === "plan_refresh" ? (idea.plan?.revision ?? 0) + 1 : 1,
+		currentSliceId:
+			idea.plan?.currentSliceId ??
+			`slice_${slugifyIdeaName(result.plan.currentSlice) || "current"}`,
 		planBlocks: syncPlanBlockChecklistWithTasks(
 			result.plan.planBlocks,
 			mergedTasks,
+		),
+		provenance: {
+			requestId: `req_${idea.slug}`,
+			governingEntityRefs: [
+				{
+					entityType: "idea" as const,
+					entityId: idea.slug,
+					entityRevision: 1,
+				},
+				{
+					entityType: "design" as const,
+					entityId: idea.design.id,
+					entityRevision: idea.design.revision,
+				},
+			],
+			governingArtifactRefs: idea.design.artifactRefs ?? [],
+			materialChangeClass,
+			createdFromTransition: params.action,
+			sourceDecisionIds: deriveIdeaGateDecisionIds(idea),
+		},
+		artifactRefs: createDefaultPlanArtifactRefs(
+			idea.slug,
+			idea.plan?.id ?? `plan_${idea.slug}`,
+			params.action === "plan_refresh" ? (idea.plan?.revision ?? 0) + 1 : 1,
 		),
 	};
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		plan: syncedPlan,
 		tasks: mergedTasks,
+		taskSet: updateTaskSetForTasks({
+			idea: existingIdea,
+			tasks: mergedTasks,
+			createdFromTransition: params.action,
+		}),
+		executionBriefs:
+			params.action === "plan_refresh"
+				? markExecutionBriefsStale(existingIdea, "plan_refresh")
+				: existingIdea.executionBriefs,
 	}));
 	const saved = await context.save(updatedState, context.pluginConfig);
 

@@ -1,6 +1,6 @@
 ---
 name: openclaw-workflow-planner
-description: Use when the user needs to create an idea, attach typed research, pass Idea Gate, create or refresh an accepted plan in WORKFLOW_PLAN.md, track tasks, and prepare a bounded implementation handoff.
+description: Use when the user needs to create an idea, attach typed research, pass Idea Gate, prepare lane-1 design, create or refresh an accepted plan in WORKFLOW_PLAN.md, track tasks, and prepare a bounded implementation handoff.
 user-invocable: true
 command-dispatch: tool
 command-tool: workflow_planner_action
@@ -9,9 +9,12 @@ command-arg-mode: raw
 
 # OpenClaw Workflow Planner
 
-This skill provides a planning-first orchestration layer over `workflow_planner_action`, and persisted current brief presence can move the active request runtime from `planning` to `execution` for the current slice while `WORKFLOW_PLAN.md` remains the single persisted state surface.
+This skill provides a planning-first orchestration layer over `workflow_planner_action`, and a fresh current-slice `ExecutionBrief` selected by the current execution-brief pointer can move the active request runtime from `planning` to `execution` for the current slice while `WORKFLOW_PLAN.md` remains the single persisted state surface.
 
-Control-plane request, entity, and pointer metadata, including rebuilt `ExecutionBrief` records from persisted `currentBriefBySlice` summaries, is rebuilt from that state; do not imply separate persisted plan, task, or brief files outside `WORKFLOW_PLAN.md`.
+Control-plane request, entity, and pointer metadata is rebuilt from persisted idea state; persisted `executionBriefs` are canonical, and `currentBriefBySlice` is a derived summary plus legacy-hydration compatibility field. Do not imply separate persisted plan, task, or brief files outside `WORKFLOW_PLAN.md`.
+Logical `artifactRefs`, `governingArtifactRefs`, and pointer `targetArtifactRef` paths describe package-local provenance/materialization targets inside the single planner bundle; they do not imply extra persisted planner files in the shipped surface.
+Legacy planner files may surface `migrationState` in derived control-plane runtime: `legacy_hydrated` means read-old/write-new normalization is active, while `migration_required` means ambiguous legacy brief state still needs operator review or a canonical save path.
+When legacy brief state is ambiguous, the current execution-brief pointer stays explicitly unresolved instead of being synthesized as resolved, and execution-state task progress must not continue until canonical brief truth exists.
 
 ## Когда использовать
 
@@ -25,13 +28,15 @@ Control-plane request, entity, and pointer metadata, including rebuilt `Executio
 1. Create or update the idea with `idea_create`.
 2. Attach typed research with `research_attach`.
 3. Run `idea_gate`.
-4. If the decision is `accepted`, run `plan_create`.
-5. If the decision is `needs_research`, attach more research before gating again.
-6. If an accepted plan already exists and changes materially, use `plan_refresh`.
-7. Inspect the current state with `idea_get`, `idea_list`, or `plan_snapshot`.
-8. For manual plan tracking, use `task_add`, prefer `task_done` and `task_remove` by stable `taskId`, and use `task_reopen` to intentionally reopen work without relying on task text matching.
-9. When a bounded slice starts, run `implementation_brief` to get a derived handoff payload with structured open tasks for that slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance. The action also records current brief presence in persisted planner state and control-plane entities without creating a separate brief file. Successful task actions, including `task_add`, `task_done`, `task_remove`, and `task_reopen`, now echo the same remaining-open-task guidance for immediate follow-through.
-10. Run `idea_close` only after the idea is accepted, has a canonical plan, all tracked tasks are done, and you can record the delivered outcome in the close note.
+4. If the decision is `accepted`, run `design_prepare` before planning.
+5. Use `design_get` when you need to inspect or reuse the current lane-1 design.
+6. Run `plan_create` after lane-1 design is prepared.
+7. If the decision is `needs_research`, attach more research before gating again.
+8. If an accepted plan already exists and changes materially, use `plan_refresh`.
+9. Inspect the current state with `idea_get`, `idea_list`, or `plan_snapshot`.
+10. For manual plan tracking, use `task_add`, prefer `task_done` and `task_remove` by stable `taskId`, and use `task_reopen` to intentionally reopen work without relying on task text matching.
+11. When a bounded slice starts, run `implementation_brief` to get a derived handoff payload with structured open tasks for that slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance. The action persists a fresh current-slice `ExecutionBrief`, updates the current execution-brief pointer, and updates `currentBriefBySlice` as a summary view without creating a separate brief file. Rerunning `implementation_brief` for the same slice keeps earlier `executionBriefs` as superseded persisted history while retargeting the current pointer and summary view to the newest fresh brief. Any later `plan_refresh`, `task_add`, `task_done`, `task_remove`, or `task_reopen` stales that fresh brief, so rerun `implementation_brief` before the next `task_done` or `task_reopen`. Successful task actions, including `task_add`, `task_done`, `task_remove`, and `task_reopen`, now echo the same remaining-open-task guidance for immediate follow-through.
+12. Run `idea_close` only after the idea is accepted, has a canonical plan, all tracked tasks are done, and you can record the delivered outcome in the close note.
 
 ## Skill Routing
 

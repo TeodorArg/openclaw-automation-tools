@@ -15,10 +15,15 @@ export type DraftPlanInput = {
 	currentSlice?: string;
 };
 
+export type DraftPlannerPlan = Omit<
+	PlannerPlan,
+	"id" | "ideaId" | "designId" | "revision" | "currentSliceId" | "provenance"
+>;
+
 export type DraftPlanResult = {
 	mode: DraftPlanMode;
 	taskTitle: string;
-	plan: PlannerPlan;
+	plan: DraftPlannerPlan;
 	tasks: PlannerTask[];
 	markdown: string;
 };
@@ -82,7 +87,7 @@ export function buildDraftPlan(input: DraftPlanInput): DraftPlanResult {
 		},
 	];
 	const tasks = planBlocks.flatMap((block) => block.checklist);
-	const plan: PlannerPlan = {
+	const plan: DraftPlannerPlan = {
 		goal: idea.requestedOutcome,
 		scope: [
 			"keep one idea as the unit of planning",

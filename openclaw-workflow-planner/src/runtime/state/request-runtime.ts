@@ -1,6 +1,7 @@
 import type {
 	AggregateStatus,
 	AggregateVerdict,
+	MigrationState,
 	RequestRuntimeRecord,
 	WorkflowPhase,
 } from "./workflow-state.js";
@@ -8,6 +9,7 @@ import type {
 export function deriveRequestPhase(input: {
 	status: string;
 	hasResearch: boolean;
+	hasDesign: boolean;
 	hasPlan: boolean;
 	hasTasks: boolean;
 	hasCurrentSliceBrief: boolean;
@@ -39,9 +41,14 @@ export function deriveRequestPhase(input: {
 export function deriveAggregateStatus(input: {
 	status: string;
 	hasCloseNote: boolean;
+	hasMigrationBlockers: boolean;
 }): AggregateStatus {
 	if (input.hasCloseNote || input.status === "closed") {
 		return "completed";
+	}
+
+	if (input.hasMigrationBlockers) {
+		return "blocked";
 	}
 
 	if (input.status === "rejected" || input.status === "deferred") {
@@ -74,29 +81,45 @@ export function deriveAggregateVerdict(input: {
 export function createRequestRuntimeRecord(input: {
 	requestId: string;
 	title: string;
+	migrationState: MigrationState;
 	currentResearchId?: string;
+	currentDesignId?: string;
 	currentPlanId?: string;
 	currentTaskSetId?: string;
 	currentBriefBySlice?: Record<string, string>;
 	status: string;
 	hasResearch: boolean;
+	hasDesign: boolean;
 	hasPlan: boolean;
 	hasTasks: boolean;
 	hasCurrentSliceBrief: boolean;
 	hasCloseNote: boolean;
+	activeBlockers?: string[];
 	updatedAt: string;
 }): RequestRuntimeRecord {
 	return {
 		requestId: input.requestId,
 		title: input.title,
 		currentPhase: deriveRequestPhase(input),
-		aggregateStatus: deriveAggregateStatus(input),
+		aggregateStatus: deriveAggregateStatus({
+			status: input.status,
+			hasCloseNote: input.hasCloseNote,
+			hasMigrationBlockers: (input.activeBlockers?.length ?? 0) > 0,
+		}),
 		aggregateVerdict: deriveAggregateVerdict(input),
-		currentResearchId: input.currentResearchId,
-		currentPlanId: input.currentPlanId,
-		currentTaskSetId: input.currentTaskSetId,
+		migrationState: input.migrationState,
+		...(input.currentResearchId
+			? { currentResearchId: input.currentResearchId }
+			: {}),
+		...(input.currentDesignId
+			? { currentDesignId: input.currentDesignId }
+			: {}),
+		...(input.currentPlanId ? { currentPlanId: input.currentPlanId } : {}),
+		...(input.currentTaskSetId
+			? { currentTaskSetId: input.currentTaskSetId }
+			: {}),
 		currentBriefBySlice: input.currentBriefBySlice ?? {},
-		activeBlockers: [],
+		activeBlockers: input.activeBlockers ?? [],
 		updatedAt: input.updatedAt,
 	};
 }

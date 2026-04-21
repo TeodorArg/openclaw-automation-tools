@@ -5,6 +5,10 @@ import type {
 	PlannerState,
 	PlannerTask,
 } from "../state/planner-state.js";
+import {
+	getCurrentExecutionBrief,
+	getCurrentExecutionBriefPointer,
+} from "../state/planner-state.js";
 
 export type PlannerToolParams = {
 	action: string;
@@ -26,6 +30,11 @@ export type PlannerToolParams = {
 	similarSurfaces?: string[];
 	whyNow?: string;
 	openQuestions?: string[];
+	targetSurface?: string;
+	constraints?: string[];
+	selectedApproach?: string;
+	alternatives?: string[];
+	verificationStrategy?: string;
 	acceptanceTarget?: string;
 	currentSlice?: string;
 	taskText?: string;
@@ -101,8 +110,34 @@ export function requireCurrentSliceBrief(idea: PlannerIdea): PlannerIdea {
 		);
 	}
 	const currentSlice = plan.currentSlice;
-	if (acceptedIdea.currentBriefBySlice?.[currentSlice]) {
+	const currentSliceId = plan.currentSliceId;
+	const currentBriefPointer = getCurrentExecutionBriefPointer(acceptedIdea);
+	const currentBrief = getCurrentExecutionBrief(acceptedIdea);
+	if (
+		currentBriefPointer?.resolutionStatus === "resolved" &&
+		currentBrief &&
+		currentBrief.sliceId === currentSliceId &&
+		currentBrief.status === "fresh"
+	) {
 		return acceptedIdea;
+	}
+
+	if (
+		currentBriefPointer?.resolutionStatus === "unresolved" &&
+		currentBriefPointer.unresolvedReason
+	) {
+		throw new Error(
+			`Idea ${acceptedIdea.slug} has unresolved current execution-brief pointer state for the current slice. ${currentBriefPointer.unresolvedReason}`,
+		);
+	}
+
+	const matchingNonFreshBrief = acceptedIdea.executionBriefs?.find(
+		(entry) => entry.sliceId === currentSliceId,
+	);
+	if (matchingNonFreshBrief) {
+		throw new Error(
+			`Idea ${acceptedIdea.slug} has a ${matchingNonFreshBrief.status} implementation brief for the current slice. Regenerate implementation_brief for ${currentSlice} before execution-state task progress can continue.`,
+		);
 	}
 
 	throw new Error(

@@ -3,6 +3,8 @@ const AllowedSkillActions = {
 		"idea_create",
 		"research_attach",
 		"idea_gate",
+		"design_prepare",
+		"design_get",
 		"plan_create",
 		"plan_refresh",
 		"idea_list",
@@ -40,6 +42,8 @@ export type PlannerAction =
 	| "idea_create"
 	| "research_attach"
 	| "idea_gate"
+	| "design_prepare"
+	| "design_get"
 	| "plan_create"
 	| "plan_refresh"
 	| "idea_list"

@@ -10,7 +10,22 @@ export function createEmptyCurrentPointerRegistry(): CurrentPointerRegistry {
 export function createCurrentPointerRecord(
 	input: CurrentPointerRecord,
 ): CurrentPointerRecord {
-	return input;
+	return {
+		requestId: input.requestId,
+		...(input.currentResearchId
+			? { currentResearchId: input.currentResearchId }
+			: {}),
+		...(input.currentDesignId
+			? { currentDesignId: input.currentDesignId }
+			: {}),
+		...(input.currentPlanId ? { currentPlanId: input.currentPlanId } : {}),
+		...(input.currentTaskSetId
+			? { currentTaskSetId: input.currentTaskSetId }
+			: {}),
+		currentBriefBySlice: input.currentBriefBySlice,
+		lastResolvedAt: input.lastResolvedAt,
+		unresolvedReasons: input.unresolvedReasons,
+	};
 }
 
 export function upsertCurrentPointerRecord(

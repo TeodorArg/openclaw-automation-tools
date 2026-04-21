@@ -1,10 +1,12 @@
 import {
 	createManualTaskId,
+	markExecutionBriefsStale,
 	type PlannerIdea,
 	type PlannerTask,
 	requireIdeaSlug,
 	syncPlanBlockChecklistWithTasks,
 	updateIdea,
+	updateTaskSetForTasks,
 } from "../state/planner-state.js";
 import type {
 	FlowContext,
@@ -44,6 +46,12 @@ export async function handleTaskAdd(
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		tasks,
+		taskSet: updateTaskSetForTasks({
+			idea: existingIdea,
+			tasks,
+			createdFromTransition: "task_add",
+		}),
+		executionBriefs: markExecutionBriefsStale(existingIdea, "task_add"),
 		plan: existingIdea.plan
 			? {
 					...existingIdea.plan,
@@ -178,6 +186,12 @@ async function updateTaskCompletionState(
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		tasks,
+		taskSet: updateTaskSetForTasks({
+			idea: existingIdea,
+			tasks,
+			createdFromTransition: action,
+		}),
+		executionBriefs: markExecutionBriefsStale(existingIdea, action),
 		plan: existingIdea.plan
 			? {
 					...existingIdea.plan,
@@ -253,6 +267,12 @@ export async function handleTaskRemove(
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		tasks,
+		taskSet: updateTaskSetForTasks({
+			idea: existingIdea,
+			tasks,
+			createdFromTransition: "task_remove",
+		}),
+		executionBriefs: markExecutionBriefsStale(existingIdea, "task_remove"),
 		plan: existingIdea.plan
 			? {
 					...existingIdea.plan,

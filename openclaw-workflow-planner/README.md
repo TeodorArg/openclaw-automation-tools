@@ -2,9 +2,9 @@
 
 The execution layer between prompt and delivery.
 
-`@openclaw/openclaw-workflow-planner` turns vague work into an executable OpenClaw workflow with explicit decisions, structured plans, tracked tasks, and a clean implementation handoff. It is built for work that matters enough to need continuity, clarity, and a real path from idea to finished outcome.
+`@openclaw/openclaw-workflow-planner` turns vague work into an executable OpenClaw workflow with explicit decisions, lane-1 design, structured plans, tracked tasks, and a clean implementation handoff. It is built for work that matters enough to need continuity, clarity, and a real path from idea to finished outcome.
 
-This is not just another planner or task list. It is the control layer that keeps long-running AI-assisted work from dissolving into chat history, scratch notes, and half-remembered decisions. Create an idea, attach research, run an Idea Gate, accept or reject the work, generate a structured plan, preserve manual task edits safely, hand off an implementation brief, and close the slice with an explicit outcome.
+This is not just another planner or task list. It is the control layer that keeps long-running AI-assisted work from dissolving into chat history, scratch notes, and half-remembered decisions. Create an idea, attach research, run an Idea Gate, prepare lane-1 design, generate a structured plan, preserve manual task edits safely, hand off an implementation brief, and close the slice with an explicit outcome.
 
 The package exists for work that is too important, too multi-step, or too easy to lose in conversation. It persists one readable planner file and rebuilds structured state from that source of truth, so planning stays inspectable for humans, durable across sessions, and usable by runtime tools without turning execution state into opaque hidden metadata.
 
@@ -12,7 +12,7 @@ Once an idea is accepted, the planner keeps plan state, task state, and current 
 
 ## Why install this
 
-- Turn ambiguous requests into structured execution with gates, plans, tasks, and handoff.
+- Turn ambiguous requests into structured execution with gates, design, plans, tasks, and handoff.
 - Keep research, decisions, task tracking, and implementation context coherent across sessions.
 - Reduce drift in long-running AI-assisted work where approved scope is easy to lose.
 - Make multi-phase delivery easier to resume, review, delegate, and close cleanly.
@@ -21,7 +21,7 @@ Once an idea is accepted, the planner keeps plan state, task state, and current 
 ## Common use cases
 
 - Turn a rough initiative into a gated workflow with a real accepted plan.
-- Convert research into an implementation path the next execution slice can actually use.
+- Convert research into lane-1 design and an implementation path the next execution slice can actually use.
 - Track execution tasks while preserving stable task identity across plan updates.
 - Generate an implementation brief for a helper skill, subagent lane, or follow-on session.
 - Keep long-running delivery aligned across sessions and contributors without losing context.
@@ -45,6 +45,8 @@ the typed tool `workflow_planner_action`.
 - `idea_create`
 - `research_attach`
 - `idea_gate`
+- `design_prepare`
+- `design_get`
 - `plan_create`
 - `plan_refresh`
 - `idea_list`
@@ -69,26 +71,30 @@ the typed tool `workflow_planner_action`.
 - Override via plugin config `plannerFilePath`
 - The markdown file is human-readable and intended to stay inspectable in git
 - `WORKFLOW_PLAN.md` is the only persisted workflow-planner state file
-- planner ideas are stored as explicit lifecycle records with typed research, idea-gate, accepted-plan, task, and close-note sections
+- planner ideas are stored as explicit lifecycle records with typed research, idea-gate, lane-1 design, accepted-plan, task, and close-note sections
 - control-plane request, entity, and pointer metadata is rebuilt from persisted ideas rather than written as separate files
-- `implementation_brief` returns a derived handoff payload, including structured open tasks for the current slice with stable `taskId`, legacy-friendly 1-based `taskIndex`, a command-ready selector hint, and explicit remaining-open-task guidance; it now also records current brief presence in persisted planner state and control-plane entities without materializing a separate brief file
+- artifact refs, `governingArtifactRefs`, and pointer `targetArtifactRef` paths are logical provenance/materialization targets inside the single planner bundle, not separate persisted planner files in the shipped surface
+- legacy planner files now surface operator-visible migration state in derived control-plane runtime: safe read-only normalization reports `legacy_hydrated`, while ambiguous legacy brief summaries report `migration_required` with active blockers until a canonical save/operator review resolves them
+- ambiguous legacy brief summaries no longer synthesize a resolved current execution-brief pointer for the current slice; they now surface an explicit unresolved pointer and block execution-state task progress until the brief state is made canonical
+- `implementation_brief` returns a derived handoff payload, including structured open tasks for the current slice with stable `taskId`, legacy-friendly 1-based `taskIndex`, a command-ready selector hint, and explicit remaining-open-task guidance; it now persists a fresh current-slice `ExecutionBrief` record in planner state, updates the current execution-brief pointer, and updates `currentBriefBySlice` as a summary view without materializing a separate brief file
+- rerunning `implementation_brief` for the same slice keeps prior `executionBriefs` as superseded persisted history while retargeting the current execution-brief pointer and summary view to the newest fresh brief
 - writes use lock-and-compare protection so stale concurrent mutations do not blindly overwrite newer planner state
 - active lock contention returns a clean planner concurrency error instead of leaking a raw filesystem `EEXIST`
 - lock contention is expected to be brief, and the plugin intentionally does not auto-retry stale saves; reload current `WORKFLOW_PLAN.md` state before retrying a conflicting action
 - `plan_refresh` updates canonical plan blocks while preserving extra manual tasks and dropping stale unmatched generated tasks
 - `idea_create` preserves existing links when `links` is omitted on update
 - `task_done`, `task_remove`, and `task_reopen` prefer stable `taskId`; legacy 1-based `taskIndex` is still supported for older/manual flows
-- `implementation_brief` exposes both selectors plus a command-ready selector hint and remaining-open-task guidance for easier handoff consumption, and marks the current slice as having a persisted current brief in control-plane state
+- `implementation_brief` exposes both selectors plus a command-ready selector hint and remaining-open-task guidance for easier handoff consumption, persists a fresh current-slice `ExecutionBrief`, updates the current execution-brief pointer, and updates `currentBriefBySlice` as a summary view
 - successful task-action responses, including `task_add`, return the resolved stable id, resolved 1-based index, shared `targetTask*` context, command-ready `*SelectorHint` fields, and remaining-open-task guidance for immediate next-step follow-through
 - checklist synchronization during `task_done`, `task_remove`, `task_reopen`, and `plan_refresh` follows stable task ids rather than matching on task text
 
 ## Shipped Flow
 
-- `idea_create` -> `research_attach` -> `idea_gate`
-- `accepted` -> `plan_create` -> optional `plan_refresh`
+- `idea_create` -> `research_attach` -> `idea_gate` -> `design_prepare` -> `plan_create`
+- `accepted` -> `design_get` to inspect the current lane-1 design -> optional `plan_refresh`
 - `needs_research` -> more `research_attach`
 - `deferred` / `rejected` -> stop or narrow scope
-- after acceptance: `task_add` / `task_done` / `task_remove` / `task_reopen` -> `implementation_brief` -> `idea_close` only once a current accepted plan exists, all tracked tasks are done, and the close note records the delivered outcome
+- after plan creation: `task_add` / `task_remove` can refine tracked work, then `implementation_brief` is required before `task_done` or `task_reopen` continue execution-state progress for the current slice. Any `plan_refresh`, `task_add`, `task_done`, `task_remove`, or `task_reopen` marks the current fresh brief stale, so rerun `implementation_brief` before the next `task_done` or `task_reopen`. Only a fresh current-slice brief moves control-plane phase to `execution`; stale brief summaries leave the request in `planning`. `idea_close` is valid only once a current accepted plan exists, all tracked tasks are done, and the close note records the delivered outcome
 
 If `idea_create` materially changes the core request after downstream work already
 exists, the plugin resets research, idea-gate, plan, and tasks back to `draft`
@@ -99,10 +105,7 @@ so the planner state stays coherent.
 This package currently focuses on planning, bounded handoff, and execution-state transition for the current slice.
 
 Follow-up lanes may add stronger template export, richer plan lifecycle
-closure rules, and broader executable workflow chaining beyond the current brief-driven execution transition. The current task/brief UX
-polish lane is considered closed after targeted runtime, docs, and test sync,
-and the next implementation step should be a genuinely new bounded lane rather
-than more polishing of this surface. This package already models the core
+closure rules, and broader executable workflow chaining beyond the current brief-driven execution transition. Current work in this surface is limited to bounded persisted-shape polish such as migration truth, pointer truth, and logical artifact/provenance coherence, not to new runtime features. This package already models the core
 user-visible planner flow instead of only draft generation.
 
 When the planner is used to drive longer research, implementation, or

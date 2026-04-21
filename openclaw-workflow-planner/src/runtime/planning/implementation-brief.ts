@@ -12,6 +12,7 @@ export type ImplementationBriefTask = {
 
 export type ImplementationBriefInput = {
 	ideaSlug: string;
+	currentSliceId: string;
 	currentSlice: string;
 	summary: string;
 	scope: string[];
@@ -45,9 +46,9 @@ export function summarizeRemainingOpenTasks(tasks: PlannerIdea["tasks"]): {
 export function buildImplementationBriefFromIdea(
 	idea: PlannerIdea,
 ): ImplementationBriefResult {
-	if (!idea.plan || idea.status !== "accepted") {
+	if (!idea.plan || !idea.design || idea.status !== "accepted") {
 		throw new Error(
-			"implementation_brief requires an accepted idea with a persisted plan.",
+			"implementation_brief requires an accepted idea with persisted design and plan state.",
 		);
 	}
 
@@ -58,9 +59,11 @@ export function buildImplementationBriefFromIdea(
 
 	return {
 		ideaSlug: idea.slug,
+		currentSliceId: idea.plan.currentSliceId,
 		currentSlice: idea.plan.currentSlice,
 		summary: `Implement the current slice for ${idea.name}: ${idea.plan.currentSlice}.`,
 		scope: [
+			`Target surface: ${idea.design.targetSurface}`,
 			`Goal: ${idea.plan.goal}`,
 			...idea.plan.scope,
 			...openTasks.map(
@@ -69,11 +72,12 @@ export function buildImplementationBriefFromIdea(
 			),
 		],
 		avoid: [
+			...idea.design.constraints,
 			...idea.plan.outOfScope,
 			"Do not treat local Codex sub-agents as shipped runtime agents.",
 			"Do not broaden the slice into unrelated repo-governance cleanup.",
 		],
-		doneWhen: idea.plan.acceptanceTarget,
+		doneWhen: `${idea.plan.acceptanceTarget} Verification: ${idea.design.verificationStrategy}`,
 		...remainingOpenTasks,
 		taskRefs: openTasks.map(({ task }) => task.id),
 		openTasks: openTasks.map(({ task, taskIndex }) => ({

@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-workflow-planner",
 	"version": "0.1.0",
-	"description": "Planning-first OpenClaw workflow plugin with bundled role skills, a file-backed WORKFLOW_PLAN.md state surface, and typed actions for idea creation, research attachment, idea gate, plan lifecycle, task tracking, snapshots, and implementation handoff.",
+	"description": "Planning-first OpenClaw workflow plugin with bundled role skills, a file-backed WORKFLOW_PLAN.md state surface, and typed actions for idea creation, research attachment, idea gate, lane-1 design preparation and retrieval, plan lifecycle, task tracking, snapshots, and implementation handoff.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
