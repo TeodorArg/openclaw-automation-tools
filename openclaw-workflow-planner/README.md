@@ -78,9 +78,11 @@ the typed tool `workflow_planner_action`.
 - ambiguous legacy brief summaries no longer synthesize a resolved current execution-brief pointer for the current slice; they now surface an explicit unresolved pointer and block execution-state task progress until the brief state is made canonical
 - `implementation_brief` returns a derived handoff payload, including structured open tasks for the current slice with stable `taskId`, legacy-friendly 1-based `taskIndex`, a command-ready selector hint, and explicit remaining-open-task guidance; it now persists a fresh current-slice `ExecutionBrief` record in planner state, updates the current execution-brief pointer, and updates `currentBriefBySlice` as a summary view without materializing a separate brief file
 - rerunning `implementation_brief` for the same slice keeps prior `executionBriefs` as superseded persisted history while retargeting the current execution-brief pointer and summary view to the newest fresh brief
+- `currentSliceId` is the durable slice identity; `currentSlice` is a mutable display label, so `plan_refresh` may rename the displayed slice while brief identity and current-pointer continuity stay bound to the same `currentSliceId`
 - writes use lock-and-compare protection so stale concurrent mutations do not blindly overwrite newer planner state
 - active lock contention returns a clean planner concurrency error instead of leaking a raw filesystem `EEXIST`
 - lock contention is expected to be brief, and the plugin intentionally does not auto-retry stale saves; reload current `WORKFLOW_PLAN.md` state before retrying a conflicting action
+- the same fail-fast rule applies to overlapping action writes such as `implementation_brief` racing task or plan mutations; one write wins, and the stale writer must reload before retrying
 - `plan_refresh` updates canonical plan blocks while preserving extra manual tasks and dropping stale unmatched generated tasks
 - `idea_create` preserves existing links when `links` is omitted on update
 - `task_done`, `task_remove`, and `task_reopen` prefer stable `taskId`; legacy 1-based `taskIndex` is still supported for older/manual flows

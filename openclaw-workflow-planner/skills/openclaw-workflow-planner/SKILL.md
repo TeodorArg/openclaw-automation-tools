@@ -38,6 +38,8 @@ When legacy brief state is ambiguous, the current execution-brief pointer stays 
 11. When a bounded slice starts, run `implementation_brief` to get a derived handoff payload with structured open tasks for that slice, including stable `taskId`, legacy-friendly `taskIndex`, a command-ready selector hint, and remaining-open-task guidance. The action persists a fresh current-slice `ExecutionBrief`, updates the current execution-brief pointer, and updates `currentBriefBySlice` as a summary view without creating a separate brief file. Rerunning `implementation_brief` for the same slice keeps earlier `executionBriefs` as superseded persisted history while retargeting the current pointer and summary view to the newest fresh brief. Any later `plan_refresh`, `task_add`, `task_done`, `task_remove`, or `task_reopen` stales that fresh brief, so rerun `implementation_brief` before the next `task_done` or `task_reopen`. Successful task actions, including `task_add`, `task_done`, `task_remove`, and `task_reopen`, now echo the same remaining-open-task guidance for immediate follow-through.
 12. Run `idea_close` only after the idea is accepted, has a canonical plan, all tracked tasks are done, and you can record the delivered outcome in the close note.
 
+`currentSliceId` is the stable slice identity. `currentSlice` is a mutable label, so `plan_refresh` may rename the visible slice title while brief lineage and current-pointer continuity stay attached to the same `currentSliceId`.
+
 ## Skill Routing
 
 - `openclaw-workflow-planner`: all actions

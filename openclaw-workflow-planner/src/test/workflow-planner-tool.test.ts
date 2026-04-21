@@ -1514,6 +1514,258 @@ describe("createWorkflowPlannerTool", () => {
 		);
 	});
 
+	it("keeps currentSliceId stable across a renamed currentSlice and retargets summaries after regeneration", async () => {
+		const { plannerFilePath, tool } = await createTool();
+
+		await seedAcceptedIdea(tool);
+		await tool.execute("call-11r2-a", {
+			action: "plan_create",
+			command: "create plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		await buildImplementationBrief(tool, "call-11r2-b");
+		const beforeRename = JSON.parse(
+			(
+				await tool.execute("call-11r2-c", {
+					action: "plan_snapshot",
+					command: "show plan",
+					commandName: "plan_workflow",
+					skillName: "openclaw-workflow-planner",
+					ideaName: "workflow planner",
+				})
+			).content[0].text,
+		);
+		const previousSliceId = beforeRename.idea.plan.currentSliceId;
+		const previousSliceTitle = beforeRename.idea.plan.currentSlice;
+		const renamedSliceTitle = "Rename the bounded implementation slice.";
+
+		await tool.execute("call-11r2-d", {
+			action: "plan_refresh",
+			command: "refresh plan with renamed slice",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+			currentSlice: renamedSliceTitle,
+		});
+		const afterRefresh = parsePlannerMarkdown(
+			await readFile(plannerFilePath, "utf8"),
+		);
+
+		expect(afterRefresh.ideas[0]?.plan?.currentSliceId).toBe(previousSliceId);
+		expect(afterRefresh.ideas[0]?.plan?.currentSlice).toBe(renamedSliceTitle);
+		expect(
+			afterRefresh.ideas[0]?.currentPointers?.currentExecutionBriefBySliceId?.[
+				previousSliceId
+			],
+		).toMatchObject({
+			resolutionStatus: "unresolved",
+		});
+		expect(afterRefresh.ideas[0]?.currentBriefBySlice ?? {}).not.toHaveProperty(
+			previousSliceTitle,
+		);
+		expect(
+			afterRefresh.controlPlane.requestRuntime["req_workflow-planner"]
+				.currentBriefBySlice,
+		).toEqual({
+			[renamedSliceTitle]:
+				"Implement the current slice for workflow planner: Define the first bounded implementation slice from the accepted plan..",
+		});
+
+		await buildImplementationBrief(tool, "call-11r2-e");
+		const afterRegeneration = parsePlannerMarkdown(
+			await readFile(plannerFilePath, "utf8"),
+		);
+		const refreshedSliceBriefs =
+			afterRegeneration.ideas[0]?.executionBriefs?.filter(
+				(brief) => brief.sliceId === previousSliceId,
+			) ?? [];
+
+		expect(refreshedSliceBriefs.at(-1)).toMatchObject({
+			revision: 2,
+			status: "fresh",
+			sliceId: previousSliceId,
+		});
+		expect(
+			afterRegeneration.ideas[0]?.currentPointers
+				?.currentExecutionBriefBySliceId?.[previousSliceId],
+		).toMatchObject({
+			resolutionStatus: "resolved",
+			targetEntityRef: {
+				entityRevision: 2,
+			},
+		});
+		expect(afterRegeneration.ideas[0]?.currentBriefBySlice).toEqual({
+			[renamedSliceTitle]:
+				"Implement the current slice for workflow planner: Rename the bounded implementation slice..",
+		});
+	});
+
+	it("requires regeneration after every brief-invalidating mutation and restores execution on rerun", async () => {
+		const scenarios = [
+			{
+				label: "task_add",
+				mutate: async (
+					tool: ReturnType<typeof createWorkflowPlannerTool>,
+					taskId: string,
+				) =>
+					tool.execute("call-11inv-add", {
+						action: "task_add",
+						command: "add task",
+						commandName: "implementation_handoff",
+						skillName: "openclaw-workflow-implementer",
+						ideaName: "workflow planner",
+						taskText: `follow-up for ${taskId}`,
+					}),
+			},
+			{
+				label: "task_done",
+				mutate: async (
+					tool: ReturnType<typeof createWorkflowPlannerTool>,
+					taskId: string,
+				) =>
+					tool.execute("call-11inv-done", {
+						action: "task_done",
+						command: "complete task",
+						commandName: "implementation_handoff",
+						skillName: "openclaw-workflow-implementer",
+						ideaName: "workflow planner",
+						taskId,
+					}),
+			},
+			{
+				label: "task_remove",
+				mutate: async (
+					tool: ReturnType<typeof createWorkflowPlannerTool>,
+					taskId: string,
+				) =>
+					tool.execute("call-11inv-remove", {
+						action: "task_remove",
+						command: "remove task",
+						commandName: "implementation_handoff",
+						skillName: "openclaw-workflow-implementer",
+						ideaName: "workflow planner",
+						taskId,
+					}),
+			},
+			{
+				label: "plan_refresh",
+				mutate: async (
+					tool: ReturnType<typeof createWorkflowPlannerTool>,
+					taskId: string,
+				) =>
+					tool.execute("call-11inv-refresh", {
+						action: "plan_refresh",
+						command: "refresh plan",
+						commandName: "plan_workflow",
+						skillName: "openclaw-workflow-planner",
+						ideaName: "workflow planner",
+						currentSlice: `Refresh slice after ${taskId}`,
+					}),
+			},
+			{
+				label: "task_reopen",
+				mutate: async (
+					tool: ReturnType<typeof createWorkflowPlannerTool>,
+					taskId: string,
+				) => {
+					await tool.execute("call-11inv-reopen-pre-done", {
+						action: "task_done",
+						command: "complete task",
+						commandName: "implementation_handoff",
+						skillName: "openclaw-workflow-implementer",
+						ideaName: "workflow planner",
+						taskId,
+					});
+					await buildImplementationBrief(tool, "call-11inv-reopen-pre-brief");
+					return tool.execute("call-11inv-reopen", {
+						action: "task_reopen",
+						command: "reopen task",
+						commandName: "implementation_handoff",
+						skillName: "openclaw-workflow-implementer",
+						ideaName: "workflow planner",
+						taskId,
+					});
+				},
+			},
+		] as const;
+
+		for (const scenario of scenarios) {
+			const { plannerFilePath, tool } = await createTool();
+
+			await seedAcceptedIdea(tool);
+			await tool.execute(`call-11inv-${scenario.label}-a`, {
+				action: "plan_create",
+				command: "create plan",
+				commandName: "plan_workflow",
+				skillName: "openclaw-workflow-planner",
+				ideaName: "workflow planner",
+			});
+			await buildImplementationBrief(tool, `call-11inv-${scenario.label}-b`);
+			const beforeMutation = JSON.parse(
+				(
+					await tool.execute(`call-11inv-${scenario.label}-c`, {
+						action: "plan_snapshot",
+						command: "show plan",
+						commandName: "plan_workflow",
+						skillName: "openclaw-workflow-planner",
+						ideaName: "workflow planner",
+					})
+				).content[0].text,
+			);
+			const currentSliceId = beforeMutation.idea.plan.currentSliceId;
+			const targetTaskId = beforeMutation.idea.tasks[0].id;
+
+			await scenario.mutate(tool, targetTaskId);
+			const afterInvalidation = parsePlannerMarkdown(
+				await readFile(plannerFilePath, "utf8"),
+			);
+
+			expect(
+				afterInvalidation.ideas[0]?.currentPointers
+					?.currentExecutionBriefBySliceId?.[currentSliceId],
+			).toMatchObject({
+				resolutionStatus: "unresolved",
+			});
+			expect(
+				afterInvalidation.controlPlane.requestRuntime["req_workflow-planner"]
+					.currentPhase,
+			).toBe("planning");
+
+			const regeneratedBrief = JSON.parse(
+				(
+					await buildImplementationBrief(
+						tool,
+						`call-11inv-${scenario.label}-regen`,
+					)
+				).content[0].text,
+			);
+			const afterRegeneration = parsePlannerMarkdown(
+				await readFile(plannerFilePath, "utf8"),
+			);
+			const latestBrief =
+				afterRegeneration.ideas[0]?.executionBriefs
+					?.filter((brief) => brief.sliceId === currentSliceId)
+					.at(-1) ?? null;
+
+			expect(regeneratedBrief.controlPlane.requestRuntime.currentPhase).toBe(
+				"execution",
+			);
+			expect(latestBrief?.status).toBe("fresh");
+			expect(latestBrief?.revision).toBeGreaterThan(1);
+			expect(
+				afterRegeneration.ideas[0]?.currentPointers
+					?.currentExecutionBriefBySliceId?.[currentSliceId],
+			).toMatchObject({
+				resolutionStatus: "resolved",
+				targetEntityRef: {
+					entityRevision: latestBrief?.revision,
+				},
+			});
+		}
+	});
+
 	it("does not merge manual tasks into generated checklist items by matching text alone", async () => {
 		const { tool } = await createTool();
 

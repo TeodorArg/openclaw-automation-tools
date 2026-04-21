@@ -1339,6 +1339,73 @@ export function markExecutionBriefsStale(
 	);
 }
 
+export function invalidateCurrentExecutionBriefState(input: {
+	idea: PlannerIdea;
+	reasonTransition: string;
+	currentSliceId?: string;
+	currentSliceTitle?: string;
+	staleSummaryTitles?: string[];
+}): Pick<
+	PlannerIdea,
+	"executionBriefs" | "currentBriefBySlice" | "currentPointers"
+> {
+	const executionBriefs = markExecutionBriefsStale(
+		input.idea,
+		input.reasonTransition,
+	);
+	const staleSummaryTitles = new Set(
+		(input.staleSummaryTitles ?? []).filter(
+			(title): title is string => typeof title === "string" && title.length > 0,
+		),
+	);
+	const currentBriefBySlice = Object.fromEntries(
+		Object.entries(input.idea.currentBriefBySlice ?? {}).filter(
+			([title]) => !staleSummaryTitles.has(title),
+		),
+	);
+	const currentExecutionBriefBySliceId = {
+		...(input.idea.currentPointers?.currentExecutionBriefBySliceId ?? {}),
+	};
+	if (input.currentSliceId) {
+		const unresolvedReason = `A ${input.reasonTransition} transition invalidated the current implementation brief. Regenerate implementation_brief for ${input.currentSliceTitle ?? "the current slice"} before execution-state task progress can continue.`;
+		const hadCurrentBriefState =
+			Boolean(currentExecutionBriefBySliceId[input.currentSliceId]) ||
+			Boolean(
+				executionBriefs?.some(
+					(brief) => brief.sliceId === input.currentSliceId,
+				),
+			);
+		if (hadCurrentBriefState) {
+			currentExecutionBriefBySliceId[input.currentSliceId] =
+				createUnresolvedPointer(
+					"current_execution_brief",
+					new Date().toISOString(),
+					unresolvedReason,
+				);
+		}
+	}
+	const currentPointers =
+		input.idea.currentPointers ||
+		Object.keys(currentExecutionBriefBySliceId).length > 0
+			? {
+					...(input.idea.currentPointers ?? {}),
+					currentExecutionBriefBySliceId:
+						Object.keys(currentExecutionBriefBySliceId).length > 0
+							? currentExecutionBriefBySliceId
+							: undefined,
+				}
+			: undefined;
+
+	return {
+		executionBriefs,
+		currentBriefBySlice:
+			Object.keys(currentBriefBySlice).length > 0
+				? currentBriefBySlice
+				: undefined,
+		currentPointers,
+	};
+}
+
 export function upsertIdea(
 	state: PlannerState,
 	idea: Omit<PlannerIdea, "updatedAt">,
