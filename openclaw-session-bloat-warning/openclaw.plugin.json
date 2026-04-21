@@ -2,7 +2,7 @@
 	"id": "openclaw-session-bloat-warning",
 	"name": "Session Health Warning: Stay Sharp in Long AI Work",
 	"description": "Early session-health warnings plus compact context-sync diagnostics for OpenClaw. Catch compaction pressure, timeout risk, lane pressure, and no-reply streaks before long AI work slows down.",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"skills": ["./skills"],
 	"configSchema": {
 		"type": "object",
