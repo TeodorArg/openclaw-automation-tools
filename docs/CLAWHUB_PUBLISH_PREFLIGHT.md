@@ -146,6 +146,7 @@ Its bounded ownership is:
 - preserve manual ClawHub operator instructions in package README and tracked release notes when they exist
 - generate `docs/releases/<package-slug>/vX.Y.Z.clawhub.md` when the release needs manual ClawHub publication so the UI fields can be filled without reconstructing source metadata
 - review release-facing marketing description and changelog quality before calling the package release-ready, especially for manual ClawHub publication, so README copy, package metadata, tracked release notes, and worksheet text stay aligned and operator-ready
+- do not close the release task until the GitHub Release exists and the tracked release files are backfilled with real tag-backed values, including GitHub Release URL plus `Source commit` and `Source ref` when the manual ClawHub fields depend on them
 - prepare the short Markdown text used for GitHub Release first, plus manual ClawHub release or archive upload flows when explicitly needed
 - draft the tracked release note file under `docs/releases/<package-slug>/`
 
