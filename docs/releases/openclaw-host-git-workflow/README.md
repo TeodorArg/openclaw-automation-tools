@@ -1,6 +1,9 @@
 # openclaw-host-git-workflow releases
 
-No tracked public release records are stored here yet.
+Tracked release records:
+
+- [v0.1.1](./v0.1.1.md)
+- [v0.1.1 ClawHub worksheet](./v0.1.1.clawhub.md)
 
 Release prep rules:
 

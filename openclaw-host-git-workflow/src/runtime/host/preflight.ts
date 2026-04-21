@@ -375,11 +375,32 @@ function buildRemoteReadiness(params: {
 				"SSH auth or host trust for github.com is not ready for bounded host push/PR actions.",
 			);
 			issues.push(params.sshAuthIssue);
-			remediationCommands.push(
-				"ssh -T git@github.com",
-				"ssh-keyscan github.com >> ~/.ssh/known_hosts",
-				"ssh-add ~/.ssh/id_ed25519_github_openclaw",
-			);
+			if (params.sshAuthIssue.includes("Host key verification failed")) {
+				remediationCommands.push(
+					"ssh -T git@github.com",
+					"ssh-keyscan github.com >> ~/.ssh/known_hosts",
+					"ssh -T git@github.com",
+					"git ls-remote --heads origin",
+				);
+			} else if (
+				params.sshAuthIssue.includes("Permission denied (publickey)")
+			) {
+				remediationCommands.push(
+					"ls -la ~/.ssh",
+					"ssh -vT git@github.com",
+					"docker cp ~/.ssh/<working_github_key> <container>:/home/node/.ssh/id_ed25519",
+					"docker cp ~/.ssh/<working_github_key>.pub <container>:/home/node/.ssh/id_ed25519.pub",
+					"docker exec -u 0 <container> sh -lc 'chown -R node:node /home/node/.ssh && chmod 700 /home/node/.ssh && chmod 600 /home/node/.ssh/id_ed25519 /home/node/.ssh/config /home/node/.ssh/known_hosts && chmod 644 /home/node/.ssh/id_ed25519.pub'",
+					"docker exec -u node <container> sh -lc 'HOME=/home/node ssh -T git@github.com'",
+					"docker exec -u node <container> sh -lc 'HOME=/home/node git -C /home/node/tools ls-remote --heads origin | sed -n \"1,10p\"'",
+				);
+			} else {
+				remediationCommands.push(
+					"ssh -T git@github.com",
+					"ssh-keyscan github.com >> ~/.ssh/known_hosts",
+					"ssh-add ~/.ssh/<working_github_key>",
+				);
+			}
 			return {
 				protocol,
 				sshAuthStatus: "blocked",

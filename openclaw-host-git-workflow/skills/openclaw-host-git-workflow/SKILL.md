@@ -81,6 +81,61 @@ Docs sync должен оставаться отдельным follow-up session
 - execution остаётся bounded around the current repo and current non-main branch
 - live/full-cycle verification phrasing should still normalize to `send_to_git` and run the bounded chain without redesign discussion
 
+## Audit Flow For Missing GitHub SSH Connectivity
+
+Если во время live audit / doctor / preflight нет соединения раннера с GitHub по SSH, не выдавай случайный набор команд. Используй этот зафиксированный порядок диагностики и remediation.
+
+### Canonical diagnosis order
+
+1. Подтверди локальную готовность package:
+   - plugin/skill установлен
+   - тесты package проходят
+2. Подтверди runtime HOME и SSH surface раннера:
+   - `HOME=/home/node`
+   - существует ли `/home/node/.ssh`
+   - есть ли `/home/node/.ssh/known_hosts`
+3. Проверь host key стадию:
+   - `ssh -T git@github.com`
+   - `git ls-remote --heads origin`
+4. Если ошибка `Host key verification failed`, remediation должна сначала чинить `known_hosts`, а не предлагать сразу генерировать новый ключ.
+5. После исправления `known_hosts` повтори preflight.
+6. Если новая ошибка `Permission denied (publickey)`, remediation должна переходить к проверке наличия приватного ключа и SSH config внутри runtime/container.
+7. Если ключ скопирован в контейнер через `docker cp`, обязательно проверь ownership/permissions, потому что типичный реальный сбой здесь это root-owned key, который не читается пользователем `node`.
+8. После исправления ownership/permissions повтори:
+   - `HOME=/home/node ssh -T git@github.com`
+   - `HOME=/home/node git -C /home/node/tools ls-remote --heads origin`
+9. Если обе команды успешны, фиксируй outcome как `SSH readiness restored` и считай remote readiness для doctor/preflight подтверждённой.
+
+### Canonical remediation sequence when OpenClaw runs in Docker
+
+Когда пользователь говорит, что OpenClaw работает в Docker, предпочитай именно этот flow:
+
+1. С локальной машины определить контейнер:
+   - `docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.Image}}'`
+2. Подготовить SSH директорию в контейнере:
+   - `docker exec <container> mkdir -p /home/node/.ssh`
+3. Скопировать рабочий GitHub key из локального `~/.ssh` в контейнер через `docker cp`, а не через длинные случайные shell-вставки.
+4. В контейнере создать `/home/node/.ssh/config` для `github.com` с `IdentityFile /home/node/.ssh/id_ed25519` и `IdentitiesOnly yes`.
+5. Добавить `known_hosts` через `ssh-keyscan github.com >> /home/node/.ssh/known_hosts`.
+6. Если после этого возникает `Load key ... Permission denied`, canonical remediation это не новый ключ, а root fix:
+   - `docker exec -u 0 <container> sh -lc 'chown -R node:node /home/node/.ssh && chmod 700 /home/node/.ssh && chmod 600 /home/node/.ssh/id_ed25519 /home/node/.ssh/config /home/node/.ssh/known_hosts && chmod 644 /home/node/.ssh/id_ed25519.pub'`
+7. Затем повторить проверку уже от пользователя `node`:
+   - `docker exec -u node <container> sh -lc 'HOME=/home/node ssh -T git@github.com'`
+   - `docker exec -u node <container> sh -lc 'HOME=/home/node git -C /home/node/tools ls-remote --heads origin | sed -n "1,10p"'`
+
+### Required messaging behavior
+
+- В audit-ответе явно различай стадии:
+  - package ok
+  - host key missing
+  - private key missing
+  - key unreadable because of ownership/permissions
+  - SSH readiness restored
+- Не перескакивай сразу к генерации нового ключа, если локальная машина пользователя уже успешно проходит `ssh -T git@github.com`.
+- Если пользователь уже показал рабочий `~/.ssh/config` на локальной машине, используй именно указанный там `IdentityFile`, а не выдумывай другое имя ключа.
+- Для Docker remediation prefer `docker cp` + targeted permission fix вместо ручного копипаста приватного ключа в heredoc, если пользователь может запускать Docker команды локально.
+- После успешной remediation сообщай краткий итог в духе: локально GitHub auth уже работал, проблема была в container runtime SSH surface, known_hosts и правах на key; теперь SSH и `git ls-remote origin` проходят.
+
 ## Жёсткие правила
 
 - Не принимай произвольный `git <anything>` как supported input.
