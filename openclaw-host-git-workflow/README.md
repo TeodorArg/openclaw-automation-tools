@@ -1,28 +1,95 @@
 # @openclaw/openclaw-host-git-workflow
 
-Safe agent-driven git and PR delivery.
+## Host Git Workflow: Branch to Merge, Safely
 
-`@openclaw/openclaw-host-git-workflow` gives OpenClaw a disciplined way to move from local changes to shipped work. It helps agents and operators branch safely, prepare commits, open PRs, wait for checks, merge cleanly, and sync `main` without turning git execution into unrestricted shell chaos.
+Host-aware Git workflow for safe, structured repo changes.
 
-It is built for environments where OpenClaw coordinates the workflow, while the actual git and GitHub actions run on a paired host node that already has the repo, auth, and local execution surface. That keeps the delivery path strong and practical without pretending the container is the host.
+`@openclaw/openclaw-host-git-workflow` turns vague “commit this and open a PR” requests into a bounded, branch-aware shipping flow for OpenClaw. It moves real repo work on a host machine through doctor, branch prep, push, PR, checks, merge, and `main` sync without falling back to arbitrary git shell chaos.
+
+If you want an agent to ship code on a real repository with fewer wrong-branch, wrong-repo, and skipped-check mistakes, this plugin is the guarded path.
+
+## What you get
+
+- open a PR from the current non-main branch
+- reuse or create the right PR into `main`
+- wait for required checks before merge
+- merge safely and sync local `main`
+- fail early with concrete remediation when host GitHub readiness is not actually ready
+- avoid arbitrary `git` / `gh` passthrough during shipping
+
+## Who this is for
+
+Use this if you already do real work in a host repo and want OpenClaw to help you ship it safely.
+
+Good fit:
+- agent-assisted coding on a real machine or paired host node
+- repos where wrong-branch pushes or sloppy PR flow are painful
+- teams or solo workflows that want a repeatable shipping lane
+
+Not this plugin:
+- a generic free-form git wrapper
+- a shortcut around GitHub auth, SSH, or host setup
+- a replacement for a real host repo execution surface
+
+## 2-minute quickstart
+
+1. Install the plugin:
+
+```bash
+openclaw plugins install clawhub:@openclaw/openclaw-host-git-workflow
+```
+
+2. Enable it and point it at the real host repo / host node:
+
+```json5
+{
+  "plugins": {
+    "entries": {
+      "openclaw-host-git-workflow": {
+        "enabled": true,
+        "config": {
+          "nodeSelector": "your-host-node",
+          "hostRepoPath": "/absolute/path/to/your/repo"
+        }
+      }
+    }
+  }
+}
+```
+
+3. In chat, say:
+
+```text
+send_to_git
+```
+
+Or in Russian:
+
+```text
+отправь в гит
+```
+
+## Example outcomes
+
+- “Take my current branch, open a PR, wait for checks, merge it, and sync main.”
+- “Check whether this repo is actually ready for safe push/PR from the host.”
+- “Fail early and tell me the exact commands I need when SSH or GitHub auth is not ready.”
+
+## Why this beats ad-hoc git from chat
+
+- It is workflow-driven, not improvisation-driven.
+- It is repo-aware and branch-aware before it touches shipping actions.
+- It makes human checkpoints explicit through doctor, commit prep, validation, PR, and checks.
+- It keeps host Git operations more predictable and easier to review.
+- It leaves a cleaner audit trail than re-explaining git steps in every conversation.
+- It scales better than ad-hoc prompting as tasks get more complex.
 
 ## Why install this
 
-- Ship through git with more trust and fewer manual mistakes.
-- Give agents a bounded path through branch, PR, checks, and merge.
-- Reduce workflow confusion around delivery, repo state, and PR completion.
-- Bring more discipline to agent-assisted shipping.
-
-## Common use cases
-
-- Turn a finished local slice into a clean PR and merge flow.
-- Use a safer delivery path instead of improvising git operations in chat.
-- Standardize branch, PR, checks, and merge sequencing for agent work.
-- Support real shipping on host-backed repos with more confidence.
-
-## One-line example request
-
-`Safely take this change from branch setup to PR, checks, merge, and main sync.`
+- ship from chat without giving the agent unrestricted git shell freedom
+- reduce wrong-repo and wrong-branch mistakes
+- turn shipping into a repeatable guarded flow instead of ad-hoc commands
+- get precise doctor/preflight feedback before a push or PR fails halfway through
 
 ## Primary UX
 
@@ -30,28 +97,18 @@ The bundled skill surface is intentionally collapsed to one primary user-facing 
 - `send_to_git`
 - `отправь в гит`
 
-## Current Runtime Coverage
+## What the workflow covers
 
 This package currently ships:
-- setup doctor for repo target, node binding, host readiness, and remote push/PR readiness
-- repo-aware planning
-- branch-aware planning
-- explicit commit prep for ownership grouping and commit contracts
-- repo resolution
-- live host node binding
-- host preflight, including remote push/PR readiness checks with host remediation commands when blocked
-- bounded branch entry from `main` or another clean local branch into a requested non-main working branch
-- confirmed-plan validation
+- doctor for repo target, node binding, and host readiness
+- repo-aware and branch-aware planning
+- commit prep and confirmed-plan validation
+- host preflight with concrete remediation when push/PR readiness is blocked
 - bounded push of the current non-main branch
 - bounded PR creation into `main`
-- bounded wait for required checks
-- bounded merge of the current branch PR into `main`
-- bounded sync of local `main` from `origin/main`
+- required-check waiting, merge, and local `main` sync
 
-Shell execution now runs on the bound host node through `node.invoke` `system.run.prepare` / `system.run`, not through an unbound selector placeholder and not through repo-local helper scripts outside the package.
-
-Branch-aware planning output now generates branch suggestions and commit titles that identify the owning package or repo surface, so downstream PR titles derived from the latest commit stay informative at merge time.
-Commit prep now exposes the current-state matrix, the tested bounded flow, and the recommended small-session choreography so the package can act as an execution kernel without collapsing everything into one giant session.
+Under the hood, execution stays on the bound host node and follows a typed workflow instead of repo-local helper scripts or arbitrary shell passthrough.
 
 ## Recommended Session Flow
 
@@ -81,6 +138,47 @@ Routine bounded steps are expected to behave proactively:
 - only emit a short user update when a major phase changes or a real blocker appears
 - when push/PR readiness is blocked, fail early with a concrete host-side remediation list instead of attempting a blind remote action
 - keep chain-of-thought and speculative step-by-step commentary out of the user-visible flow
+
+## Canonical Docker SSH Audit Flow
+
+When OpenClaw is running in Docker and remote readiness fails for GitHub SSH, use a fixed audit/remediation order instead of ad-hoc commands.
+
+Recommended order:
+1. confirm package health first, including tests
+2. inspect runtime SSH surface under `/home/node/.ssh`
+3. run `ssh -T git@github.com` and `git ls-remote --heads origin`
+4. if the error is `Host key verification failed`, fix `known_hosts` first
+5. retry the same checks
+6. if the error becomes `Permission denied (publickey)`, inspect available keys and SSH config inside the runtime
+7. if the user already has working GitHub SSH on the local machine, reuse that exact `IdentityFile` rather than inventing a new key name
+8. for Docker, prefer copying the working keypair with `docker cp`
+9. if SSH then reports `Load key ... Permission denied`, fix ownership and permissions inside the container before suggesting any new key generation
+10. only treat remote readiness as restored after both `ssh -T git@github.com` and `git ls-remote --heads origin` succeed from the runtime user
+
+Canonical container remediation shape:
+
+```bash
+docker exec <container> mkdir -p /home/node/.ssh
+docker cp ~/.ssh/<working_github_key> <container>:/home/node/.ssh/id_ed25519
+docker cp ~/.ssh/<working_github_key>.pub <container>:/home/node/.ssh/id_ed25519.pub
+docker exec <container> sh -lc 'cat > /home/node/.ssh/config <<EOF
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile /home/node/.ssh/id_ed25519
+  IdentitiesOnly yes
+EOF
+ssh-keyscan github.com >> /home/node/.ssh/known_hosts'
+docker exec -u 0 <container> sh -lc 'chown -R node:node /home/node/.ssh && chmod 700 /home/node/.ssh && chmod 600 /home/node/.ssh/id_ed25519 /home/node/.ssh/config /home/node/.ssh/known_hosts && chmod 644 /home/node/.ssh/id_ed25519.pub'
+docker exec -u node <container> sh -lc 'HOME=/home/node ssh -T git@github.com'
+docker exec -u node <container> sh -lc 'HOME=/home/node git -C /home/node/tools ls-remote --heads origin | sed -n "1,10p"'
+```
+
+This exact pattern was verified against the `openclaw-gateway` Docker container during a live audit. The real failure sequence was:
+- missing `/home/node/.ssh` / `known_hosts`
+- then `Permission denied (publickey)` after host trust was fixed
+- then unreadable copied key due to ownership/permissions
+- then successful SSH auth and `git ls-remote`
 
 ## Hard Boundaries
 

@@ -285,6 +285,70 @@ describe("host preflight", () => {
 		).rejects.toThrow(/ssh-keyscan github.com >> ~\/\.ssh\/known_hosts/);
 	});
 
+	it("surfaces docker-oriented remediation after host trust is fixed but publickey auth is still blocked", async () => {
+		const remoteRunner: HostCommandRunner = {
+			async run(command, args) {
+				if (args[0] === "--version") {
+					return { stdout: `${command} version test`, stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--show-toplevel") {
+					return { stdout: "/Users/tester/repo", stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
+					return {
+						stdout: "feat/openclaw-host-git-workflow-live-check",
+						stderr: "",
+					};
+				}
+				if (args[0] === "remote" && args[1] === "get-url") {
+					return {
+						stdout: "git@github.com:TeodorArg/openclaw-automation-tools.git",
+						stderr: "",
+					};
+				}
+				if (args[0] === "auth" && args[1] === "status") {
+					return { stdout: "github.com\n  ✓ Logged in", stderr: "" };
+				}
+				if (args[0] === "repo" && args[1] === "view") {
+					return {
+						stdout: '{"nameWithOwner":"TeodorArg/openclaw-automation-tools"}',
+						stderr: "",
+					};
+				}
+				if (args[0] === "pr" && args[1] === "list") {
+					return { stdout: "[]", stderr: "" };
+				}
+				if (command === "ssh" && args[0] === "-T") {
+					throw new Error("git@github.com: Permission denied (publickey).");
+				}
+				throw new Error(`Unexpected command: ${command} ${args.join(" ")}`);
+			},
+		};
+
+		await expect(
+			preflightHostOps(
+				"/Users/tester/repo",
+				{
+					requireGhAuth: true,
+					requireNonMainBranch: true,
+					requireRemotePushReadiness: true,
+				},
+				remoteRunner,
+			),
+		).rejects.toThrow(/docker cp ~\/\.ssh\/<working_github_key>/);
+		await expect(
+			preflightHostOps(
+				"/Users/tester/repo",
+				{
+					requireGhAuth: true,
+					requireNonMainBranch: true,
+					requireRemotePushReadiness: true,
+				},
+				remoteRunner,
+			),
+		).rejects.toThrow(/chown -R node:node \/home\/node\/.ssh/);
+	});
+
 	it("treats authenticated ssh -T output as ready even when the command exits nonzero", async () => {
 		const remoteRunner: HostCommandRunner = {
 			async run(command, args) {

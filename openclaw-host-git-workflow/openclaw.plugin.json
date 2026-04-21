@@ -1,8 +1,8 @@
 {
 	"id": "openclaw-host-git-workflow",
-	"name": "OpenClaw Host Git Workflow",
-	"description": "Host-backed git workflow with bundled skill, single send_to_git entrypoint, and bounded runtime slices for setup doctor, repo-aware planning, branch-aware planning, commit prep, repo resolution, live host node binding, preflight, branch entry, confirmed-plan validation, push, PR creation, checks wait, merge, and sync-main.",
-	"version": "0.1.0",
+	"name": "Host Git Workflow: Branch to Merge, Safely",
+	"description": "Host-aware Git workflow for OpenClaw. Turn current-branch work into a guarded path through doctor, preflight, PR, checks, merge, and main sync, with concrete remediation when host GitHub readiness is blocked.",
+	"version": "0.1.1",
 	"skills": ["./skills"],
 	"configSchema": {
 		"type": "object",
