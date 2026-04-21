@@ -2,7 +2,7 @@
 	"id": "openclaw-canon",
 	"name": "Workspace Truth Guard for OpenClaw",
 	"description": "Keep docs, memory, and repo truth aligned in long-running OpenClaw work. Diagnose canon drift first, then preview and apply bounded fixes for supported memory and sync issues.",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"skills": ["./skills"],
 	"configSchema": {
 		"type": "object",
