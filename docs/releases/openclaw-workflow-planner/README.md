@@ -1,6 +1,8 @@
 # openclaw-workflow-planner releases
 
-No tracked public release records are stored here yet.
+Tracked public release records:
+
+- [v0.1.0](./v0.1.0.md)
 
 Current shipped surface to reflect in release records:
 

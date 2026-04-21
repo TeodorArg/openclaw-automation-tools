@@ -15,7 +15,7 @@ const pkgSlug = requireArg(args, "package");
 const summary = requireArg(args, "summary");
 const releaseDate = requireArg(args, "date");
 const dryRun = Boolean(args["dry-run"]);
-const publishFlow = args["publish-flow"] ?? "clawhub";
+const publishFlow = args["publish-flow"] ?? "github release";
 
 if (!/^\d{4}-\d{2}-\d{2}$/u.test(releaseDate)) {
 	fail("--date must be in YYYY-MM-DD format.");
@@ -43,10 +43,6 @@ if (typeof currentVersion !== "string" || typeof pluginJson.version !== "string"
 }
 
 const targetVersion = resolveTargetVersion(currentVersion, args.version, args.bump);
-if (targetVersion === currentVersion) {
-	fail(`Target version matches current version ${currentVersion}.`);
-}
-
 const releaseDir = resolve(root, "docs", "releases", pkgSlug);
 const releasePath = resolve(releaseDir, `v${targetVersion}.md`);
 if (existsSync(releasePath)) {
@@ -74,7 +70,10 @@ const releaseBody = buildReleaseNote({
 	summary,
 });
 
-const changedFiles = [packageJsonPath, pluginJsonPath, releasePath];
+const updatesVersionFiles = targetVersion !== currentVersion;
+const changedFiles = updatesVersionFiles
+	? [packageJsonPath, pluginJsonPath, releasePath]
+	: [releasePath];
 
 if (dryRun) {
 	printSummary({
@@ -88,12 +87,13 @@ if (dryRun) {
 	process.exit(0);
 }
 
-packageJson.version = targetVersion;
-pluginJson.version = targetVersion;
-
 mkdirSync(releaseDir, { recursive: true });
-writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, "\t")}\n`);
-writeFileSync(pluginJsonPath, `${JSON.stringify(pluginJson, null, "\t")}\n`);
+if (updatesVersionFiles) {
+	packageJson.version = targetVersion;
+	pluginJson.version = targetVersion;
+	writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, "\t")}\n`);
+	writeFileSync(pluginJsonPath, `${JSON.stringify(pluginJson, null, "\t")}\n`);
+}
 writeFileSync(releasePath, releaseBody);
 
 printSummary({
@@ -183,6 +183,18 @@ function buildReleaseNote({
 	prRef,
 	summary,
 }) {
+	const needsClawHubWorksheet = /clawhub/iu.test(publishFlow);
+	const verificationLines = ["- `pnpm check`"];
+	if (needsClawHubWorksheet) {
+		verificationLines.push(`- \`clawhub package publish ./${pkgSlug} --dry-run\``);
+	}
+	const operatorCopyTarget = needsClawHubWorksheet
+		? "GitHub Release or ClawHub"
+		: "GitHub Release";
+	const publishResultClawHub = needsClawHubWorksheet
+		? "- ClawHub publish status:"
+		: "- ClawHub publish status: not requested";
+
 	return `# ${pkgSlug} v${targetVersion}
 
 - Package: \`${packageName}\`
@@ -194,6 +206,7 @@ function buildReleaseNote({
 - GitHub Release URL:
 - GitHub notes mode: \`tracked file only\`
 - Publish flow: \`${publishFlow}\`
+- ClawHub worksheet: ${needsClawHubWorksheet ? "" : "not requested"}
 - Source commit: ${sourceCommit}
 - PR: ${prRef}
 
@@ -203,16 +216,11 @@ function buildReleaseNote({
 
 ## Verification
 
-- \`pnpm lint\`
-- \`pnpm typecheck\`
-- \`pnpm build\`
-- \`pnpm test\`
-- \`pnpm pack:smoke\`
-- \`clawhub package publish ./${pkgSlug} --dry-run\`
+${verificationLines.join("\n")}
 
 ## Operator Copy
 
-Short release note text for GitHub Release or ClawHub:
+Short release note text for ${operatorCopyTarget}:
 
 \`\`\`text
 ${pkgSlug} v${targetVersion}
@@ -223,7 +231,7 @@ ${pkgSlug} v${targetVersion}
 ## Publish Result
 
 - GitHub Release status:
-- ClawHub publish status:
+${publishResultClawHub}
 - Operator notes:
 `;
 }
@@ -243,6 +251,7 @@ function printHelp() {
 	console.log(`Usage:
   node scripts/release-prep.mjs --package <slug> (--version <x.y.z> | --bump <patch|minor|major>) --date <yyyy-mm-dd> --summary "<text>" [--publish-flow <flow>] [--source-commit <sha>] [--pr <ref>] [--tag <name>] [--dry-run]
 `);
+	console.log("Default publish flow: github release");
 }
 
 function fail(message) {
