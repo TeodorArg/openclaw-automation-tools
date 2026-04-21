@@ -1,7 +1,7 @@
 {
 	"id": "openclaw-canon",
-	"name": "OpenClaw Canon",
-	"description": "Operational canon plugin with typed status, doctor, and preview-first memory and bounded sync fix tools plus bundled canon-memory-hygiene and canon-source-of-truth-fix skills.",
+	"name": "Workspace Truth Guard for OpenClaw",
+	"description": "Keep docs, memory, and repo truth aligned in long-running OpenClaw work. Diagnose canon drift first, then preview and apply bounded fixes for supported memory and sync issues.",
 	"version": "0.1.0",
 	"skills": ["./skills"],
 	"configSchema": {

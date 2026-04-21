@@ -1,6 +1,8 @@
 # openclaw-canon releases
 
-No tracked public release records are stored here yet.
+Tracked public release records:
+
+- `v0.1.0.md`
 
 Release prep rules:
 

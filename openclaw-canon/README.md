@@ -1,28 +1,79 @@
 # @openclaw/openclaw-canon
 
-Single source of truth for long-running OpenClaw work.
+## Workspace Truth Guard for OpenClaw
 
-`@openclaw/openclaw-canon` helps teams and solo operators keep docs, memory, and workspace truth aligned before drift turns into confusion. It is built for long-running OpenClaw work where stale context, conflicting notes, and quietly diverging standards create hidden drag.
+Catch drift across docs, memory, and repo truth before it turns into confusion.
 
-Instead of relying on ad hoc cleanup and good intentions, it gives you a bounded, preview-first way to inspect canon health, diagnose drift, and apply safe fixes where the current runtime actually has authority.
+`@openclaw/openclaw-canon` helps teams and solo operators keep workspace truth aligned in long-running OpenClaw work. It checks whether docs, memory snapshots, package canon, and repo-level source-of-truth files still agree, then gives you a bounded, preview-first path to inspect problems and apply safe fixes where the runtime actually has authority.
+
+If you want long-running work to stay easier to resume, review, and trust, this plugin is the guardrail against silent canon drift.
+
+## What you get
+
+- workspace truth checks across docs, memory, and repo-level canon
+- diagnosis-first reports before any fix is applied
+- preview-first bounded fixes for supported memory and sync drift
+- safer cleanup of malformed or duplicate memory records
+- help keeping package lists and publish docs aligned with repo truth
+
+## Who this is for
+
+Use this if your OpenClaw workspace lives long enough for docs, memory, and repo facts to drift apart.
+
+Good fit:
+- long-running multi-session work
+- repos with multiple plugins or shared workspace rules
+- operators who want a cleaner source of truth before handoff or the next implementation pass
+
+Not this plugin:
+- a generic repo linter
+- an unrestricted auto-fix bot
+- a replacement for human judgment about what should be canonical
+
+## 2-minute quickstart
+
+1. Install the plugin:
+
+```bash
+openclaw plugins install clawhub:@openclaw/openclaw-canon
+```
+
+2. Enable it:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "openclaw-canon": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+3. Ask OpenClaw to check for drift and show what needs to be aligned.
+
+## Example outcomes
+
+- “Show me whether docs, memory, and repo canon have drifted.”
+- “Preview what would be fixed before changing any canon files.”
+- “Clean malformed or duplicate memory records without touching unrelated data.”
 
 ## Why install this
 
-- Keep workspace truth aligned across docs, memory, and ongoing execution.
-- Catch drift before it spreads into confusion and rework.
-- Replace fragile maintenance habits with a clearer source of truth.
-- Make long-running work easier to resume, review, and trust.
+- keep workspace truth aligned across docs, memory, and ongoing execution
+- catch drift before it spreads into confusion and rework
+- replace fragile maintenance habits with a clearer source of truth
+- make long-running work easier to resume, review, and trust
 
-## Common use cases
+## Why this beats ad-hoc cleanup
 
-- Check whether docs and memory still reflect current working truth.
-- Reduce drift across long-running multi-session work.
-- Keep standards, rules, and project guidance aligned for operators and teammates.
-- Clean up before a new implementation pass or handoff.
-
-## One-line example request
-
-`Check whether our workspace truth has drifted and show me what needs to be aligned.`
+- It checks canon health systematically instead of relying on memory or guesswork.
+- It separates diagnosis from fixes, so you can inspect drift before applying changes.
+- It keeps fixes bounded to supported memory and sync surfaces.
+- It makes long-running workspace truth easier to review, trust, and maintain.
+- It scales better than occasional manual cleanup after drift has already spread.
 
 ## Bundled Skills
 
