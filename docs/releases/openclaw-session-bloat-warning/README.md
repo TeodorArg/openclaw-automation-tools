@@ -13,4 +13,5 @@ Release prep rules:
 - add `vX.Y.Z.clawhub.md` when the release needs manual ClawHub publication
 - keep `vX.Y.Z.md` as the tracked release record and canonical GitHub Release note source
 - keep `vX.Y.Z.clawhub.md` as the fill-in operator worksheet for manual ClawHub publication when that path is requested
+- place the manual-upload tarball in `openclaw-session-bloat-warning/` so the package folder remains the canonical operator handoff location
 - record version, date, summary, verification evidence, and publish outcome
