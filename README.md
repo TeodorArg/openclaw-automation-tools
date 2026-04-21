@@ -25,7 +25,7 @@ The package-shape canon is broader than runtime/test layout alone, and the style
 | [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
 | [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea, lane-1 design, and plan lifecycle |
 | [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory and bounded sync fixes |
-| [openclaw-session-bloat-warning/README.md](openclaw-session-bloat-warning/README.md) | publishable plugin-plus-skill package | Compaction-warning package for calm pre/post compaction session-bloat notices |
+| [openclaw-session-bloat-warning/README.md](openclaw-session-bloat-warning/README.md) | publishable plugin-plus-skill package | Session-health warning package with visible early warning, operator diagnostics, and compact status surfacing |
 | [openclaw-url-tailwind-scaffold/README.md](openclaw-url-tailwind-scaffold/README.md) | publishable plugin-plus-skill package | URL-driven package for bounded scaffold normalization/synthesis and Tailwind CSS v4 scaffold summaries |
 
 ## Plugin Packages
@@ -83,17 +83,19 @@ The plugin keeps only minimal file-backed domain state for latest summaries, doc
 Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtime/fix/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/status/`, with flat default tests under `src/test/`.
 
 `openclaw-session-bloat-warning/` is the active compaction-warning plugin package in this repo.
-Its shipped surface combines the official compaction lifecycle with bounded visible early-warning delivery:
+Its shipped surface combines the official compaction lifecycle with bounded visible early-warning delivery plus compact operator diagnostics:
 - `before_compaction` for a calm warning before compaction starts
 - `after_compaction` for a short continuation note after compaction finishes when the hook payload exposes a writable `messages` array
 - observe-only `llm_input` and `llm_output` signal capture
 - visible early-warning delivery on `before_agent_reply`
+- operator-facing context-sync diagnostics on `before_prompt_build`
+- optional `session_bloat_status` tool for compact JSON status snapshots
 - plugin-owned dedupe plus cooldown state for per-session warning ceilings
 
 Its bundled skill surface currently centers on `session-bloat-warning`.
-The live slice stays bounded to calm warning copy, visible early warning, persisted dedupe/cooldown state, and timeout/lane-pressure/no-reply runtime-risk signal reuse rather than runtime-owned recovery or bounded handoff summarization.
+The live slice stays bounded to calm warning copy, visible early warning, compact diagnostics/status surfacing, persisted dedupe/cooldown state, and timeout/lane-pressure/no-reply runtime-risk signal reuse rather than runtime-owned recovery or bounded handoff summarization.
 
-Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/hooks/`, `src/runtime/state/`, and `src/runtime/text/`, with flat default tests under `src/test/`.
+Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/core/`, `src/runtime/hooks/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/text/`, with `src/status-tool.ts` as the package-local optional tool entry and flat default tests under `src/test/`.
 
 `openclaw-url-tailwind-scaffold/` is the active URL-analysis plugin-plus-skill package in this repo.
 Its shipped surface centers on one typed tool and one bundled skill:

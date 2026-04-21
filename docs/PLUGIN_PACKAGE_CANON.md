@@ -47,6 +47,7 @@ In the live session-bloat warning package, the current runtime domains are group
 - `src/runtime/core/`
 - `src/runtime/config/`
 - `src/runtime/hooks/`
+- `src/runtime/report/`
 - `src/runtime/state/`
 - `src/runtime/text/`
 

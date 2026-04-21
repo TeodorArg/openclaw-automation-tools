@@ -1,4 +1,9 @@
+export type AnyAgentTool = unknown;
 export type PluginRuntime = unknown;
+export type OpenClawPluginToolContext = {
+	agentId?: string;
+	sessionKey?: string;
+};
 
 export type PluginHookContext = {
 	sessionKey?: string;
@@ -72,6 +77,10 @@ export type LlmOutputHookEvent = {
 export type OpenClawPluginApi = {
 	pluginConfig?: Record<string, unknown>;
 	runtime: PluginRuntime;
+	registerTool(
+		tool: unknown | ((context: OpenClawPluginToolContext) => unknown),
+		opts?: { optional?: boolean },
+	): void;
 	on(
 		hookName: "before_compaction",
 		handler: (

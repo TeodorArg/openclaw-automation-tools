@@ -1,4 +1,9 @@
 declare module "openclaw/plugin-sdk/plugin-entry" {
+	type OpenClawPluginToolContext = {
+		agentId?: string;
+		sessionKey?: string;
+	};
+
 	type PluginHookContext = {
 		sessionKey?: string;
 		runId?: string;
@@ -71,6 +76,10 @@ declare module "openclaw/plugin-sdk/plugin-entry" {
 	type OpenClawPluginApi = {
 		pluginConfig?: Record<string, unknown>;
 		runtime: unknown;
+		registerTool(
+			tool: unknown | ((context: OpenClawPluginToolContext) => unknown),
+			opts?: { optional?: boolean },
+		): void;
 		on(
 			hookName: "before_compaction",
 			handler: (
