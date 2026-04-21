@@ -12,6 +12,7 @@ Current shipped surface to reflect in release records:
 - shipped flow is gated, not linear: `idea_gate` can lead to `accepted`, `needs_research`, `deferred`, or `rejected`; accepted work now runs `design_prepare` before `plan_create`, and `plan_refresh` is only valid after an accepted idea already has a plan
 - `implementation_brief` persists a fresh current-slice `ExecutionBrief`; rerunning it for the same slice keeps prior `executionBriefs` as superseded persisted history while retargeting the current pointer to the newest fresh brief; `plan_refresh`, `task_add`, `task_done`, `task_remove`, and `task_reopen` stale that brief, so the next `task_done` or `task_reopen` requires a regenerated brief
 - `task_done` prefers stable `taskId` with legacy `taskIndex` fallback, and checklist sync follows task ids rather than matching task text
+- package docs now include an end-to-end example for `accepted plan -> implementation_brief -> task execution -> idea_close`, and the current verification tail for this surface is `cd openclaw-workflow-planner && pnpm check`
 
 Release prep rules:
 

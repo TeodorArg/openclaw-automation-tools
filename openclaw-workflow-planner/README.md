@@ -98,6 +98,30 @@ the typed tool `workflow_planner_action`.
 - `deferred` / `rejected` -> stop or narrow scope
 - after plan creation: `task_add` / `task_remove` can refine tracked work, then `implementation_brief` is required before `task_done` or `task_reopen` continue execution-state progress for the current slice. Any `plan_refresh`, `task_add`, `task_done`, `task_remove`, or `task_reopen` marks the current fresh brief stale, so rerun `implementation_brief` before the next `task_done` or `task_reopen`. Only a fresh current-slice brief moves control-plane phase to `execution`; stale brief summaries leave the request in `planning`. `idea_close` is valid only once a current accepted plan exists, all tracked tasks are done, and the close note records the delivered outcome
 
+## End-to-End Example
+
+1. Run `idea_create`, `research_attach`, `idea_gate`, and `design_prepare` to establish the accepted request, typed research, and lane-1 design.
+2. Run `plan_create`, then inspect the accepted plan with `plan_snapshot` or `idea_get`.
+3. Run `implementation_brief` before execution-state task progress begins for the current slice.
+4. Use `task_done` to complete tracked work and `task_add` or `task_remove` only when the accepted slice genuinely changes.
+5. If `task_add`, `task_done`, `task_remove`, `task_reopen`, or `plan_refresh` runs, regenerate the handoff with `implementation_brief` before the next execution-state task step.
+6. When all tracked tasks are done, run `idea_close` with the delivered outcome recorded in the close note.
+
+Example path:
+
+```text
+idea_create
+-> research_attach
+-> idea_gate (accepted)
+-> design_prepare
+-> plan_create
+-> implementation_brief
+-> task_done
+-> implementation_brief
+-> task_done
+-> idea_close
+```
+
 If `idea_create` materially changes the core request after downstream work already
 exists, the plugin resets research, idea-gate, plan, and tasks back to `draft`
 so the planner state stays coherent.
