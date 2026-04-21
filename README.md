@@ -1,188 +1,93 @@
 # openclaw-automation-tools
 
-Multi-package OpenClaw repository for five active publishable plugin packages.
+OpenClaw plugins for real work, not toy demos.
 
-## Repo Docs
+This repository is a curated OpenClaw development stack: five focused plugins that help turn AI-assisted work into something more structured, more reliable, and much easier to ship.
 
-Core canon:
+Together, they help you keep a real execution plan, start faster from live references, protect long sessions from going soft, keep repo truth aligned, and close the loop from working branch to merged result.
 
-- [docs/PLUGIN_PACKAGE_CANON.md](docs/PLUGIN_PACKAGE_CANON.md)
-- [docs/PLUGIN_STYLE_CANON.md](docs/PLUGIN_STYLE_CANON.md)
+If you want OpenClaw to do more than chat, this repo is where the practical tooling lives.
 
-Operational canon:
+This repo currently ships five publishable plugin packages:
+- `openclaw-host-git-workflow/`
+- `openclaw-workflow-planner/`
+- `openclaw-canon/`
+- `openclaw-session-bloat-warning/`
+- `openclaw-url-tailwind-scaffold/`
 
-- [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md)
-- [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+## Why This Repo Exists
 
-Together these documents define the active repo-level package, style, node-boundary, and publish-preflight canon.
-The live plugin packages now match the current runtime/test layout canon.
-The package-shape canon is broader than runtime/test layout alone, and the style canon is active policy even though some enforcement still remains review/script-driven until repo tooling converges further.
+OpenClaw becomes much more useful when it can:
 
-## Current Repo Map
+- turn vague work into an accepted execution plan
+- keep long-running repo truth and memory aligned
+- ship changes from branch to PR to merge with guardrails
+- warn before a session gets too bloated to stay sharp
+- turn a reference URL into a reusable Tailwind starting point
 
-| Path | Current shape | Purpose |
+That is the point of this repository: each package adds one concrete capability that helps OpenClaw move from "helpful chat" to "repeatable delivery system."
+
+## Why This Stack Feels Powerful
+
+These plugins are intentionally stronger together than they are alone.
+
+- `openclaw-workflow-planner` gives the work structure.
+- `openclaw-url-tailwind-scaffold` gives frontend work a fast starting point.
+- `openclaw-session-bloat-warning` protects long sessions before they get sloppy.
+- `openclaw-canon` keeps repo truth, docs, and memory aligned.
+- `openclaw-host-git-workflow` closes the loop from working branch to merged result.
+
+That combination is the real pitch of the repo: not isolated tools, but a curated development stack that gives OpenClaw a serious boost as an execution engine.
+
+It is a strong setup for people who want OpenClaw to become a serious co-driver for development, not just a chat window with good intentions.
+
+## The Plugin Lineup
+
+| Plugin | What it does | Best for |
 | --- | --- | --- |
-| [openclaw-host-git-workflow/README.md](openclaw-host-git-workflow/README.md) | publishable plugin-plus-skill package | Active bounded host-backed git/GitHub workflow package |
-| [openclaw-workflow-planner/README.md](openclaw-workflow-planner/README.md) | publishable plugin-plus-skill package | Planning-first workflow planner package with file-backed idea, lane-1 design, and plan lifecycle |
-| [openclaw-canon/README.md](openclaw-canon/README.md) | publishable plugin-plus-skill package | Operational canon package for typed status, drift diagnosis, and preview-first memory and bounded sync fixes |
-| [openclaw-session-bloat-warning/README.md](openclaw-session-bloat-warning/README.md) | publishable plugin-plus-skill package | Session-health warning package with visible early warning, operator diagnostics, and compact status surfacing |
-| [openclaw-url-tailwind-scaffold/README.md](openclaw-url-tailwind-scaffold/README.md) | publishable plugin-plus-skill package | URL-driven package for bounded scaffold normalization/synthesis and Tailwind CSS v4 scaffold summaries |
+| [`@openclaw/openclaw-host-git-workflow`](./openclaw-host-git-workflow/README.md) | Turns current-branch work into a guarded path through doctor, preflight, PR, checks, merge, and `main` sync. | Real repositories where wrong-branch or wrong-repo shipping mistakes are expensive. |
+| [`@openclaw/openclaw-workflow-planner`](./openclaw-workflow-planner/README.md) | Turns rough requests into accepted plans, tracked tasks, and implementation-ready handoff in one readable `WORKFLOW_PLAN.md`. | Multi-step work that must survive longer than one chat session. |
+| [`@openclaw/openclaw-canon`](./openclaw-canon/README.md) | Keeps docs, memory, and repo truth aligned with diagnosis-first reports and bounded fixes. | Long-running workspaces where source-of-truth drift causes confusion and rework. |
+| [`@openclaw/openclaw-session-bloat-warning`](./openclaw-session-bloat-warning/README.md) | Warns early about compaction pressure, timeout risk, lane pressure, and no-reply streaks before long AI work slows down. | Coding, debugging, research, or orchestration sessions with a lot of context. |
+| [`@openclaw/openclaw-url-tailwind-scaffold`](./openclaw-url-tailwind-scaffold/README.md) | Turns a reference page URL into a bounded Tailwind CSS v4 scaffold summary or structured page contract. | Frontend work that starts from a visual reference instead of a blank page. |
 
-## Plugin Packages
+## On ClawHub
 
-`openclaw-host-git-workflow/` is the active host-backed execution package in this repo.
-Its bundled skill surface is intentionally collapsed to one primary user-facing entrypoint: `send_to_git` / `отправь в гит`.
+- [`openclaw-host-git-workflow`](https://clawhub.ai/plugins/%40openclaw%2Fopenclaw-host-git-workflow)
+- [`openclaw-workflow-planner`](https://clawhub.ai/plugins/%40openclaw%2Fopenclaw-workflow-planner)
+- [`openclaw-canon`](https://clawhub.ai/plugins/%40openclaw%2Fopenclaw-canon)
+- [`openclaw-session-bloat-warning`](https://clawhub.ai/plugins/%40openclaw%2Fopenclaw-session-bloat-warning)
+- [`openclaw-url-tailwind-scaffold`](https://clawhub.ai/plugins/%40openclaw%2Fopenclaw-url-tailwind-scaffold)
 
-Its current shipped slice covers:
-- setup doctor for repo targeting, node binding, and host readiness
-- repo-aware planning
-- branch-aware planning
-- explicit commit prep for ownership grouping, branch naming, and commit bodies
-- repo resolution
-- live host node binding
-- host preflight
-- bounded branch entry from `main` or another clean local branch into a requested non-main working branch
-- confirmed-plan validation
-- bounded push of the current non-main branch to `origin`
-- bounded PR creation into `main`
-- bounded wait for required checks
-- bounded merge of the current branch PR into `main`
-- bounded sync of local `main` from `origin/main`
+## Why Install These Plugins
 
-The runtime now binds to a concrete host node and executes shell steps through `node.invoke` `system.run.prepare` / `system.run`, instead of treating node selection as an unbound placeholder.
-Branch-aware planning output now emits package-aware branch suggestions and commit titles, so merge-visible PR titles identify the owning package or explicit repo surface instead of a generic workflow label.
-The package now also exposes a recommended short-session choreography of `doctor -> plan_with_branches -> commit_prep -> bounded execution flow`, where the execution flow is the canonical push/PR/checks/merge/main-sync path and docs sync stays a separate follow-up when shipped truth changed.
+Most OpenClaw setups hit the same ceiling: chat is easy, but delivery gets messy.
 
-Its runtime layout is currently grouped under `src/runtime/host/`, `src/runtime/node/`, `src/runtime/planning/`, and `src/runtime/repo/`, with flat default tests under `src/test/`.
+These packages close that gap:
 
-`openclaw-workflow-planner/` is the active planning-first plugin package in this repo.
-Its shipped surface centers on file-backed `WORKFLOW_PLAN.md` state plus typed planner actions for:
-- idea creation and listing
-- typed research attachment
-- explicit `Idea Gate` decisions
-- lane-1 design preparation and retrieval
-- accepted-plan creation and refresh
-- persisted plan snapshots and idea reads
-- manual task add / done / remove / reopen tracking
-- bounded implementation brief generation
-- explicit idea closure
+- planning stops living in scattered prompts and temporary notes
+- shipping stops depending on improvised git/gh command chains
+- repo truth stops drifting across docs, memory, and package lists
+- long sessions become easier to manage before they degrade
+- frontend inspiration turns into a usable scaffold much faster
 
-Its concrete planner entry surfaces are the bundled skills `openclaw-workflow-planner`, `openclaw-workflow-research`, and `openclaw-workflow-implementer`, plus the typed tool `workflow_planner_action`.
+In short: this repo gives OpenClaw operational memory, safer execution, and better follow-through.
 
-Its runtime layout is currently grouped under `src/runtime/planning/` and `src/runtime/state/`, with flat default tests under `src/test/`.
+It is a strong setup if you want OpenClaw to act less like a chat assistant and more like a practical co-driver for development.
 
-`openclaw-canon/` is the active operational-canon plugin package in this repo.
-Its shipped surface centers on a compact typed runtime contract:
-- `canon_status` for latest-known summary snapshots plus optional light refresh
-- `canon_doctor` for bounded `source`, `memory`, and `sync` diagnosis
-- `canon_fix` for preview-first `memory` and bounded `sync` fixes with confirm-token gated apply
+It is also a very good "starter stack" for anyone who wants OpenClaw to become a real development environment multiplier instead of a one-off helper.
 
-Its bundled skills are `canon-memory-hygiene` and `canon-source-of-truth-fix`, but those remain instruction layers on top of the typed tool surface rather than replacing it.
-The plugin keeps only minimal file-backed domain state for latest summaries, doctor reports, and short-lived preview tokens.
+## Start Here
 
-Its runtime layout is currently grouped under `src/runtime/doctor/`, `src/runtime/fix/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/status/`, with flat default tests under `src/test/`.
+Most users should not start by cloning the whole repository. Start by installing the plugin that matches the job.
 
-`openclaw-session-bloat-warning/` is the active compaction-warning plugin package in this repo.
-Its shipped surface combines the official compaction lifecycle with bounded visible early-warning delivery plus compact operator diagnostics:
-- `before_compaction` for a calm warning before compaction starts
-- `after_compaction` for a short continuation note after compaction finishes when the hook payload exposes a writable `messages` array
-- observe-only `llm_input` and `llm_output` signal capture
-- visible early-warning delivery on `before_agent_reply`
-- operator-facing context-sync diagnostics on `before_prompt_build`
-- optional `session_bloat_status` tool for compact JSON status snapshots
-- plugin-owned dedupe plus cooldown state for per-session warning ceilings
+### What You Need
 
-Its bundled skill surface currently centers on `session-bloat-warning`.
-The live slice stays bounded to calm warning copy, visible early warning, compact diagnostics/status surfacing, persisted dedupe/cooldown state, and timeout/lane-pressure/no-reply runtime-risk signal reuse rather than runtime-owned recovery or bounded handoff summarization.
+- An OpenClaw environment where plugins can be installed and enabled.
+- Node.js if you want to build from source locally.
+- A paired host node only if you want real host-backed git and GitHub execution through `openclaw-host-git-workflow`.
 
-Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/core/`, `src/runtime/hooks/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/text/`, with `src/status-tool.ts` as the package-local optional tool entry and flat default tests under `src/test/`.
-
-`openclaw-url-tailwind-scaffold/` is the active URL-analysis plugin-plus-skill package in this repo.
-Its shipped surface centers on one typed tool and two bundled skills:
-- `url_tailwind_scaffold_action`
-- bundled skill `openclaw-url-tailwind-scaffold`
-- bundled skill `openclaw-url-tailwind-scaffold-orchestrator`
-- working action `analyze_reference_page`
-
-Its current shipped slice covers:
-- bounded static fetch-backed acquisition for publicly reachable HTML pages
-- bounded declared acquisition metadata from the request contract
-- normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
-- source-backed shell landmark extraction for matched static DOM regions when usable fetched HTML exists
-- explicit synthetic `sourceBacked` versus `inferred` status fields derived from request mode
-- synthesized Tailwind CSS v4 token and utility candidates plus either a scaffold summary or structured `page_contract` output
-- raw slash-command dispatch through either a plain URL or a small JSON payload
-
-Its runtime layout is currently grouped under `src/runtime/analysis/` and `src/runtime/contract/`, with flat default tests under `src/test/`.
-
-## Gateway Vs Node Host
-
-In this repo the canonical baseline is the Gateway, not a repo-owned node-host package.
-
-- `openclaw-gateway` in Docker is the always-on Gateway/WebSocket runtime for OpenClaw
-- `node host` is a separate headless OpenClaw node running on the machine where `system.run` / `system.which` must execute for real
-- if you need local repos, host git, `ssh`, `gh`, push, PR creation, or required-check polling, run that node on the corresponding host machine instead of trying to make baseline `openclaw-gateway` own those capabilities
-
-This split matters:
-- the gateway accepts operator and node connections, stores pairing state, and coordinates runtime
-- the node host connects to the gateway and exposes the command surface of its own machine
-- this repo's baseline is intentionally narrow and does not treat container-runtime `git push` or `PR creation` as the canonical path
-
-For the full host-node install, pairing, Windows, and remote-loopback/SSH-tunnel contract, see [docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md](docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md).
-
-## Install
-
-Local development install:
-
-```bash
-nvm use || nvm install
-cd openclaw-host-git-workflow
-pnpm install
-pnpm build
-cd ..
-openclaw plugins install -l ./openclaw-host-git-workflow
-```
-
-Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-workflow-planner/` when working on the planner package.
-Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-canon/` when working on the canon package.
-Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-session-bloat-warning/` when working on the compaction-warning package.
-Repeat the same package-local `pnpm install`, `pnpm build`, and `openclaw plugins install -l ...` flow for `openclaw-url-tailwind-scaffold/` when working on the URL-driven scaffold package.
-
-For a Docker gateway with local plugin directories mounted into `/home/node/tools`, do not batch multiple linked installs inside one long-lived `docker exec ... sh -lc '...'` shell. A config-changing `openclaw plugins install -l ...` can trigger gateway reload and kill that shell after the first install.
-
-Treat the batch reinstall flow as runtime-repo orchestration, not plugin-package canon. Use the helper or equivalent install/wait/verify loop from the Docker/OpenClaw runtime repo that owns the live `openclaw-gateway` container.
-
-For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin path` setup, do not treat plugin install as the first step. The practical order is:
-
-1. configure the local CLI profile with `gateway.remote.url`
-2. set node-host auth with `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` for local-mode node install/run
-3. approve the local CLI/operator pairing request on the gateway
-4. install and connect the dedicated host node
-5. build and install the target package, starting with `openclaw-host-git-workflow` when you need host-backed git/GitHub execution
-6. enable the installed plugin and set `nodeSelector` when multiple eligible nodes exist
-
-Token auth and pairing approval are separate gates in this flow. A valid token does not replace operator pairing approval, and host-node pairing can still require its own approval step after install/run.
-
-Minimal same-machine Docker gateway bootstrap:
-
-```bash
-openclaw config set gateway.remote.url ws://127.0.0.1:18789
-export OPENCLAW_GATEWAY_TOKEN="<gateway-token>"
-openclaw devices list
-openclaw devices approve <requestId>
-openclaw node install --host 127.0.0.1 --port 18789 --display-name "openclaw-docker-host-git"
-```
-
-Recommended macOS hardening before routine use:
-
-```bash
-node -e 'const fs=require("fs"); const p=process.env.HOME+"/.openclaw/openclaw.json"; const raw=JSON.parse(fs.readFileSync(p,"utf8")); raw.browser ??= {}; raw.browser.enabled = false; raw.gateway ??= {}; raw.gateway.nodes ??= {}; raw.gateway.nodes.browser = { ...(raw.gateway.nodes.browser ?? {}), mode: "off" }; raw.nodeHost ??= {}; raw.nodeHost.browserProxy = { ...(raw.nodeHost.browserProxy ?? {}), enabled: false }; fs.writeFileSync(p, JSON.stringify(raw,null,2)+"\n");'
-openclaw node restart
-```
-
-This reduces browser-related surface area, but it does not fully convert the generic `node` host into a strict system-only process from the perspective of macOS privacy prompts.
-
-Registry install:
+### Install From ClawHub
 
 ```bash
 openclaw plugins install clawhub:@openclaw/openclaw-host-git-workflow
@@ -192,75 +97,88 @@ openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
 openclaw plugins install clawhub:@openclaw/openclaw-url-tailwind-scaffold
 ```
 
-## Verification
+### Install From A Local Checkout
 
-For `openclaw-host-git-workflow/`:
-
-```bash
-cd openclaw-host-git-workflow
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm test
-pnpm pack:smoke
-```
-
-For `openclaw-workflow-planner/`:
+If you want to develop or inspect a package locally:
 
 ```bash
-cd openclaw-workflow-planner
-pnpm lint
-pnpm typecheck
+git clone https://github.com/openclaw/openclaw-automation-tools.git
+cd openclaw-automation-tools
+nvm use || nvm install
+cd <package>
+pnpm install
 pnpm build
-pnpm test
-pnpm pack:smoke
+cd ..
+openclaw plugins install -l ./<package>
 ```
 
-For `openclaw-canon/`:
+Replace `<package>` with one of:
 
-```bash
-cd openclaw-canon
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm test
-pnpm pack:smoke
+- `openclaw-host-git-workflow`
+- `openclaw-workflow-planner`
+- `openclaw-canon`
+- `openclaw-session-bloat-warning`
+- `openclaw-url-tailwind-scaffold`
+
+## What Using These Feels Like
+
+- `openclaw-host-git-workflow`: "Ship my current branch safely, open the PR, wait for checks, merge it, and sync main."
+- `openclaw-workflow-planner`: "Take this vague request and turn it into a real plan with tasks and an implementation brief."
+- `openclaw-canon`: "Show me where docs, memory, and repo truth drifted before it turns into cleanup pain."
+- `openclaw-session-bloat-warning`: "Warn me before this session gets too heavy for another big phase."
+- `openclaw-url-tailwind-scaffold`: "Use this page as the reference and give me a reusable Tailwind shell to build from."
+
+## A Strong Default Flow
+
+One high-leverage way to use this stack:
+
+1. Start with `openclaw-workflow-planner` to turn the request into a real execution plan.
+2. Use `openclaw-url-tailwind-scaffold` when the work starts from a visual reference.
+3. Let `openclaw-session-bloat-warning` watch session quality during long implementation work.
+4. Run `openclaw-canon` before handoff or release to catch drift early.
+5. Finish with `openclaw-host-git-workflow` to ship safely from branch to PR to merge.
+
+That is where the boost comes from: less prompt chaos, less context loss, less drift, and a cleaner path from idea to shipped result.
+
+## How To Choose
+
+Install `openclaw-host-git-workflow` if your biggest problem is safe shipping from a real repo.
+
+Install `openclaw-workflow-planner` if your biggest problem is losing structure between idea, plan, tasks, and implementation.
+
+Install `openclaw-canon` if your biggest problem is drift between repo truth, docs, and memory.
+
+Install `openclaw-session-bloat-warning` if your biggest problem is long sessions getting slower, noisier, or more fragile over time.
+
+Install `openclaw-url-tailwind-scaffold` if your biggest problem is turning design references into a practical frontend starting point.
+
+## Technical Docs
+
+The root README stays intentionally focused on orientation. Technical policy, runtime details, publish workflow, and maintainer guidance live in `docs/`.
+
+- [Technical docs map](./docs/README.md)
+- [Plugin package canon](./docs/PLUGIN_PACKAGE_CANON.md)
+- [Plugin style canon](./docs/PLUGIN_STYLE_CANON.md)
+- [Node install and identity contract](./docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md)
+- [ClawHub publish preflight](./docs/CLAWHUB_PUBLISH_PREFLIGHT.md)
+- [Release records](./docs/RELEASES.md)
+
+## For Maintainers
+
+This repository is a multi-package OpenClaw workspace, not a single root package.
+
+- each publishable plugin keeps its own `README.md`, `package.json`, `openclaw.plugin.json`, build, tests, and packaged artifact rules
+- repo-level package canon lives in [`docs/PLUGIN_PACKAGE_CANON.md`](./docs/PLUGIN_PACKAGE_CANON.md)
+- the root repo does not ship a single shared plugin entrypoint
+- package-level verification should run inside the package being changed, with the detailed maintainer flow documented in [`docs/README.md`](./docs/README.md)
+
+## Repo Structure
+
+```text
+openclaw-host-git-workflow/
+openclaw-workflow-planner/
+openclaw-canon/
+openclaw-session-bloat-warning/
+openclaw-url-tailwind-scaffold/
+docs/
 ```
-
-For `openclaw-session-bloat-warning/`:
-
-```bash
-cd openclaw-session-bloat-warning
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm test
-pnpm pack:smoke
-```
-
-For `openclaw-url-tailwind-scaffold/`:
-
-```bash
-cd openclaw-url-tailwind-scaffold
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm test
-pnpm pack:smoke
-```
-
-For publish workflow details and the manual pre-publish gate beyond CI minimum, use [docs/CLAWHUB_PUBLISH_PREFLIGHT.md](docs/CLAWHUB_PUBLISH_PREFLIGHT.md).
-
-## Repo Facts
-
-- The repo root does not ship a `package.json`, `pnpm-workspace.yaml`, or `openclaw.plugin.json`.
-- Local development is pinned to Node `24.13.0` via `.nvmrc`.
-- Repo-local planning scratch files belong only under ignored `.local-planning/`.
-- The repo currently ships five publishable plugin packages: `openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, `openclaw-session-bloat-warning/`, and `openclaw-url-tailwind-scaffold/`.
-- Product-level `openclaw node` install/runtime ownership belongs to OpenClaw product docs, not to an invented repo-local package surface.
-- Package-structure and code-style canon now live in `docs/PLUGIN_PACKAGE_CANON.md` and `docs/PLUGIN_STYLE_CANON.md`.
-- Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.
-- Repo-local publish/preflight guidance now lives in `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`.
-- The live plugin packages follow the broader local package canon, including domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, required package docs/metadata, and package `files` allowlists that keep shipped `dist/**` artifacts in packed tarballs despite the repo-root `dist/` ignore; package-local `.npmignore` is optional rather than a required baseline.
-- In Docker-gateway setups, node-host auth and device pairing are separate gates; a valid `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` does not replace CLI/operator pairing approval.
-- On macOS, config hardening can reduce browser-related node surface, but a generic `node` host can still trigger unrelated TCC prompts unless you isolate it by user/session/VM/host.
