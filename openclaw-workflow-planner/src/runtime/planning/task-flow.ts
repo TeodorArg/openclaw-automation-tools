@@ -1,6 +1,6 @@
 import {
 	createManualTaskId,
-	markExecutionBriefsStale,
+	invalidateCurrentExecutionBriefState,
 	type PlannerIdea,
 	type PlannerTask,
 	requireIdeaSlug,
@@ -43,6 +43,13 @@ export async function handleTaskAdd(
 		done: false,
 	};
 	const tasks = idea.tasks.concat(manualTask);
+	const briefInvalidation = invalidateCurrentExecutionBriefState({
+		idea,
+		reasonTransition: "task_add",
+		currentSliceId: idea.plan?.currentSliceId,
+		currentSliceTitle: idea.plan?.currentSlice,
+		staleSummaryTitles: [idea.plan?.currentSlice ?? ""],
+	});
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		tasks,
@@ -51,7 +58,7 @@ export async function handleTaskAdd(
 			tasks,
 			createdFromTransition: "task_add",
 		}),
-		executionBriefs: markExecutionBriefsStale(existingIdea, "task_add"),
+		...briefInvalidation,
 		plan: existingIdea.plan
 			? {
 					...existingIdea.plan,
@@ -183,6 +190,13 @@ async function updateTaskCompletionState(
 			? { ...entry, done: nextDone }
 			: entry;
 	});
+	const briefInvalidation = invalidateCurrentExecutionBriefState({
+		idea,
+		reasonTransition: action,
+		currentSliceId: idea.plan?.currentSliceId,
+		currentSliceTitle: idea.plan?.currentSlice,
+		staleSummaryTitles: [idea.plan?.currentSlice ?? ""],
+	});
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		tasks,
@@ -191,7 +205,7 @@ async function updateTaskCompletionState(
 			tasks,
 			createdFromTransition: action,
 		}),
-		executionBriefs: markExecutionBriefsStale(existingIdea, action),
+		...briefInvalidation,
 		plan: existingIdea.plan
 			? {
 					...existingIdea.plan,
@@ -264,6 +278,13 @@ export async function handleTaskRemove(
 	const tasks = target.usedTaskId
 		? idea.tasks.filter((entry) => entry.id !== target.taskId)
 		: idea.tasks.filter((_, index) => index !== target.taskIndex - 1);
+	const briefInvalidation = invalidateCurrentExecutionBriefState({
+		idea,
+		reasonTransition: "task_remove",
+		currentSliceId: idea.plan?.currentSliceId,
+		currentSliceTitle: idea.plan?.currentSlice,
+		staleSummaryTitles: [idea.plan?.currentSlice ?? ""],
+	});
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		tasks,
@@ -272,7 +293,7 @@ export async function handleTaskRemove(
 			tasks,
 			createdFromTransition: "task_remove",
 		}),
-		executionBriefs: markExecutionBriefsStale(existingIdea, "task_remove"),
+		...briefInvalidation,
 		plan: existingIdea.plan
 			? {
 					...existingIdea.plan,

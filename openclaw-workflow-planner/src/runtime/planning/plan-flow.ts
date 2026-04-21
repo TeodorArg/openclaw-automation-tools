@@ -1,7 +1,7 @@
 import {
 	createDefaultPlanArtifactRefs,
 	deriveIdeaGateDecisionIds,
-	markExecutionBriefsStale,
+	invalidateCurrentExecutionBriefState,
 	mergePlannerTasks,
 	type PlannerPlan,
 	type PlannerProvenanceEnvelope,
@@ -101,6 +101,19 @@ export async function handlePlanCreateOrRefresh(
 			params.action === "plan_refresh" ? (idea.plan?.revision ?? 0) + 1 : 1,
 		),
 	};
+	const briefInvalidation =
+		params.action === "plan_refresh"
+			? invalidateCurrentExecutionBriefState({
+					idea,
+					reasonTransition: "plan_refresh",
+					currentSliceId: syncedPlan.currentSliceId,
+					currentSliceTitle: syncedPlan.currentSlice,
+					staleSummaryTitles: [
+						idea.plan?.currentSlice ?? "",
+						syncedPlan.currentSlice,
+					],
+				})
+			: undefined;
 	const updatedState = updateIdea(context.state, ideaSlug, (existingIdea) => ({
 		...existingIdea,
 		plan: syncedPlan,
@@ -110,10 +123,7 @@ export async function handlePlanCreateOrRefresh(
 			tasks: mergedTasks,
 			createdFromTransition: params.action,
 		}),
-		executionBriefs:
-			params.action === "plan_refresh"
-				? markExecutionBriefsStale(existingIdea, "plan_refresh")
-				: existingIdea.executionBriefs,
+		...(briefInvalidation ?? {}),
 	}));
 	const saved = await context.save(updatedState, context.pluginConfig);
 
