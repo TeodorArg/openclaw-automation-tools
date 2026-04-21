@@ -145,6 +145,7 @@ Its bounded ownership is:
 - run or verify the package verification minimum
 - preserve manual ClawHub operator instructions in package README and tracked release notes when they exist
 - generate `docs/releases/<package-slug>/vX.Y.Z.clawhub.md` when the release needs manual ClawHub publication so the UI fields can be filled without reconstructing source metadata
+- review release-facing marketing description and changelog quality before calling the package release-ready, especially for manual ClawHub publication, so README copy, package metadata, tracked release notes, and worksheet text stay aligned and operator-ready
 - prepare the short Markdown text used for GitHub Release first, plus manual ClawHub release or archive upload flows when explicitly needed
 - draft the tracked release note file under `docs/releases/<package-slug>/`
 
@@ -198,15 +199,20 @@ That note should be the copy-paste source for the release UI or operator log and
 - verification evidence summary
 - source commit, branch, or PR reference when known
 - publish target and operator notes
+- evidence that marketing description and changelog copy were reviewed for this release and are specific to the shipped change set
 
 The companion worksheet should include at minimum:
+- exact manual ClawHub release UI fields only
+- package type
+- package name
+- display name
+- owner/publisher
+- changelog text
 - source repo
 - source commit
 - source ref
 - source path
-- publish flow
-- owner/publisher
-- operator notes
+- version
 
 Keep a package release index at:
 - `docs/releases/<package-slug>/README.md`

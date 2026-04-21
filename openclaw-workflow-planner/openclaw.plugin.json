@@ -1,8 +1,8 @@
 {
 	"id": "openclaw-workflow-planner",
 	"name": "OpenClaw Workflow Planner",
-	"description": "Planning-first OpenClaw workflow plugin with bundled role skills, a file-backed WORKFLOW_PLAN.md state surface, and typed actions for idea creation, research attachment, idea gate, lane-1 design preparation and retrieval, plan lifecycle, task tracking, snapshots, and implementation handoff.",
-	"version": "0.1.0",
+	"description": "OpenClaw workflow planner for turning rough requests into accepted plans, tracked tasks, and implementation-ready handoff, backed by a single readable WORKFLOW_PLAN.md source of truth.",
+	"version": "0.1.1",
 	"skills": ["./skills"],
 	"configSchema": {
 		"type": "object",
