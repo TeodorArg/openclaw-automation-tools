@@ -4,12 +4,13 @@ Release records for `openclaw-url-tailwind-scaffold` live in this directory.
 
 Tracked public release records:
 
-- `v0.1.0.md`
+- [v0.1.0](./v0.1.0.md)
+- [v0.1.0 ClawHub worksheet](./v0.1.0.clawhub.md)
 
 Use this package ledger for:
 - one tracked Markdown note per released version
 - package-qualified tag and GitHub Release traceability
-- optional companion ClawHub worksheet files when manual publication is requested
+- one companion ClawHub worksheet file per released version
 
 Current shipped package boundary:
 - package: `@openclaw/openclaw-url-tailwind-scaffold`

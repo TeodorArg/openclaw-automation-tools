@@ -98,17 +98,19 @@ The live slice stays bounded to calm warning copy, visible early warning, compac
 Its runtime layout is currently grouped under `src/runtime/config/`, `src/runtime/core/`, `src/runtime/hooks/`, `src/runtime/report/`, `src/runtime/state/`, and `src/runtime/text/`, with `src/status-tool.ts` as the package-local optional tool entry and flat default tests under `src/test/`.
 
 `openclaw-url-tailwind-scaffold/` is the active URL-analysis plugin-plus-skill package in this repo.
-Its shipped surface centers on one typed tool and one bundled skill:
+Its shipped surface centers on one typed tool and two bundled skills:
 - `url_tailwind_scaffold_action`
 - bundled skill `openclaw-url-tailwind-scaffold`
+- bundled skill `openclaw-url-tailwind-scaffold-orchestrator`
 - working action `analyze_reference_page`
 
 Its current shipped slice covers:
-- reference-URL-driven scaffold synthesis without live page fetch or inspection
+- bounded static fetch-backed acquisition for publicly reachable HTML pages
 - bounded declared acquisition metadata from the request contract
 - normalized shell regions for `app-shell`, `sidebar`, `header`, `content`, and `footer`
+- source-backed shell landmark extraction for matched static DOM regions when usable fetched HTML exists
 - explicit synthetic `sourceBacked` versus `inferred` status fields derived from request mode
-- Tailwind CSS v4 scaffold summary output with a generated file-tree suggestion
+- synthesized Tailwind CSS v4 token and utility candidates plus either a scaffold summary or structured `page_contract` output
 - raw slash-command dispatch through either a plain URL or a small JSON payload
 
 Its runtime layout is currently grouped under `src/runtime/analysis/` and `src/runtime/contract/`, with flat default tests under `src/test/`.
@@ -156,8 +158,8 @@ For a same-machine `Docker Gateway on macOS -> macOS host node -> local plugin p
 2. set node-host auth with `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` for local-mode node install/run
 3. approve the local CLI/operator pairing request on the gateway
 4. install and connect the dedicated host node
-5. build and install `openclaw-host-git-workflow`
-6. enable the plugin and set `nodeSelector` when multiple eligible nodes exist
+5. build and install the target package, starting with `openclaw-host-git-workflow` when you need host-backed git/GitHub execution
+6. enable the installed plugin and set `nodeSelector` when multiple eligible nodes exist
 
 Token auth and pairing approval are separate gates in this flow. A valid token does not replace operator pairing approval, and host-node pairing can still require its own approval step after install/run.
 
@@ -260,5 +262,5 @@ For publish workflow details and the manual pre-publish gate beyond CI minimum, 
 - Repo-local host-lane boundary, node identity, and source-of-truth guidance now live directly in `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md` plus the relevant live package docs.
 - Repo-local publish/preflight guidance now lives in `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`.
 - The live plugin packages follow the broader local package canon, including domain-grouped runtime modules under `src/runtime/`, flat default tests under `src/test/`, required package docs/metadata, and package `files` allowlists that keep shipped `dist/**` artifacts in packed tarballs despite the repo-root `dist/` ignore; package-local `.npmignore` is optional rather than a required baseline.
-- In Docker-gateway setups, gateway token configuration and device pairing are separate gates; a valid `gateway.remote.token` does not replace CLI/operator pairing approval.
+- In Docker-gateway setups, node-host auth and device pairing are separate gates; a valid `OPENCLAW_GATEWAY_TOKEN` or `gateway.auth.token` does not replace CLI/operator pairing approval.
 - On macOS, config hardening can reduce browser-related node surface, but a generic `node` host can still trigger unrelated TCC prompts unless you isolate it by user/session/VM/host.

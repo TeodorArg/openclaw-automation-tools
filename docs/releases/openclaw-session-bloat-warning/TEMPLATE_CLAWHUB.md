@@ -3,6 +3,7 @@
 - Package: `@openclaw/openclaw-session-bloat-warning`
 - Slug: `openclaw-session-bloat-warning`
 - Version: `X.Y.Z`
+- Package type: `Code plugin`
 - Publish flow: `manual ClawHub archive upload` or `clawhub package publish`
 - Tarball file: `openclaw-session-bloat-warning/<tarball-name>.tgz`
 - Source repo: `TeodorArg/openclaw-automation-tools`
@@ -10,8 +11,9 @@
 - Source ref:
 - Source path: `openclaw-session-bloat-warning`
 - Owner / publisher:
-- ClawHub package name: `@openclaw/openclaw-session-bloat-warning`
-- Display name: `OpenClaw Session Bloat Warning`
+- Package name: `@openclaw/openclaw-session-bloat-warning`
+- Display name: `Session Health Warning: Stay Sharp in Long AI Work`
+- Changelog text:
 
 ## Release Summary
 
@@ -20,8 +22,9 @@
 ## UI Fields
 
 - Name: `@openclaw/openclaw-session-bloat-warning`
-- Display name: `OpenClaw Session Bloat Warning`
+- Display name: `Session Health Warning: Stay Sharp in Long AI Work`
 - Version: `X.Y.Z`
+- Changelog:
 - Source repo: `TeodorArg/openclaw-automation-tools`
 - Source commit:
 - Source ref:
