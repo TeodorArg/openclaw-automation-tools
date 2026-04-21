@@ -1,7 +1,6 @@
-*
-!dist/**
-!openclaw.plugin.json
-!skills/**
-!README.md
-!LICENSE
-!package.json
+node_modules
+.pack
+.npm-cache
+src
+*.tsbuildinfo
+openclaw-openclaw-url-tailwind-scaffold-*.tgz

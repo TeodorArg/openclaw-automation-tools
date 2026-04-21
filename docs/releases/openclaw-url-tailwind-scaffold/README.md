@@ -2,6 +2,10 @@
 
 Release records for `openclaw-url-tailwind-scaffold` live in this directory.
 
+Tracked public release records:
+
+- `v0.1.0.md`
+
 Use this package ledger for:
 - one tracked Markdown note per released version
 - package-qualified tag and GitHub Release traceability
