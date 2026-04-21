@@ -8,8 +8,11 @@
 - Tag commit:
 - GitHub Release URL:
 - GitHub notes mode: `tracked file only` or `generated + mirrored`
-- Publish flow: `github-only`, `manual ClawHub archive upload`, or `clawhub package publish`
-- ClawHub worksheet:
+- Publish flow: `github release`, `manual ClawHub archive upload`, or `clawhub package publish`
+- Companion worksheet path:
+- Archive path:
+- Marketing description review:
+- Changelog quality review:
 - Source commit:
 - PR:
 

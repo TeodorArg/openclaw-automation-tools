@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -29,9 +30,15 @@ if (!canonPackages.includes(pkgSlug)) {
 const packageDir = resolve(root, pkgSlug);
 const packageJsonPath = resolve(packageDir, "package.json");
 const pluginJsonPath = resolve(packageDir, "openclaw.plugin.json");
+const releaseDir = resolve(root, "docs", "releases", pkgSlug);
+const releaseIndexPath = resolve(releaseDir, "README.md");
 
 if (!existsSync(packageJsonPath) || !existsSync(pluginJsonPath)) {
 	fail(`Missing manifest files for package "${pkgSlug}".`);
+}
+
+if (!existsSync(releaseIndexPath)) {
+	fail(`Missing release ledger README for package "${pkgSlug}".`);
 }
 
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
@@ -43,7 +50,6 @@ if (typeof currentVersion !== "string" || typeof pluginJson.version !== "string"
 }
 
 const targetVersion = resolveTargetVersion(currentVersion, args.version, args.bump);
-const releaseDir = resolve(root, "docs", "releases", pkgSlug);
 const releasePath = resolve(releaseDir, `v${targetVersion}.md`);
 if (existsSync(releasePath)) {
 	fail(`Release note file already exists: ${releasePath}`);
@@ -55,12 +61,24 @@ const prRef = args.pr ?? "";
 const packageName = typeof packageJson.name === "string" ? packageJson.name : "";
 const displayName = typeof pluginJson.name === "string" ? pluginJson.name : packageName;
 const sourceRepo = resolveSourceRepo(packageJson.repository);
-const needsClawHubWorksheet = /clawhub/iu.test(publishFlow);
 const usesClawHubCliPublish = /clawhub package publish/iu.test(publishFlow);
 const ownerOrPublisher = resolveOwnerOrPublisher(packageJson.author, sourceRepo);
+const tarballFile = buildTarballFileName(packageName, targetVersion);
+const archiveRelativePath = `${pkgSlug}/${tarballFile}`;
+const archivePath = resolve(root, archiveRelativePath);
+const worksheetRelativePath = `docs/releases/${pkgSlug}/v${targetVersion}.clawhub.md`;
+const clawhubWorksheetPath = resolve(releaseDir, `v${targetVersion}.clawhub.md`);
 
 if (!packageName) {
 	fail(`Missing package.json name for package "${pkgSlug}".`);
+}
+
+if (existsSync(clawhubWorksheetPath)) {
+	fail(`ClawHub worksheet file already exists: ${clawhubWorksheetPath}`);
+}
+
+if (existsSync(archivePath)) {
+	fail(`Archive file already exists: ${archivePath}`);
 }
 
 const releaseBody = buildReleaseNote({
@@ -70,28 +88,26 @@ const releaseBody = buildReleaseNote({
 	releaseDate,
 	tagName,
 	publishFlow,
-	needsClawHubWorksheet,
 	usesClawHubCliPublish,
-	worksheetPath: needsClawHubWorksheet ? `docs/releases/${pkgSlug}/v${targetVersion}.clawhub.md` : "not requested",
+	worksheetPath: worksheetRelativePath,
+	archivePath: archiveRelativePath,
 	sourceCommit,
 	prRef,
 	summary,
 });
-const clawhubWorksheetPath = resolve(releaseDir, `v${targetVersion}.clawhub.md`);
-const clawhubWorksheetBody = needsClawHubWorksheet
-	? buildClawHubWorksheet({
-			packageName,
-			displayName,
-			pkgSlug,
-			targetVersion,
-			tagName,
-			publishFlow,
-			sourceCommit,
-			sourceRepo,
-			ownerOrPublisher,
-			summary,
-		})
-	: null;
+const clawhubWorksheetBody = buildClawHubWorksheet({
+	packageName,
+	displayName,
+	pkgSlug,
+	targetVersion,
+	tagName,
+	publishFlow,
+	tarballFile: archiveRelativePath,
+	sourceCommit,
+	sourceRepo,
+	ownerOrPublisher,
+	summary,
+});
 
 const updatesVersionFiles = targetVersion !== currentVersion;
 const changedFiles = updatesVersionFiles
@@ -99,9 +115,10 @@ const changedFiles = updatesVersionFiles
 			packageJsonPath,
 			pluginJsonPath,
 			releasePath,
-			...(needsClawHubWorksheet ? [clawhubWorksheetPath] : []),
+			clawhubWorksheetPath,
+			archivePath,
 		]
-	: [releasePath, ...(needsClawHubWorksheet ? [clawhubWorksheetPath] : [])];
+	: [releasePath, clawhubWorksheetPath, archivePath];
 
 if (dryRun) {
 	printSummary({
@@ -109,6 +126,7 @@ if (dryRun) {
 		currentVersion,
 		targetVersion,
 		releasePath,
+		archiveRelativePath,
 		changedFiles,
 		dryRun,
 	});
@@ -122,16 +140,16 @@ if (updatesVersionFiles) {
 	writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, "\t")}\n`);
 	writeFileSync(pluginJsonPath, `${JSON.stringify(pluginJson, null, "\t")}\n`);
 }
+packReleaseArchive({ packageDir, archivePath, expectedTarballFile: tarballFile });
 writeFileSync(releasePath, releaseBody);
-if (clawhubWorksheetBody) {
-	writeFileSync(clawhubWorksheetPath, clawhubWorksheetBody);
-}
+writeFileSync(clawhubWorksheetPath, clawhubWorksheetBody);
 
 printSummary({
 	pkgSlug,
 	currentVersion,
 	targetVersion,
 	releasePath,
+	archiveRelativePath,
 	changedFiles,
 	dryRun,
 });
@@ -210,9 +228,9 @@ function buildReleaseNote({
 	releaseDate,
 	tagName,
 	publishFlow,
-	needsClawHubWorksheet,
 	usesClawHubCliPublish,
 	worksheetPath,
+	archivePath,
 	sourceCommit,
 	prRef,
 	summary,
@@ -221,12 +239,7 @@ function buildReleaseNote({
 	if (usesClawHubCliPublish) {
 		verificationLines.push(`- \`clawhub package publish ./${pkgSlug} --dry-run\``);
 	}
-	const operatorCopyTarget = needsClawHubWorksheet
-		? "GitHub Release or ClawHub"
-		: "GitHub Release";
-	const publishResultClawHub = needsClawHubWorksheet
-		? "- ClawHub publish status:"
-		: "- ClawHub publish status: not requested";
+	const operatorCopyTarget = "GitHub Release or ClawHub";
 
 	return `# ${pkgSlug} v${targetVersion}
 
@@ -239,7 +252,10 @@ function buildReleaseNote({
 - GitHub Release URL:
 - GitHub notes mode: \`tracked file only\`
 - Publish flow: \`${publishFlow}\`
-- ClawHub worksheet: ${worksheetPath}
+- Companion worksheet path: \`${worksheetPath}\`
+- Archive path: \`${archivePath}\`
+- Marketing description review:
+- Changelog quality review:
 - Source commit: ${sourceCommit}
 - PR: ${prRef}
 
@@ -264,7 +280,7 @@ ${pkgSlug} v${targetVersion}
 ## Publish Result
 
 - GitHub Release status:
-${publishResultClawHub}
+- ClawHub publish status:
 - Operator notes:
 `;
 }
@@ -275,31 +291,93 @@ function buildClawHubWorksheet({
 	pkgSlug,
 	targetVersion,
 	tagName,
+	publishFlow,
+	tarballFile,
 	sourceCommit,
 	sourceRepo,
 	ownerOrPublisher,
 	summary,
 }) {
-	return `# ${pkgSlug} v${targetVersion} ClawHub Release Fields
+	return `# ${pkgSlug} v${targetVersion} ClawHub Worksheet
 
-- Package type: \`Code plugin\`
-- Package name: \`${packageName}\`
-- Display name: \`${displayName}\`
-- Owner / publisher: \`${ownerOrPublisher}\`
+- Package: \`${packageName}\`
+- Slug: \`${pkgSlug}\`
 - Version: \`${targetVersion}\`
-- Changelog: \`${summary}\`
+- Package type: \`Code plugin\`
+- Publish flow: \`${publishFlow}\`
+- Tarball file: \`${tarballFile}\`
 - Source repo: \`${sourceRepo}\`
 - Source commit: ${sourceCommit}
 - Source ref: \`${tagName}\`
 - Source path: \`${pkgSlug}\`
+- Owner / publisher: \`${ownerOrPublisher}\`
+- Package name: \`${packageName}\`
+- Display name: \`${displayName}\`
+- Changelog text: \`${summary}\`
+
+## Release Summary
+
+- ${summary}
+
+## UI Fields
+
+- Package type: \`Code plugin\`
+- Name: \`${packageName}\`
+- Display name: \`${displayName}\`
+- Version: \`${targetVersion}\`
+- Changelog:
+
+\`\`\`text
+${summary}
+\`\`\`
+
+- Source repo: \`${sourceRepo}\`
+- Source commit: ${sourceCommit}
+- Source ref: \`${tagName}\`
+- Source path: \`${pkgSlug}\`
+
+## Operator Notes
+
+- Keep the tarball in \`${pkgSlug}/\` as the canonical handoff location for this release.
+- Record the final GitHub Release URL and ClawHub publish result back in \`v${targetVersion}.md\`.
 `;
 }
 
-function printSummary({ pkgSlug, currentVersion, targetVersion, releasePath, changedFiles, dryRun }) {
+function buildTarballFileName(packageName, version) {
+	return `${packageName.replace(/^@/u, "").replace(/\//gu, "-")}-${version}.tgz`;
+}
+
+function packReleaseArchive({ packageDir, archivePath, expectedTarballFile }) {
+	const output = execFileSync("npm", ["pack"], {
+		cwd: packageDir,
+		encoding: "utf8",
+		env: {
+			...process.env,
+			npm_config_cache: "/tmp/npm-cache",
+		},
+	});
+	const packedFile = output
+		.trim()
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.at(-1);
+
+	if (packedFile !== expectedTarballFile) {
+		fail(`npm pack returned "${packedFile ?? "<empty>"}", expected "${expectedTarballFile}".`);
+	}
+
+	if (!existsSync(archivePath)) {
+		fail(`Expected archive file was not created: ${archivePath}`);
+	}
+}
+
+function printSummary({ pkgSlug, currentVersion, targetVersion, releasePath, archiveRelativePath, changedFiles, dryRun }) {
 	const prefix = dryRun ? "DRY RUN" : "UPDATED";
 	console.log(`${prefix}: ${pkgSlug}`);
 	console.log(`Version: ${currentVersion} -> ${targetVersion}`);
 	console.log(`Release note: ${releasePath}`);
+	console.log(`Archive: ${archiveRelativePath}`);
 	console.log("Files:");
 	for (const file of changedFiles) {
 		console.log(`- ${file}`);

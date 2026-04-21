@@ -9,7 +9,8 @@
 - GitHub Release URL:
 - GitHub notes mode: `tracked file only` or `generated + mirrored`
 - Publish flow: `github release`, `manual ClawHub archive upload`, or `clawhub package publish`
-- ClawHub worksheet:
+- Companion worksheet path:
+- Archive path:
 - Marketing description review:
 - Changelog quality review:
 - Source commit:
