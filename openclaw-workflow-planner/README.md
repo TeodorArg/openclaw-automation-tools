@@ -2,13 +2,13 @@
 
 The execution layer between prompt and delivery.
 
-`@openclaw/openclaw-workflow-planner` turns vague work into an executable OpenClaw workflow with explicit decisions, lane-1 design, structured plans, tracked tasks, and a clean implementation handoff. It is built for work that matters enough to need continuity, clarity, and a real path from idea to finished outcome.
+`@openclaw/openclaw-workflow-planner` turns rough requests into accepted plans, tracked tasks, and implementation-ready handoff in one readable `WORKFLOW_PLAN.md` source of truth. It is built for work that matters enough to need continuity, clarity, and a real path from idea to finished outcome.
 
-This is not just another planner or task list. It is the control layer that keeps long-running AI-assisted work from dissolving into chat history, scratch notes, and half-remembered decisions. Create an idea, attach research, run an Idea Gate, prepare lane-1 design, generate a structured plan, preserve manual task edits safely, hand off an implementation brief, and close the slice with an explicit outcome.
+This is not just another planner or task list. It is the execution backbone that keeps long-running AI-assisted work from dissolving into chat history, scratch notes, and half-remembered decisions. Create an idea, attach research, run an Idea Gate, prepare lane-1 design, generate a structured plan, preserve manual task edits safely, hand off an implementation brief, and close the slice with an explicit outcome.
 
 The package exists for work that is too important, too multi-step, or too easy to lose in conversation. It persists one readable planner file and rebuilds structured state from that source of truth, so planning stays inspectable for humans, durable across sessions, and usable by runtime tools without turning execution state into opaque hidden metadata.
 
-Once an idea is accepted, the planner keeps plan state, task state, and current implementation brief state coherent enough that a session, helper skill, or follow-on operator can continue without guessing what is approved, what is open, or what done should mean. That makes it a practical execution backbone for serious OpenClaw delivery, not just a drafting surface.
+Once an idea is accepted, the planner keeps plan state, task state, and current implementation brief state coherent enough that a session, helper skill, or follow-on operator can continue without guessing what is approved, what is open, or what done should mean. That makes it a practical execution backbone for serious OpenClaw delivery rather than just a drafting surface.
 
 ## Why install this
 

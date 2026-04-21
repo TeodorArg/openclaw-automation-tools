@@ -10,6 +10,8 @@
 - GitHub notes mode: `tracked file only` or `generated + mirrored`
 - Publish flow: `github release`, `manual ClawHub archive upload`, or `clawhub package publish`
 - ClawHub worksheet:
+- Marketing description review:
+- Changelog quality review:
 - Source commit:
 - PR:
 

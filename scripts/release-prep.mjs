@@ -56,6 +56,8 @@ const packageName = typeof packageJson.name === "string" ? packageJson.name : ""
 const displayName = typeof pluginJson.name === "string" ? pluginJson.name : packageName;
 const sourceRepo = resolveSourceRepo(packageJson.repository);
 const needsClawHubWorksheet = /clawhub/iu.test(publishFlow);
+const usesClawHubCliPublish = /clawhub package publish/iu.test(publishFlow);
+const ownerOrPublisher = resolveOwnerOrPublisher(packageJson.author, sourceRepo);
 
 if (!packageName) {
 	fail(`Missing package.json name for package "${pkgSlug}".`);
@@ -69,6 +71,7 @@ const releaseBody = buildReleaseNote({
 	tagName,
 	publishFlow,
 	needsClawHubWorksheet,
+	usesClawHubCliPublish,
 	worksheetPath: needsClawHubWorksheet ? `docs/releases/${pkgSlug}/v${targetVersion}.clawhub.md` : "not requested",
 	sourceCommit,
 	prRef,
@@ -85,6 +88,7 @@ const clawhubWorksheetBody = needsClawHubWorksheet
 			publishFlow,
 			sourceCommit,
 			sourceRepo,
+			ownerOrPublisher,
 			summary,
 		})
 	: null;
@@ -207,13 +211,14 @@ function buildReleaseNote({
 	tagName,
 	publishFlow,
 	needsClawHubWorksheet,
+	usesClawHubCliPublish,
 	worksheetPath,
 	sourceCommit,
 	prRef,
 	summary,
 }) {
 	const verificationLines = ["- `pnpm check`"];
-	if (needsClawHubWorksheet) {
+	if (usesClawHubCliPublish) {
 		verificationLines.push(`- \`clawhub package publish ./${pkgSlug} --dry-run\``);
 	}
 	const operatorCopyTarget = needsClawHubWorksheet
@@ -270,45 +275,23 @@ function buildClawHubWorksheet({
 	pkgSlug,
 	targetVersion,
 	tagName,
-	publishFlow,
 	sourceCommit,
 	sourceRepo,
+	ownerOrPublisher,
 	summary,
 }) {
-	return `# ${pkgSlug} v${targetVersion} ClawHub Worksheet
+	return `# ${pkgSlug} v${targetVersion} ClawHub Release Fields
 
-- Package: \`${packageName}\`
-- Slug: \`${pkgSlug}\`
+- Package type: \`Code plugin\`
+- Package name: \`${packageName}\`
+- Display name: \`${displayName}\`
+- Owner / publisher: \`${ownerOrPublisher}\`
 - Version: \`${targetVersion}\`
-- Publish flow: \`${publishFlow}\`
-- Tarball file:
+- Changelog: \`${summary}\`
 - Source repo: \`${sourceRepo}\`
 - Source commit: ${sourceCommit}
 - Source ref: \`${tagName}\`
 - Source path: \`${pkgSlug}\`
-- Owner / publisher:
-- ClawHub package name: \`${packageName}\`
-- Display name: \`${displayName}\`
-
-## Release Summary
-
-- ${summary}
-
-## UI Fields
-
-- Name: \`${packageName}\`
-- Display name: \`${displayName}\`
-- Version: \`${targetVersion}\`
-- Source repo: \`${sourceRepo}\`
-- Source commit: ${sourceCommit}
-- Source ref: \`${tagName}\`
-- Source path: \`${pkgSlug}\`
-
-## Operator Notes
-
-- Verify the published package matches version \`${targetVersion}\`.
-- Keep the GitHub Release URL and the package-qualified tag aligned to the same version.
-- Record the final ClawHub publish result back in \`v${targetVersion}.md\`.
 `;
 }
 
@@ -338,6 +321,14 @@ function resolveSourceRepo(repository) {
 		}
 	}
 	return "TeodorArg/openclaw-automation-tools";
+}
+
+function resolveOwnerOrPublisher(author, sourceRepo) {
+	if (typeof author === "string" && author.trim().length > 0) {
+		return author.trim();
+	}
+	const [owner] = sourceRepo.split("/");
+	return owner || "TeodorArg";
 }
 
 function fail(message) {
