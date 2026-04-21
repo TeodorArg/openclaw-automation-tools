@@ -8,15 +8,17 @@ Release storage contract:
 - keep a package index at `docs/releases/<package-slug>/README.md`
 - keep one small Markdown note per released version at `docs/releases/<package-slug>/vX.Y.Z.md`
 - use that per-version file as the canonical operator copy-paste source for GitHub Release text and the tracked release record for the package version
-- when a release needs manual ClawHub publication, also keep a companion worksheet file at `docs/releases/<package-slug>/vX.Y.Z.clawhub.md`
+- keep a companion worksheet file at `docs/releases/<package-slug>/vX.Y.Z.clawhub.md` for every plugin release
+- keep a fresh release archive in the package directory for every plugin release, using the package-qualified tarball built from the release state
+- package-local templates such as `TEMPLATE.md` and `TEMPLATE_CLAWHUB.md` may already exist, but they do not replace generating both versioned files for each release
 - keep transient release prep checklists in `.local-planning/`, not in `docs/releases/`
 - use package-qualified tags in the form `<package-slug>/vX.Y.Z`
 
 Release boundary:
 
 - a merged PR is not a package release by itself
-- for this repo, the default public release closes when the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, and the corresponding `vX.Y.Z.md` record is stored
-- when a release also needs manual ClawHub publication support, do not treat the task as closed until the tracked release artifacts are backfilled with the real GitHub Release URL and any required tag-backed source fields such as `Source commit` and `Source ref`
+- for this repo, the default public release closes when the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, the fresh release archive exists in the package directory, and the corresponding `vX.Y.Z.md` record is stored
+- do not treat the release task as closed until both tracked release artifacts are backfilled with the real GitHub Release URL and any required tag-backed source fields such as `Source commit` and `Source ref`, and the fresh release archive path is recorded
 - ClawHub publish or manual archive upload is optional by default and remains a separate operator step unless explicitly requested for that release
 - GitHub Releases are public release records for this repo even though ClawHub itself does not require them for package publication
 
@@ -33,10 +35,11 @@ Required fields for each `docs/releases/<package-slug>/vX.Y.Z.md`:
 - marketing description review status
 - changelog quality review status
 - verification checklist
+- archive path
 - publish result
-- if manual ClawHub publication was requested, companion worksheet path
+- companion worksheet path
 
-Required fields for each optional `docs/releases/<package-slug>/vX.Y.Z.clawhub.md` worksheet:
+Required fields for each `docs/releases/<package-slug>/vX.Y.Z.clawhub.md` worksheet:
 
 - package slug
 - package version
@@ -49,6 +52,7 @@ Required fields for each optional `docs/releases/<package-slug>/vX.Y.Z.clawhub.m
 - source commit
 - source ref
 - source path
+- tarball file
 
 GitHub release notes policy:
 

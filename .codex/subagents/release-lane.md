@@ -14,10 +14,11 @@ Allowed work:
 - run the repo-local release-prep automation for one package at a time
 - run or coordinate the package verification minimum
 - keep package README and tracked release notes usable for manual ClawHub release or archive upload workflows
-- generate a companion ClawHub publish worksheet file with fill-in UI fields when the user wants manual ClawHub publication
+- generate both versioned release artifacts for every plugin release: the tracked `vX.Y.Z.md` note and the companion `vX.Y.Z.clawhub.md` worksheet
+- build a fresh package archive from the release state and keep it in the package directory for ClawHub handoff
 - review and tighten release-facing marketing description and changelog quality before calling a release ready
 - align package README top copy, package metadata description, tracked `vX.Y.Z.md` summary, and any manual ClawHub worksheet text so listing-facing copy does not drift
-- do not treat a release task as closed until the GitHub Release exists and any required tracked release files are backfilled with real tag-backed values such as GitHub Release URL, `Source commit`, and `Source ref`
+- do not treat a release task as closed until the GitHub Release exists, the fresh package archive is built, and required tracked release files are backfilled with real tag-backed values such as GitHub Release URL, `Source commit`, and `Source ref`
 - prepare short Markdown copy for GitHub Release first, with manual ClawHub operator copy preserved when relevant
 - write or update tracked release records under `docs/releases/<package-slug>/`
 - prepare the package-qualified tag plan for `github-release-lane`
