@@ -2,6 +2,7 @@
 
 Tracked public release records:
 
+- `v0.1.3.md`
 - `v0.1.2.md`
 - `v0.1.1.md`
 
