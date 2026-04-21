@@ -9,9 +9,9 @@ import { createCanonStatusTool } from "./canon-status-tool.js";
 
 export default definePluginEntry({
 	id: "openclaw-canon",
-	name: "OpenClaw Canon",
+	name: "Workspace Truth Guard for OpenClaw",
 	description:
-		"Operational canon plugin for status, bounded diagnosis, and preview-first memory fixes.",
+		"Keep docs, memory, and repo truth aligned in long-running OpenClaw work. Diagnose canon drift first, then preview and apply bounded fixes for supported memory and sync issues.",
 	register(api: OpenClawPluginApi) {
 		api.registerTool(
 			() =>

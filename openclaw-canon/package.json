@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-canon",
 	"version": "0.1.0",
-	"description": "Operational canon plugin for OpenClaw with typed status, doctor, and preview-first memory and bounded sync fix tools plus bundled canon-memory-hygiene and canon-source-of-truth-fix skills.",
+	"description": "Keep docs, memory, and repo truth aligned in long-running OpenClaw work. Diagnose canon drift first, then preview and apply bounded fixes for supported memory and sync issues.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
