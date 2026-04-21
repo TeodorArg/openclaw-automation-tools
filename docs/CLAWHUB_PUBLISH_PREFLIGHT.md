@@ -36,6 +36,7 @@ URL-tailwind scaffold package entrypoints:
 - bundled skill `openclaw-url-tailwind-scaffold`
 - typed tool `url_tailwind_scaffold_action`
 - working action `analyze_reference_page`
+- in our custom skill host, the canonical user-facing invocation is `/skill openclaw-url-tailwind-scaffold <url-or-compact-json>`
 - static fetch-backed acquisition for publicly reachable HTML pages is the only live source-backed mode in the current slice
 - bounded static DOM/island extraction is available for shell landmarks when usable fetched HTML exists
 - unmatched shell regions remain inferred placeholders when no confident static DOM landmark is found
@@ -252,7 +253,7 @@ Current planner package coverage to publish:
 - explicit `Idea Gate`
 - accepted plan create and refresh
 - plan snapshot and idea retrieval
-- manual task tracking
+- manual task add / done / remove / reopen tracking
 - bounded implementation brief handoff
 - idea closure
 
@@ -268,6 +269,7 @@ Current session-bloat warning package coverage to publish:
 - observe-only runtime signal capture on `llm_input` and `llm_output`
 - visible early-warning delivery on `before_agent_reply`
 - calm localized pre/post compaction and early-warning copy
+- timeout/lane-pressure/no-reply runtime-risk signal reuse
 - plugin-owned per-session dedupe and cooldown state
 - bundled `session-bloat-warning` instruction layer
 

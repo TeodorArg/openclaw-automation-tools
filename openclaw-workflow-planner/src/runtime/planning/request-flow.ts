@@ -83,7 +83,10 @@ export async function handleIdeaCreate(
 		createdAt: persistedIdea?.createdAt ?? now,
 		status: resetLifecycle ? "draft" : (persistedIdea?.status ?? "draft"),
 		notes: normalizeOptionalText(params.notes) ?? persistedIdea?.notes,
-		links: params.links?.map((entry) => requireNonEmptyText(entry, "links")),
+		links:
+			params.links !== undefined
+				? params.links.map((entry) => requireNonEmptyText(entry, "links"))
+				: persistedIdea?.links,
 		ownerSurface:
 			normalizeOptionalText(params.ownerSurface) ?? persistedIdea?.ownerSurface,
 		research: resetLifecycle ? undefined : persistedIdea?.research,

@@ -7,7 +7,7 @@ export default definePluginEntry({
 	id: "openclaw-session-bloat-warning",
 	name: "OpenClaw Session Bloat Warning",
 	description:
-		"Compaction-surface warning plugin with calm pre/post compaction notices and early session-heaviness tracking.",
+		"Compaction-surface warning plugin with calm pre/post compaction notices and early session-heaviness tracking for timeout_risk, lane_pressure, and no_reply_streak.",
 	register(api: OpenClawPluginApi) {
 		const pluginConfig = resolvePluginConfig(api.pluginConfig);
 		const hooks = createCompactionWarningHooks(pluginConfig);

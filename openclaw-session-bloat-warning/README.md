@@ -33,7 +33,7 @@ Implemented surfaces:
 - `before_compaction`, writable warning delivery via `event.messages`
 - `after_compaction`, writable continuation note via `event.messages`
 - `llm_input`, observe-only signal capture
-- `llm_output`, observe-only token and runtime-risk signal capture
+- `llm_output`, observe-only token and runtime-risk signal capture for `timeout_risk`, `lane_pressure`, and `no_reply_streak`
 - `before_agent_reply`, visible early-warning delivery as a synthetic reply
 
 The plugin provides:
@@ -139,7 +139,7 @@ Supported config keys:
   persisted counters/state
 - early-warning observation is gathered on observe-only hooks and delivered only
   through `before_agent_reply`
-- timeout-risk and lane-pressure heuristics can be derived from observed output/error text and reused on the next visible warning delivery
+- `timeout_risk`, `lane_pressure`, and `no_reply_streak` heuristics can be derived from observed output/error text and reused on the next visible warning delivery
 - elevated heaviness classification uses the configured `warningCharThreshold` and `warningMessageCountThreshold` directly, while the earlier `earlyWarning*` thresholds gate warning-level delivery
 - token-pressure classification now uses the lower of the absolute token thresholds and the ratio-derived thresholds from `contextWindowTokens`, so warning behavior can scale to smaller or larger model windows
 - early-warning cooldown recovery is based on real observed turn progression,
@@ -158,7 +158,7 @@ Supported config keys:
   transcript compaction artifact owned by this package
 - visible early warning is a synthetic reply surface, not prompt mutation
 - percent-style token pressure is still approximate because it depends on observed `llm_output.usage.input` and a configured `contextWindowTokens`, not a live provider-reported max window per request
-- timeout and lane-pressure detection remains heuristic and depends on observable output/error text reaching plugin hooks
+- `timeout_risk`, `lane_pressure`, and `no_reply_streak` detection remains heuristic and depends on observable output/error text reaching plugin hooks
 
 ## Verification
 

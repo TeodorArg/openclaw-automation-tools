@@ -80,6 +80,16 @@ export type WaitForChecksResult = PushPreflight & {
 	stderr: string;
 };
 
+type GhPrCheckBucket = "pass" | "fail" | "pending" | "skipping" | "cancel";
+
+type GhPrCheckRecord = {
+	bucket?: GhPrCheckBucket;
+	state?: string;
+	name?: string;
+	workflow?: string;
+	completedAt?: string | null;
+};
+
 export type MergePrResult = PushPreflight & {
 	status: "merged";
 	prNumber: number;
@@ -125,6 +135,147 @@ function createLocalCommandRunner(): HostCommandRunner {
 			return runBinary(command, args, options.cwd);
 		},
 	};
+}
+
+function sleep(milliseconds: number): Promise<void> {
+	return new Promise((resolve) => {
+		setTimeout(resolve, milliseconds);
+	});
+}
+
+function parseRequiredChecksPayload(stdout: string): GhPrCheckRecord[] {
+	const trimmed = stdout.trim();
+	if (trimmed === "") {
+		return [];
+	}
+
+	const parsed = JSON.parse(trimmed) as unknown;
+	if (!Array.isArray(parsed)) {
+		throw new Error("gh pr checks returned an invalid JSON payload.");
+	}
+
+	return parsed as GhPrCheckRecord[];
+}
+
+function extractExitCode(error: unknown): number | null {
+	if (!error || typeof error !== "object") {
+		return null;
+	}
+
+	const candidate = error as { exitCode?: unknown; code?: unknown };
+	if (typeof candidate.exitCode === "number") {
+		return candidate.exitCode;
+	}
+
+	if (typeof candidate.code === "number") {
+		return candidate.code;
+	}
+
+	if (typeof candidate.code === "string") {
+		const parsed = Number(candidate.code);
+		return Number.isNaN(parsed) ? null : parsed;
+	}
+
+	return null;
+}
+
+function readCapturedText(error: unknown, key: "stdout" | "stderr"): string {
+	if (!error || typeof error !== "object") {
+		return "";
+	}
+
+	const value = (error as Record<string, unknown>)[key];
+	return typeof value === "string" ? value : "";
+}
+
+function classifyRequiredChecks(checks: GhPrCheckRecord[]) {
+	if (checks.length === 0) {
+		return {
+			status: "empty" as const,
+			stderr: "No required checks were configured for this PR.",
+		};
+	}
+
+	if (checks.some((check) => check.bucket === "pending")) {
+		return {
+			status: "pending" as const,
+			stderr: "",
+		};
+	}
+
+	if (
+		checks.every(
+			(check) => check.bucket === "pass" || check.bucket === "skipping",
+		)
+	) {
+		return {
+			status: "passed" as const,
+			stderr: "",
+		};
+	}
+
+	const failingChecks = checks
+		.filter(
+			(check) =>
+				check.bucket === "fail" ||
+				check.bucket === "cancel" ||
+				(check.state !== undefined && check.state.toUpperCase() === "FAILURE"),
+		)
+		.map((check) => check.name || check.workflow || "unnamed check");
+
+	return {
+		status: "failed" as const,
+		stderr:
+			failingChecks.length > 0
+				? `Required checks did not pass: ${failingChecks.join(", ")}.`
+				: "Required checks did not pass.",
+	};
+}
+
+async function readRequiredChecksSnapshot(
+	repoPath: string,
+	prNumber: number,
+	runner: HostCommandRunner,
+): Promise<{
+	stdout: string;
+	stderr: string;
+	checks: GhPrCheckRecord[];
+	exitCode: number | null;
+}> {
+	try {
+		const result = await runner.run(
+			resolveHostGhBin(),
+			[
+				"pr",
+				"checks",
+				String(prNumber),
+				"--required",
+				"--json",
+				"bucket,completedAt,description,link,name,state,workflow",
+			],
+			{ cwd: repoPath },
+		);
+		return {
+			stdout: result.stdout,
+			stderr: result.stderr,
+			checks: parseRequiredChecksPayload(result.stdout),
+			exitCode: null,
+		};
+	} catch (error) {
+		const exitCode = extractExitCode(error);
+		if (exitCode !== 8) {
+			throw error;
+		}
+
+		const stdout = readCapturedText(error, "stdout");
+		const stderr = readCapturedText(error, "stderr");
+		return {
+			stdout,
+			stderr,
+			checks: parseRequiredChecksPayload(stdout),
+			exitCode,
+		};
+	}
 }
 
 async function readLatestCommit(
@@ -463,52 +614,42 @@ export async function waitForPullRequestChecks(
 		preflight.currentBranch,
 		runner,
 	);
-	try {
-		const result = await runner.run(
-			resolveHostGhBin(),
-			[
-				"pr",
-				"checks",
-				String(pullRequest.number),
-				"--required",
-				"--watch",
-				"--interval",
-				String(CHECKS_WATCH_INTERVAL_SECONDS),
-			],
-			{ cwd: repoPath },
+	while (true) {
+		const snapshot = await readRequiredChecksSnapshot(
+			repoPath,
+			pullRequest.number,
+			runner,
 		);
+		const classification = classifyRequiredChecks(snapshot.checks);
 
-		return {
-			...preflight,
-			status: "checks_passed",
-			prNumber: pullRequest.number,
-			prUrl: pullRequest.url,
-			baseBranch: "main",
-			checkScope: "required",
-			watchMode: "poll_until_complete",
-			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
-			stdout: result.stdout,
-			stderr: result.stderr,
-		};
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		if (!message.includes("no required checks reported")) {
-			throw error;
+		if (snapshot.exitCode === 8 && snapshot.checks.length === 0) {
+			await sleep(CHECKS_WATCH_INTERVAL_SECONDS * 1000);
+			continue;
 		}
 
-		return {
-			...preflight,
-			status: "checks_passed",
-			prNumber: pullRequest.number,
-			prUrl: pullRequest.url,
-			baseBranch: "main",
-			checkScope: "required",
-			watchMode: "poll_until_complete",
-			watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
-			stdout: "No required checks were configured for this PR.",
-			stderr:
-				"gh pr checks reported no required checks, so bounded wait completed without blocking.",
-		};
+		if (
+			classification.status === "passed" ||
+			classification.status === "empty"
+		) {
+			return {
+				...preflight,
+				status: "checks_passed",
+				prNumber: pullRequest.number,
+				prUrl: pullRequest.url,
+				baseBranch: "main",
+				checkScope: "required",
+				watchMode: "poll_until_complete",
+				watchIntervalSeconds: CHECKS_WATCH_INTERVAL_SECONDS,
+				stdout: snapshot.stdout,
+				stderr: classification.stderr || snapshot.stderr,
+			};
+		}
+
+		if (classification.status === "failed") {
+			throw new Error(classification.stderr);
+		}
+
+		await sleep(CHECKS_WATCH_INTERVAL_SECONDS * 1000);
 	}
 }
 

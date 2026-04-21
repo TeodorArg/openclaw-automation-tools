@@ -43,4 +43,14 @@ describe("session bloat warning messages", () => {
 			}),
 		).toContain("45s");
 	});
+
+	it("renders no_reply_streak reason text", () => {
+		expect(
+			buildEarlyWarning({
+				language: "en",
+				severity: "critical",
+				reasonCode: "no_reply_streak",
+			}),
+		).toContain("failed to reply in time multiple times");
+	});
 });

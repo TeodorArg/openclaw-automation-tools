@@ -172,6 +172,37 @@ describe("session compact hooks", () => {
 		expect(state.sessions["agent:main:main"]?.signals?.lastRunId).toBe("run-2");
 	});
 
+	it("does not track llm_input or llm_output when early warnings are disabled", async () => {
+		const fixture = await createFixture();
+		const hooks = createCompactionWarningHooks({
+			...fixture.config,
+			enableEarlyWarning: false,
+		});
+
+		await hooks.llmInput(
+			{
+				runId: "run-disabled",
+				systemPrompt: "a".repeat(50000),
+				prompt: "b".repeat(80000),
+				historyMessages: [{ role: "user", content: "hello" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-disabled" },
+		);
+		await hooks.llmOutput(
+			{
+				runId: "run-disabled",
+				assistantTexts: ["No reply from agent"],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-disabled" },
+		);
+
+		await expect(
+			readFile(fixture.config.stateFilePath, "utf8"),
+		).rejects.toMatchObject({
+			code: "ENOENT",
+		});
+	});
+
 	it("builds an early warning message when heuristics cross threshold", async () => {
 		const fixture = await createFixture();
 
@@ -540,6 +571,59 @@ describe("session compact hooks", () => {
 		expect(result?.handled).toBe(true);
 		expect(result?.reply?.text).toContain("30s");
 		expect(result?.reply?.text).toContain("lane");
+	});
+
+	it("captures no_reply_streak output signals and delivers the matching warning", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-no-reply",
+				assistantTexts: ["No reply from agent"],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-no-reply" },
+		);
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-no-reply",
+				assistantTexts: ["No reply from agent"],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-no-reply" },
+		);
+		await compactionHooks.llmInput(
+			{
+				runId: "run-no-reply",
+				systemPrompt: "small prompt",
+				prompt: "small user message",
+				historyMessages: [{ role: "user", content: "short" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-no-reply" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-no-reply" },
+		);
+
+		expect(result?.handled).toBe(true);
+		expect(result?.reply?.text).toContain(
+			"failed to reply in time multiple times",
+		);
+
+		const state = JSON.parse(
+			await readFile(fixture.config.stateFilePath, "utf8"),
+		) as {
+			sessions: Record<
+				string,
+				{ signals?: { noReplyStreak?: number; lastReasonCode?: string } }
+			>;
+		};
+		expect(state.sessions["agent:main:main"]?.signals?.noReplyStreak).toBe(2);
+		expect(state.sessions["agent:main:main"]?.signals?.lastReasonCode).toBe(
+			"no_reply_streak",
+		);
 	});
 
 	it("returns only synthetic visible reply payload semantics on before_agent_reply delivery", async () => {

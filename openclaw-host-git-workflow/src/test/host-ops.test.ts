@@ -152,7 +152,11 @@ if [ "$1" = "pr" ] && [ "$2" = "view" ]; then
   exit 0
 fi
 if [ "$1" = "pr" ] && [ "$2" = "checks" ]; then
-  echo "required checks passed"
+  if [ "$FAKE_GH_REQUIRED_CHECKS_MODE" = "none" ]; then
+    echo '[]'
+    exit 0
+  fi
+  echo '[{"bucket":"pass","state":"COMPLETED","name":"ci","workflow":"test","completedAt":"2026-04-20T00:00:00Z"}]'
   exit 0
 fi
 if [ "$1" = "pr" ] && [ "$2" = "create" ]; then
@@ -210,6 +214,7 @@ afterEach(async () => {
 	delete process.env.OPENCLAW_HOST_GIT_WORKFLOW_GIT_BIN;
 	delete process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN;
 	delete process.env.FAKE_GH_EXISTING_PR;
+	delete process.env.FAKE_GH_REQUIRED_CHECKS_MODE;
 
 	await Promise.all(
 		tempDirs
@@ -458,8 +463,32 @@ describe("host push and pr ops", () => {
 		expect(ghLog).toContain("number,url,headRefName,baseRefName,state");
 		expect(ghLog).toContain("checks");
 		expect(ghLog).toContain("--required");
-		expect(ghLog).toContain("--watch");
-		expect(ghLog).toContain("--interval");
+		expect(ghLog).toContain("--json");
+		expect(ghLog).toContain(
+			"bucket,completedAt,description,link,name,state,workflow",
+		);
+	});
+
+	it("treats an empty required-checks response as ready", async () => {
+		const { repoPath } = await createRepo();
+		const { binDir } = await createFakeGh(repoPath);
+		const runner = createGithubReadyRunner();
+
+		process.env.OPENCLAW_HOST_GIT_WORKFLOW_GH_BIN = path.join(binDir, "gh");
+		process.env.FAKE_GH_REQUIRED_CHECKS_MODE = "none";
+
+		const result = await waitForPullRequestChecks(repoPath, runner);
+
+		expect(result).toMatchObject({
+			status: "checks_passed",
+			currentBranch: "feat/host-workflow-test",
+			prNumber: 123,
+			baseBranch: "main",
+			checkScope: "required",
+			watchMode: "poll_until_complete",
+			watchIntervalSeconds: 10,
+		});
+		delete process.env.FAKE_GH_REQUIRED_CHECKS_MODE;
 	});
 
 	it("merges the bounded current-branch PR with head SHA matching", async () => {

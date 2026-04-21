@@ -183,6 +183,23 @@ async function checkGithubSshAuth(
 	repoPath: string,
 	runner: HostCommandRunner,
 ): Promise<{ status: "ready" | "blocked"; issue?: string }> {
+	function readCombinedOutput(error: unknown, fallback: string): string {
+		if (!error || typeof error !== "object") {
+			return fallback;
+		}
+
+		const candidate = error as {
+			message?: string;
+			stdout?: unknown;
+			stderr?: unknown;
+		};
+		return [candidate.stdout, candidate.stderr, candidate.message, fallback]
+			.filter(
+				(value): value is string => typeof value === "string" && value !== "",
+			)
+			.join("\n");
+	}
+
 	try {
 		const result = await runner.run("ssh", ["-T", "git@github.com"], {
 			cwd: repoPath,
@@ -201,7 +218,13 @@ async function checkGithubSshAuth(
 				combined.trim() || "SSH auth to github.com did not report success.",
 		};
 	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
+		const message = readCombinedOutput(error, String(error));
+		if (
+			message.includes("successfully authenticated") ||
+			message.includes("does not provide shell access")
+		) {
+			return { status: "ready" };
+		}
 		return { status: "blocked", issue: message };
 	}
 }

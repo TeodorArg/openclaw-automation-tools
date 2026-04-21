@@ -285,6 +285,74 @@ describe("host preflight", () => {
 		).rejects.toThrow(/ssh-keyscan github.com >> ~\/\.ssh\/known_hosts/);
 	});
 
+	it("treats authenticated ssh -T output as ready even when the command exits nonzero", async () => {
+		const remoteRunner: HostCommandRunner = {
+			async run(command, args) {
+				if (args[0] === "--version") {
+					return { stdout: `${command} version test`, stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--show-toplevel") {
+					return { stdout: "/Users/tester/repo", stderr: "" };
+				}
+				if (args[0] === "rev-parse" && args[1] === "--abbrev-ref") {
+					return {
+						stdout: "feat/openclaw-host-git-workflow-live-check",
+						stderr: "",
+					};
+				}
+				if (args[0] === "remote" && args[1] === "get-url") {
+					return {
+						stdout: "git@github.com:TeodorArg/openclaw-automation-tools.git",
+						stderr: "",
+					};
+				}
+				if (args[0] === "auth" && args[1] === "status") {
+					return { stdout: "github.com\n  ✓ Logged in", stderr: "" };
+				}
+				if (args[0] === "repo" && args[1] === "view") {
+					return {
+						stdout: '{"nameWithOwner":"TeodorArg/openclaw-automation-tools"}',
+						stderr: "",
+					};
+				}
+				if (command === "ssh" && args[0] === "-T") {
+					const error = new Error(
+						"Command failed with exit code 1",
+					) as Error & {
+						stdout?: string;
+						stderr?: string;
+						exitCode?: number;
+					};
+					error.stdout = "";
+					error.stderr =
+						"Hi test-user! You've successfully authenticated, but GitHub does not provide shell access.";
+					error.exitCode = 1;
+					throw error;
+				}
+				if (args[0] === "pr" && args[1] === "list") {
+					return { stdout: "[]", stderr: "" };
+				}
+				throw new Error(`Unexpected command: ${command} ${args.join(" ")}`);
+			},
+		};
+
+		const result = await preflightHostOps(
+			"/Users/tester/repo",
+			{
+				requireGhAuth: true,
+				requireNonMainBranch: true,
+				requireRemotePushReadiness: true,
+			},
+			remoteRunner,
+		);
+
+		expect(result.remoteReadiness).toMatchObject({
+			sshAuthStatus: "ready",
+			knownHostsStatus: "ready",
+			githubRepoSlug: "TeodorArg/openclaw-automation-tools",
+		});
+	});
+
 	it("detects an existing PR for the current branch through explicit lookup", async () => {
 		const remoteRunner: HostCommandRunner = {
 			async run(command, args) {

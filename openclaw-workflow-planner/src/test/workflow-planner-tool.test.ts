@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -168,6 +168,17 @@ describe("createWorkflowPlannerTool", () => {
 				"https://github.com/openclaw/openclaw",
 			],
 		});
+		await tool.execute("call-2u-b2", {
+			action: "idea_create",
+			command: "update idea without links",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+			problem: "Planning flow needs a hardened plugin runtime.",
+			requestedOutcome:
+				"Ship an OpenClaw planner plugin with an explicit lifecycle.",
+			ownerSurface: "production plugin package",
+		});
 		const getResult = await tool.execute("call-2u-c", {
 			action: "idea_get",
 			command: "get idea",
@@ -181,6 +192,10 @@ describe("createWorkflowPlannerTool", () => {
 		expect(getPayload.idea.ownerSurface).toBe("production plugin package");
 		expect(getPayload.idea.notes).toContain("Slice 1");
 		expect(getPayload.idea.links).toHaveLength(2);
+		expect(getPayload.idea.links).toEqual([
+			"https://docs.openclaw.ai",
+			"https://github.com/openclaw/openclaw",
+		]);
 		expect(getPayload.idea.createdAt).toBe(firstPayload.idea.createdAt);
 		expect(getPayload.idea.status).toBe("draft");
 		expect(getPayload.controlPlane.requestId).toBe("req_workflow-planner");
@@ -349,6 +364,75 @@ describe("createWorkflowPlannerTool", () => {
 				"req_workflow-planner"
 			].currentPlanId,
 		).toBe("plan_workflow-planner");
+	});
+
+	it("preserves manual extra tasks while dropping stale unmatched generated tasks on plan_refresh", async () => {
+		const { tool, plannerFilePath } = await createTool();
+
+		await seedAcceptedIdea(tool);
+		await tool.execute("call-3x-a", {
+			action: "plan_create",
+			command: "create plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		const addResult = await tool.execute("call-3x-b", {
+			action: "task_add",
+			command: "add task",
+			commandName: "implementation_handoff",
+			skillName: "openclaw-workflow-implementer",
+			ideaName: "workflow planner",
+			taskText: "keep manual follow-up",
+		});
+		const addPayload = JSON.parse(addResult.content[0].text);
+		const persisted = parsePlannerMarkdown(
+			await readFile(plannerFilePath, "utf8"),
+		);
+		const idea = persisted.ideas[0];
+		if (!idea) {
+			throw new Error("Expected persisted workflow planner idea.");
+		}
+		idea.tasks.push({
+			id: "generated-stale-legacy-task",
+			text: "stale generated task",
+			origin: "generated",
+			done: false,
+		});
+		await writeFile(plannerFilePath, renderPlannerMarkdown(persisted), "utf8");
+
+		const refreshResult = await tool.execute("call-3x-c", {
+			action: "plan_refresh",
+			command: "refresh plan",
+			commandName: "plan_workflow",
+			skillName: "openclaw-workflow-planner",
+			ideaName: "workflow planner",
+		});
+		const refreshPayload = JSON.parse(refreshResult.content[0].text);
+
+		expect(
+			refreshPayload.tasks.some(
+				(task: { id: string }) => task.id === "generated-stale-legacy-task",
+			),
+		).toBe(false);
+		expect(
+			refreshPayload.tasks.find(
+				(task: { id: string }) => task.id === addPayload.addedTask.id,
+			),
+		).toMatchObject({
+			id: addPayload.addedTask.id,
+			origin: "manual",
+			done: false,
+		});
+		expect(
+			refreshPayload.plan.planBlocks
+				.flatMap(
+					(block: { checklist: Array<{ id: string }> }) => block.checklist,
+				)
+				.some(
+					(task: { id: string }) => task.id === "generated-stale-legacy-task",
+				),
+		).toBe(false);
 	});
 
 	it("lists ideas and returns a persisted idea record", async () => {
@@ -2450,6 +2534,20 @@ describe("createWorkflowPlannerTool", () => {
 				].join("\n"),
 			),
 		).toThrow("malformed");
+	});
+
+	it("rejects unsupported explicit planner state versions", () => {
+		expect(() =>
+			parsePlannerMarkdown(
+				[
+					"<!-- openclaw-workflow-planner-state",
+					JSON.stringify({ version: 99, ideas: [] }),
+					"-->",
+					"",
+					"# Workflow Planner",
+				].join("\n"),
+			),
+		).toThrow("unsupported version: 99");
 	});
 
 	it("rejects malformed planner markdown state", () => {
