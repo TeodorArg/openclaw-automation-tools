@@ -215,6 +215,11 @@ The companion worksheet should include at minimum:
 - source path
 - version
 
+For manual ClawHub archive uploads in this repo, place the built tarball in the package directory itself by default:
+- `<package-slug>/<tarball-name>.tgz`
+
+Do not treat temporary directories or repo-level scratch artifact folders as the canonical handoff location for the upload archive.
+
 Keep a package release index at:
 - `docs/releases/<package-slug>/README.md`
 
