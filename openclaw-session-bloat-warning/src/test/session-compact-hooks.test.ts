@@ -144,18 +144,24 @@ describe("session compact hooks", () => {
 		);
 	});
 
-	it("stores observed llm_output input token usage", async () => {
+	it("stores observed llm_output runtime truth and usage details", async () => {
 		const fixture = await createFixture();
 		const hooks = createCompactionWarningHooks(fixture.config);
 
 		await hooks.llmOutput(
 			{
 				runId: "run-2",
+				sessionId: "session-2",
+				provider: "openai-codex",
+				model: "gpt-5.4",
 				usage: {
 					input: 130432,
+					cacheRead: 41000,
+					output: 901,
+					total: 172333,
 				},
 			},
-			{ sessionKey: "agent:main:main" },
+			{ sessionKey: "agent:main:main", authProfileOverride: "openai-codex:teodorph2025@gmail.com" } as never,
 		);
 
 		const state = JSON.parse(
@@ -163,13 +169,91 @@ describe("session compact hooks", () => {
 		) as {
 			sessions: Record<
 				string,
-				{ signals?: { lastInputTokens?: number; lastRunId?: string } }
+				{
+					signals?: {
+						lastInputTokens?: number;
+						lastEstimatedInputTokens?: number;
+						lastCachedInputTokens?: number;
+						lastOutputTokens?: number;
+						lastCacheWriteTokens?: number;
+						lastTotalTokens?: number;
+						estimateObservedDriftTokens?: number;
+						estimateObservedDriftRatio?: number;
+						driftStatus?: string;
+						observedUsageAvailability?: string;
+						lastRunId?: string;
+						lastProvider?: string;
+						lastModel?: string;
+						lastAuthProfile?: string;
+						effectiveContextWindowTokens?: number;
+						effectiveContextWindowSource?: string;
+					}
+				}
 			>;
 		};
-		expect(state.sessions["agent:main:main"]?.signals?.lastInputTokens).toBe(
-			130432,
+		const signals = state.sessions["agent:main:main"]?.signals;
+		expect(signals?.lastInputTokens).toBe(130432);
+		expect(signals?.lastEstimatedInputTokens).toBeUndefined();
+		expect(signals?.lastCachedInputTokens).toBe(41000);
+		expect(signals?.lastCacheWriteTokens).toBeUndefined();
+		expect(signals?.lastOutputTokens).toBe(901);
+		expect(signals?.lastTotalTokens).toBe(172333);
+		expect(signals?.observedUsageAvailability).toBe("present");
+		expect(signals?.lastRunId).toBe("run-2");
+		expect(signals?.lastProvider).toBe("openai-codex");
+		expect(signals?.lastModel).toBe("gpt-5.4");
+		expect(signals?.lastAuthProfile).toBe("openai-codex:teodorph2025@gmail.com");
+		expect(signals?.effectiveContextWindowTokens).toBe(272000);
+		expect(signals?.effectiveContextWindowSource).toBe("provider_catalog");
+	});
+
+	it("computes and persists drift fields on llm_input when observed provider usage already exists", async () => {
+		const fixture = await createFixture();
+		const hooks = createCompactionWarningHooks(fixture.config);
+
+		await hooks.llmOutput(
+			{
+				runId: "run-drift",
+				usage: {
+					input: 130000,
+					cacheRead: 40000,
+					output: 1000,
+					total: 171000,
+				},
+			},
+			{ sessionKey: "agent:main:main", runId: "run-drift" },
 		);
-		expect(state.sessions["agent:main:main"]?.signals?.lastRunId).toBe("run-2");
+
+		await hooks.llmInput(
+			{
+				runId: "run-drift",
+				systemPrompt: "a".repeat(100000),
+				prompt: "b".repeat(60000),
+				historyMessages: [{ role: "user", content: "short" }],
+			},
+			{ sessionKey: "agent:main:main", runId: "run-drift" },
+		);
+
+		const state = JSON.parse(
+			await readFile(fixture.config.stateFilePath, "utf8"),
+		) as {
+			sessions: Record<
+				string,
+				{
+					signals?: {
+						lastEstimatedInputTokens?: number;
+						estimateObservedDriftTokens?: number;
+						estimateObservedDriftRatio?: number;
+						driftStatus?: string;
+					}
+				}
+			>;
+		};
+		const signals = state.sessions["agent:main:main"]?.signals;
+		expect(signals?.lastEstimatedInputTokens).toBeGreaterThan(0);
+		expect(signals?.estimateObservedDriftTokens).toBeGreaterThan(0);
+		expect(signals?.estimateObservedDriftRatio).toBeGreaterThan(0);
+		expect(signals?.driftStatus).toBe("observed");
 	});
 
 	it("does not track llm_input or llm_output when early warnings are disabled", async () => {
@@ -444,15 +528,9 @@ describe("session compact hooks", () => {
 		);
 
 		expect(result?.handled).toBe(true);
-		expect(result?.reply).toEqual({
-			text: buildStoredEarlyWarningMessage({
-				config: fixture.config,
-				signals: {
-					lastSeverity: "elevated",
-					lastReasonCode: "history_chars",
-				},
-			}),
-		});
+		expect(result?.reply?.text).toBeDefined();
+		expect(result?.reply?.text).toContain("context-sync:");
+		expect(result?.reply?.text).toContain("local estimate:");
 	});
 
 	it("prefers stored token signals over char heuristics when building delivery copy", async () => {

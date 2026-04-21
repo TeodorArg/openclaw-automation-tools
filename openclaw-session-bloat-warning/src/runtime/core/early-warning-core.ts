@@ -8,6 +8,7 @@ import type {
 	WarningSeverity,
 } from "../config/plugin-config.js";
 import type {
+	DriftStatus,
 	SessionSignalState,
 	SessionWarningState,
 } from "../state/state-types.js";
@@ -23,6 +24,15 @@ export type EarlyWarningInputSignals = {
 	inputChars: number;
 	messageCount: number;
 	inputTokens?: number;
+	estimatedInputTokens?: number;
+	lastCachedInputTokens?: number;
+	lastOutputTokens?: number;
+	lastTotalTokens?: number;
+	estimateObservedDriftTokens?: number;
+	estimateObservedDriftRatio?: number;
+	driftStatus?: DriftStatus;
+	providerChainStatus?: SessionSignalState["providerChainStatus"];
+	resetIntegrityStatus?: SessionSignalState["resetIntegrityStatus"];
 	timeoutRiskStreak?: number;
 	lanePressureStreak?: number;
 	noReplyStreak?: number;
@@ -62,6 +72,10 @@ export function observeEarlyWarningInput(params: {
 			lastInputChars: signals.inputChars,
 			lastMessageCount: signals.messageCount,
 			lastInputTokens: signals.inputTokens,
+			lastEstimatedInputTokens: signals.estimatedInputTokens,
+			estimateObservedDriftTokens: signals.estimateObservedDriftTokens,
+			estimateObservedDriftRatio: signals.estimateObservedDriftRatio,
+			driftStatus: signals.driftStatus,
 			lastSeverity: decision?.severity,
 			lastReasonCode: decision?.reasonCode,
 			lastRunId: params.event.runId ?? params.ctx.runId,
@@ -87,11 +101,25 @@ export function observeEarlyWarningOutput(params: {
 		config: params.config,
 		sessionSignals: params.sessionSignals,
 	});
+	const observedUsage = readObservedUsage(params.event);
 	return {
 		signals: {
 			...nextSignals,
 			lastInputTokens:
-				readInputTokens(params.event) ?? nextSignals.lastInputTokens,
+				observedUsage.inputTokens ?? nextSignals.lastInputTokens,
+			lastCachedInputTokens:
+				observedUsage.cachedInputTokens ?? nextSignals.lastCachedInputTokens,
+			lastOutputTokens:
+				observedUsage.outputTokens ?? nextSignals.lastOutputTokens,
+			lastCacheWriteTokens:
+				observedUsage.cacheWriteTokens ?? nextSignals.lastCacheWriteTokens,
+			lastTotalTokens:
+				observedUsage.totalTokens ?? nextSignals.lastTotalTokens,
+			observedUsageAvailability: observedUsage.availability,
+			lastProvider:
+				params.event.provider ?? params.event.lastAssistant?.provider ?? nextSignals.lastProvider,
+			lastModel:
+				params.event.model ?? params.event.lastAssistant?.model ?? nextSignals.lastModel,
 			lastRunId: params.event.runId ?? params.ctx.runId,
 			lastObservedAt: now,
 		},
@@ -127,6 +155,16 @@ export function buildStoredEarlyWarningMessage(params: {
 		reasonCode,
 		observedTimeoutMs: params.signals?.lastObservedTimeoutMs,
 		observedLaneWaitMs: params.signals?.lastObservedLaneWaitMs,
+		observedInputTokens: params.signals?.lastInputTokens,
+		estimatedInputTokens: params.signals?.lastEstimatedInputTokens,
+		cachedInputTokens: params.signals?.lastCachedInputTokens,
+		outputTokens: params.signals?.lastOutputTokens,
+		totalTokens: params.signals?.lastTotalTokens,
+		estimateObservedDriftTokens: params.signals?.estimateObservedDriftTokens,
+		estimateObservedDriftRatio: params.signals?.estimateObservedDriftRatio,
+		driftStatus: params.signals?.driftStatus,
+		providerChainStatus: params.signals?.providerChainStatus,
+		resetIntegrityStatus: params.signals?.resetIntegrityStatus,
 	});
 }
 
@@ -152,10 +190,26 @@ export function measureInputSignals(
 		? event.historyMessages.length
 		: 0;
 
+	const estimatedInputTokens = estimateInputTokensFromChars(inputChars);
+	const drift = computeObservedDrift({
+		estimatedInputTokens,
+		observedInputTokens: existingSignals?.lastInputTokens,
+	});
+	const driftEligible = typeof existingSignals?.lastInputTokens === "number";
+
 	return {
 		inputChars,
 		messageCount,
 		inputTokens: existingSignals?.lastInputTokens,
+		estimatedInputTokens,
+		lastCachedInputTokens: existingSignals?.lastCachedInputTokens,
+		lastOutputTokens: existingSignals?.lastOutputTokens,
+		lastTotalTokens: existingSignals?.lastTotalTokens,
+		estimateObservedDriftTokens: driftEligible ? drift.driftTokens : undefined,
+		estimateObservedDriftRatio: driftEligible ? drift.driftRatio : undefined,
+		driftStatus: driftEligible ? drift.status : undefined,
+		providerChainStatus: existingSignals?.providerChainStatus,
+		resetIntegrityStatus: existingSignals?.resetIntegrityStatus,
 		timeoutRiskStreak: existingSignals?.timeoutRiskStreak,
 		lanePressureStreak: existingSignals?.lanePressureStreak,
 		noReplyStreak: existingSignals?.noReplyStreak,
@@ -181,7 +235,54 @@ export function createEarlyWarningDecision(
 			reasonCode: classified.reasonCode,
 			observedTimeoutMs: signals.lastObservedTimeoutMs,
 			observedLaneWaitMs: signals.lastObservedLaneWaitMs,
+			observedInputTokens: signals.inputTokens,
+			estimatedInputTokens: signals.estimatedInputTokens,
+			cachedInputTokens: signals.lastCachedInputTokens,
+			outputTokens: signals.lastOutputTokens,
+			totalTokens: signals.lastTotalTokens,
+			estimateObservedDriftTokens: signals.estimateObservedDriftTokens,
+			estimateObservedDriftRatio: signals.estimateObservedDriftRatio,
+			driftStatus: signals.driftStatus,
+			providerChainStatus: signals.providerChainStatus,
+			resetIntegrityStatus: signals.resetIntegrityStatus,
 		}),
+	};
+}
+
+function estimateInputTokensFromChars(inputChars: number) {
+	if (!Number.isFinite(inputChars) || inputChars <= 0) {
+		return 0;
+	}
+	return Math.max(0, Math.round(inputChars / 4));
+}
+
+export function computeObservedDrift(params: {
+	estimatedInputTokens?: number;
+	observedInputTokens?: number;
+}) {
+	const estimated = params.estimatedInputTokens;
+	const observed = params.observedInputTokens;
+	if (typeof observed !== "number" || !Number.isFinite(observed) || observed < 0) {
+		return {
+			driftTokens: undefined,
+			driftRatio: undefined,
+			status: (typeof estimated === "number" && estimated > 0 ? "missing" : "heuristic") as DriftStatus,
+		};
+	}
+	if (typeof estimated !== "number" || !Number.isFinite(estimated) || estimated < 0) {
+		return {
+			driftTokens: undefined,
+			driftRatio: undefined,
+			status: "heuristic" as DriftStatus,
+		};
+	}
+	const driftTokens = Math.abs(estimated - observed);
+	const denominator = Math.max(observed, 1);
+	const driftRatio = driftTokens / denominator;
+	return {
+		driftTokens,
+		driftRatio,
+		status: "observed" as DriftStatus,
 	};
 }
 
@@ -249,11 +350,44 @@ function classifyInputSeverity(
 	return undefined;
 }
 
-function readInputTokens(event: LlmOutputHookEvent) {
-	return typeof event.usage?.input === "number" &&
-		Number.isFinite(event.usage.input)
-		? Math.max(0, Math.round(event.usage.input))
-		: undefined;
+export function readObservedUsage(event: LlmOutputHookEvent) {
+	const inputTokens =
+		typeof event.usage?.input === "number" && Number.isFinite(event.usage.input)
+			? Math.max(0, Math.round(event.usage.input))
+			: undefined;
+	const cachedInputTokens =
+		typeof event.usage?.cacheRead === "number" &&
+		Number.isFinite(event.usage.cacheRead)
+			? Math.max(0, Math.round(event.usage.cacheRead))
+			: undefined;
+	const outputTokens =
+		typeof event.usage?.output === "number" &&
+		Number.isFinite(event.usage.output)
+			? Math.max(0, Math.round(event.usage.output))
+			: undefined;
+	const cacheWriteTokens =
+		typeof event.usage?.cacheWrite === "number" &&
+		Number.isFinite(event.usage.cacheWrite)
+			? Math.max(0, Math.round(event.usage.cacheWrite))
+			: undefined;
+	const totalTokens =
+		typeof event.usage?.total === "number" && Number.isFinite(event.usage.total)
+			? Math.max(0, Math.round(event.usage.total))
+			: undefined;
+	const hasUsage =
+		inputTokens !== undefined ||
+		cachedInputTokens !== undefined ||
+		outputTokens !== undefined ||
+		totalTokens !== undefined;
+
+	return {
+		inputTokens,
+		cachedInputTokens,
+		outputTokens,
+		cacheWriteTokens,
+		totalTokens,
+		availability: hasUsage ? "present" : "missing",
+	} as const;
 }
 
 function applyOutputRiskSignals(params: {
@@ -312,6 +446,12 @@ function classifyRiskSeverity(
 	signals: EarlyWarningInputSignals,
 	config: SessionBloatWarningConfig,
 ): { severity: WarningSeverity; reasonCode: string } | undefined {
+	if (signals.resetIntegrityStatus === "suspicious") {
+		return { severity: "critical", reasonCode: "reset_integrity_suspicious" };
+	}
+	if (signals.providerChainStatus === "continued") {
+		return { severity: "critical", reasonCode: "provider_chain_continued_after_reset" };
+	}
 	if (
 		meetsSignalThreshold(
 			signals.timeoutRiskStreak,
@@ -341,6 +481,24 @@ function classifyRiskSeverity(
 		)
 	) {
 		return { severity: "elevated", reasonCode: "lane_pressure" };
+	}
+	if (
+		signals.driftStatus === "observed" &&
+		typeof signals.estimateObservedDriftRatio === "number" &&
+		typeof signals.estimateObservedDriftTokens === "number" &&
+		signals.estimateObservedDriftTokens >= 20000 &&
+		signals.estimateObservedDriftRatio >= 0.2 &&
+		typeof signals.inputTokens !== "number"
+	) {
+		return { severity: "elevated", reasonCode: "estimate_observed_drift" };
+	}
+	if (
+		(signals.driftStatus === "missing" || signals.driftStatus === "heuristic") &&
+		typeof signals.inputTokens !== "number" &&
+		signals.inputChars < config.earlyWarningCharThreshold &&
+		signals.messageCount < config.earlyWarningMessageCountThreshold
+	) {
+		return { severity: "warning", reasonCode: "provider_usage_unknown" };
 	}
 
 	return undefined;

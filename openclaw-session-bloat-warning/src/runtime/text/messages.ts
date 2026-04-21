@@ -13,6 +13,16 @@ type EarlyWarningArgs = {
 	reasonCode: string;
 	observedTimeoutMs?: number;
 	observedLaneWaitMs?: number;
+	observedInputTokens?: number;
+	estimatedInputTokens?: number;
+	cachedInputTokens?: number;
+	outputTokens?: number;
+	totalTokens?: number;
+	estimateObservedDriftTokens?: number;
+	estimateObservedDriftRatio?: number;
+	driftStatus?: "observed" | "missing" | "heuristic" | "suspicious";
+	providerChainStatus?: "fresh" | "continued" | "unknown";
+	resetIntegrityStatus?: "ok" | "suspicious" | "unknown";
 };
 
 const ENGLISH_MESSAGES = {
@@ -55,7 +65,7 @@ export function buildPostCompactionNote(args: MessageArgs) {
 
 export function buildEarlyWarning(args: EarlyWarningArgs) {
 	const base = readMessages(args.language).early[args.severity];
-	return appendReason(base, args);
+	return appendContextSyncSurface(appendReason(base, args), args);
 }
 
 function readMessages(language: SessionWarningLanguage) {
@@ -82,6 +92,14 @@ function readReasonText(args: EarlyWarningArgs) {
 				return `очередь main session уже подвисает до ${formatMs(args.observedLaneWaitMs, args.language)}`;
 			case "no_reply_streak":
 				return "агент уже несколько раз не смог ответить вовремя";
+			case "estimate_observed_drift":
+				return `observed usage заметно расходится с local estimate: ${formatDrift(args)}`;
+			case "provider_usage_unknown":
+				return `provider usage пока ${readSignalLabel(args.driftStatus, args.language)}, estimate остаётся heuristic`;
+			case "reset_integrity_suspicious":
+				return "reset signal выглядит suspicious, continuity truth не подтверждён";
+			case "provider_chain_continued_after_reset":
+				return "provider chain выглядит continued после reset, это suspicious";
 			default:
 				return "";
 		}
@@ -100,8 +118,144 @@ function readReasonText(args: EarlyWarningArgs) {
 			return `the main session lane is already stalling up to ${formatMs(args.observedLaneWaitMs, args.language)}`;
 		case "no_reply_streak":
 			return "the agent already failed to reply in time multiple times";
+		case "estimate_observed_drift":
+			return `observed usage is drifting materially from the local estimate: ${formatDrift(args)}`;
+		case "provider_usage_unknown":
+			return `provider usage is still ${readSignalLabel(args.driftStatus, args.language)}, so the estimate remains heuristic`;
+		case "reset_integrity_suspicious":
+			return "reset integrity looks suspicious, and continuity truth is not confirmed";
+		case "provider_chain_continued_after_reset":
+			return "the provider chain looks continued after reset, which is suspicious";
 		default:
 			return "";
+	}
+}
+
+function formatDrift(args: EarlyWarningArgs) {
+	const parts: string[] = [];
+	if (typeof args.estimatedInputTokens === "number") {
+		parts.push(`estimate=${Math.round(args.estimatedInputTokens)}`);
+	}
+	if (typeof args.observedInputTokens === "number") {
+		parts.push(`observed=${Math.round(args.observedInputTokens)}`);
+	}
+	if (typeof args.cachedInputTokens === "number") {
+		parts.push(`cached=${Math.round(args.cachedInputTokens)}`);
+	}
+	if (typeof args.totalTokens === "number") {
+		parts.push(`total=${Math.round(args.totalTokens)}`);
+	}
+	if (typeof args.estimateObservedDriftTokens === "number") {
+		parts.push(`drift=${Math.round(args.estimateObservedDriftTokens)}`);
+	}
+	if (typeof args.estimateObservedDriftRatio === "number") {
+		parts.push(`ratio=${Math.round(args.estimateObservedDriftRatio * 100)}%`);
+	}
+	return parts.join(", ");
+}
+
+function appendContextSyncSurface(message: string, args: EarlyWarningArgs) {
+	const surface = buildContextSyncSurface(args);
+	return surface ? `${message}\n\n${surface}` : message;
+}
+
+function buildContextSyncSurface(args: EarlyWarningArgs) {
+	const lines: string[] = [];
+	const push = (label: string, value: string | undefined) => {
+		if (value) {
+			lines.push(`${label}: ${value}`);
+		}
+	};
+
+	push(
+		args.language === "ru" ? "context-sync" : "context-sync",
+		undefined,
+	);
+	push(readLabel("estimate", args.language), formatMetric(args.estimatedInputTokens, "heuristic", args.language));
+	push(readLabel("observed", args.language), formatMetric(args.observedInputTokens, "observed", args.language));
+	push(readLabel("cached", args.language), formatMetric(args.cachedInputTokens, "observed", args.language));
+	push(readLabel("output", args.language), formatMetric(args.outputTokens, "observed", args.language));
+	push(readLabel("total", args.language), formatMetric(args.totalTokens, "observed", args.language));
+	push(readLabel("drift", args.language), formatDriftMetric(args));
+	push(readLabel("chain", args.language), formatChainMetric(args));
+
+	if (lines.length === 0) {
+		return undefined;
+	}
+
+	const header = args.language === "ru" ? "context-sync:" : "context-sync:";
+	return `${header}\n- ${lines.join("\n- ")}`;
+}
+
+function formatMetric(value: number | undefined, status: "observed" | "missing" | "heuristic" | "suspicious", language: SessionWarningLanguage) {
+	if (typeof value !== "number" || !Number.isFinite(value)) {
+		return readSignalLabel(status === "observed" ? "missing" : status, language);
+	}
+	return `${Math.round(value)} (${readSignalLabel(status, language)})`;
+}
+
+function formatDriftMetric(args: EarlyWarningArgs) {
+	const parts: string[] = [];
+	if (typeof args.estimateObservedDriftTokens === "number") {
+		parts.push(`${Math.round(args.estimateObservedDriftTokens)}`);
+	}
+	if (typeof args.estimateObservedDriftRatio === "number") {
+		parts.push(`${Math.round(args.estimateObservedDriftRatio * 100)}%`);
+	}
+	if (parts.length === 0) {
+		return readSignalLabel(args.driftStatus ?? "missing", args.language);
+	}
+	return `${parts.join(", ")} (${readSignalLabel(args.driftStatus ?? "observed", args.language)})`;
+}
+
+function formatChainMetric(args: EarlyWarningArgs) {
+	const parts: string[] = [];
+	if (args.providerChainStatus) {
+		parts.push(`chain=${args.providerChainStatus}`);
+	}
+	if (args.resetIntegrityStatus) {
+		parts.push(`reset=${args.resetIntegrityStatus === "ok" ? "observed" : args.resetIntegrityStatus}`);
+	}
+	return parts.join(", ");
+}
+
+function readLabel(
+	kind: "estimate" | "observed" | "cached" | "output" | "total" | "drift" | "chain",
+	language: SessionWarningLanguage,
+) {
+	switch (kind) {
+		case "estimate":
+			return language === "ru" ? "local estimate" : "local estimate";
+		case "observed":
+			return language === "ru" ? "observed provider input" : "observed provider input";
+		case "cached":
+			return language === "ru" ? "cached input" : "cached input";
+		case "output":
+			return language === "ru" ? "observed output" : "observed output";
+		case "total":
+			return language === "ru" ? "total observed usage" : "total observed usage";
+		case "drift":
+			return language === "ru" ? "drift" : "drift";
+		case "chain":
+		default:
+			return language === "ru" ? "reset / chain status" : "reset / chain status";
+	}
+}
+
+function readSignalLabel(
+	status: EarlyWarningArgs["driftStatus"],
+	language: SessionWarningLanguage,
+) {
+	switch (status) {
+		case "observed":
+			return "observed";
+		case "missing":
+			return language === "ru" ? "missing" : "missing";
+		case "suspicious":
+			return language === "ru" ? "suspicious" : "suspicious";
+		case "heuristic":
+		default:
+			return "heuristic";
 	}
 }
 
