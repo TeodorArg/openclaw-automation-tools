@@ -1,28 +1,79 @@
 # @openclaw/openclaw-session-bloat-warning
 
-Session health protection for long AI work.
+## Session Health Warning: Stay Sharp in Long AI Work
 
-`@openclaw/openclaw-session-bloat-warning` helps you catch session degradation before it starts slowing the work down. It warns early when a session is becoming too large, too noisy, or too fragile, so you can simplify context before quality drops and long-running work starts to wobble.
+Catch session degradation before long AI work slows down.
 
-This package stays intentionally narrow. It does not summarize the session, move work automatically, or rewrite the conversation. Its job is to surface growing session heaviness early enough that operators can split work, checkpoint, or move the next heavy phase into a fresh session with less risk.
+`@openclaw/openclaw-session-bloat-warning` warns early when a session is becoming too large, too noisy, or too fragile, so you can simplify context before quality drops and long-running coding, debugging, research, or orchestration work starts to wobble.
+
+If you want OpenClaw to flag session heaviness before compaction pressure, slowdown, or loss of signal gets in the way, this plugin gives you a lightweight guardrail without changing your workflow.
+
+## What you get
+
+- early warnings before a session gets too heavy to stay productive
+- visible signals for compaction pressure, timeout risk, lane pressure, and no-reply streaks
+- pre-compaction warnings and post-compaction continuation notes
+- configurable thresholds for message count, chars, and token pressure
+- protection for long-running work without automatic rewrites or forced session moves
+
+## Who this is for
+
+Use this if you run long OpenClaw sessions and want a warning before quality starts to drop.
+
+Good fit:
+- long coding or debugging sessions
+- research and orchestration work that accumulates a lot of context
+- operators who want earlier warning before compaction or slowdown
+
+Not this plugin:
+- a session summarizer
+- an automatic session splitter
+- a tool that rewrites your conversation for you
+
+## 2-minute quickstart
+
+1. Install the plugin:
+
+```bash
+openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
+```
+
+2. Enable it:
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "openclaw-session-bloat-warning": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+3. Keep working normally. The plugin warns when session health starts trending in the wrong direction.
+
+## Example outcomes
+
+- “This session is getting heavy enough that the next large phase should move to a fresh session.”
+- “You are approaching compaction pressure and should checkpoint before another big step.”
+- “Runtime signals suggest timeout risk or lane pressure is accumulating.”
 
 ## Why install this
 
-- Protect long-running work from bloated, noisy sessions.
-- Catch degradation before compaction, slowdown, or lost signal.
-- Keep execution sharper during coding, debugging, research, and orchestration.
-- Add a lightweight session health guardrail without changing your workflow.
+- protect long-running work from bloated, noisy sessions
+- catch degradation before compaction, slowdown, or lost signal
+- keep execution sharper during coding, debugging, research, and orchestration
+- add a lightweight session health guardrail without changing your workflow
 
-## Common use cases
+## Why this beats ad-hoc intuition
 
-- Warn before a long session becomes too heavy to stay productive.
-- Keep signal from getting buried under accumulated context.
-- Reduce the chance that execution quality drops late in a big session.
-- Maintain better focus in multi-phase OpenClaw work.
-
-## One-line example request
-
-`Warn me before this session gets too bloated to stay productive.`
+- It watches session heaviness continuously instead of relying on gut feel.
+- It surfaces risk before quality drops badly enough to derail the next phase.
+- It gives visible warnings without forcing a workflow change.
+- It makes long-session health easier to notice, explain, and act on.
+- It scales better than trying to manually judge session quality late in the work.
 
 ## Features
 

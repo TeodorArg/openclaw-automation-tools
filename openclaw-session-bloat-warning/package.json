@@ -1,7 +1,7 @@
 {
 	"name": "@openclaw/openclaw-session-bloat-warning",
 	"version": "0.1.3",
-	"description": "OpenClaw plugin for compaction warnings, earlier visible session-heaviness warnings, and timeout_risk, lane_pressure, and no_reply_streak heuristics with bundled session-bloat-warning guidance.",
+	"description": "Early session-health warnings for OpenClaw. Catch compaction pressure, timeout risk, lane pressure, and no-reply streaks before long AI work slows down.",
 	"license": "MIT",
 	"author": "TeodorArg",
 	"homepage": "https://github.com/TeodorArg/openclaw-automation-tools#readme",
