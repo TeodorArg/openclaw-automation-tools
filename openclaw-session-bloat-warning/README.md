@@ -13,7 +13,8 @@ If you want OpenClaw to flag session heaviness before compaction pressure, slowd
 - early warnings before a session gets too heavy to stay productive
 - visible signals for compaction pressure, timeout risk, lane pressure, and no-reply streaks
 - pre-compaction warnings and post-compaction continuation notes
-- configurable thresholds for message count, chars, and token pressure
+- compact operator diagnostics on `before_prompt_build` plus an optional `session_bloat_status` tool for JSON status snapshots
+- configurable thresholds for message count, chars, token pressure, estimate-vs-observed drift surfacing, and compact context-sync status surfacing
 - protection for long-running work without automatic rewrites or forced session moves
 
 ## Who this is for
@@ -32,10 +33,10 @@ Not this plugin:
 
 ## 2-minute quickstart
 
-1. Install the plugin:
+1. Install the plugin from a local checkout:
 
 ```bash
-openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
+openclaw plugins install -l ./openclaw-session-bloat-warning
 ```
 
 2. Enable it:
@@ -81,11 +82,14 @@ This plugin ships a bounded, stable warning surface for session heaviness.
 
 Implemented surfaces:
 
+- `before_prompt_build`, operator-facing context-sync diagnostics appended as system context
 - `before_compaction`, writable warning delivery via `event.messages`
 - `after_compaction`, writable continuation note via `event.messages`
 - `llm_input`, observe-only signal capture
 - `llm_output`, observe-only token and runtime-risk signal capture for `timeout_risk`, `lane_pressure`, and `no_reply_streak`
-- `before_agent_reply`, visible early-warning delivery as a synthetic reply
+- drift-aware separation between local estimate, observed provider input, cached input contribution, observed output, and total observed usage when runtime truth exists
+- `before_agent_reply`, visible early-warning delivery as a synthetic reply with compact context-sync/status-style surfacing
+- optional tool `session_bloat_status`, compact JSON snapshot of stored runtime truth for one session key
 
 The plugin provides:
 
@@ -95,15 +99,21 @@ The plugin provides:
   fresh session
 - early warning based on stored runtime signals, delivered as a visible
   synthetic reply before the agent reply path
+- operator-facing context-sync diagnostics that reuse the same stored runtime
+  truth on `before_prompt_build`
+- an optional `session_bloat_status` tool that returns the same compact
+  status surface as structured JSON
 - plugin-owned JSON state with per-session counters and signal persistence for
   dedupe and cooldown handling
 - a bundled `session-bloat-warning` skill
 
 The architecture split is:
 
+- reporting surface: `src/status-tool.ts` and `src/runtime/report/json-content.ts`
+- signal and decision core: `src/runtime/core/early-warning-core.ts`
 - signal hooks: `llm_input` and `llm_output`
-- decision core: `src/runtime/core/early-warning-core.ts`
-- delivery adapter: `src/runtime/hooks/early-warning-delivery-hooks.ts`
+- delivery adapters: `src/runtime/hooks/early-warning-delivery-hooks.ts` and
+  `src/runtime/hooks/operator-diagnostics-hooks.ts`
 
 Not in scope:
 
@@ -125,7 +135,7 @@ cd ..
 openclaw plugins install -l ./openclaw-session-bloat-warning
 ```
 
-Registry install:
+Published-registry install when this version was explicitly published to ClawHub:
 
 ```bash
 openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
@@ -172,7 +182,7 @@ Supported config keys:
 - `warningInputTokensThreshold`: absolute warning token ceiling used together with ratio-based thresholds
 - `elevatedInputTokensThreshold`: absolute elevated token ceiling used together with ratio-based thresholds
 - `criticalInputTokensThreshold`: absolute critical token ceiling used together with ratio-based thresholds
-- `contextWindowTokens`: approximate model context window used for ratio-based token warning thresholds
+- `contextWindowTokens`: fallback model context window used for ratio-based token warning thresholds when runtime truth is missing
 - `warningInputTokensRatio`: warning token ratio relative to `contextWindowTokens`
 - `elevatedInputTokensRatio`: elevated token ratio relative to `contextWindowTokens`
 - `criticalInputTokensRatio`: critical token ratio relative to `contextWindowTokens`
@@ -193,6 +203,11 @@ Supported config keys:
 - `timeout_risk`, `lane_pressure`, and `no_reply_streak` heuristics can be derived from observed output/error text and reused on the next visible warning delivery
 - elevated heaviness classification uses the configured `warningCharThreshold` and `warningMessageCountThreshold` directly, while the earlier `earlyWarning*` thresholds gate warning-level delivery
 - token-pressure classification now uses the lower of the absolute token thresholds and the ratio-derived thresholds from `contextWindowTokens`, so warning behavior can scale to smaller or larger model windows
+- when runtime-observed usage exists, the plugin persists both local estimate and observed provider usage, then computes drift fields so warning copy can stay honest about what is observed, missing, heuristic, or suspicious
+- warning delivery now includes a compact `context-sync` block that can surface local estimate, observed provider input, cached input, observed output, total observed usage, drift, and reset or chain status with explicit labels
+- `before_prompt_build` can append the same context-sync truth as an
+  operator-facing diagnostics block, and the optional `session_bloat_status`
+  tool can return it as compact JSON
 - early-warning cooldown recovery is based on real observed turn progression,
   not on accumulated warning counters
 - when pre-compaction warnings stay enabled, post-compaction notes are gated so
@@ -208,7 +223,7 @@ Supported config keys:
 - state is simple JSON persistence; there is no bounded handoff summary or
   transcript compaction artifact owned by this package
 - visible early warning is a synthetic reply surface, not prompt mutation
-- percent-style token pressure is still approximate because it depends on observed `llm_output.usage.input` and a configured `contextWindowTokens`, not a live provider-reported max window per request
+- percent-style token pressure is still approximate because it depends on observed `llm_output.usage.input` and a runtime/catalog or fallback `contextWindowTokens`, not a guaranteed live provider-reported max window per request
 - `timeout_risk`, `lane_pressure`, and `no_reply_streak` detection remains heuristic and depends on observable output/error text reaching plugin hooks
 
 ## Verification

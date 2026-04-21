@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { resolvePluginConfig } from "../runtime/config/plugin-config.js";
+
+vi.mock("openclaw/plugin-sdk/plugin-entry", () => ({
+	definePluginEntry(entry: unknown) {
+		return entry;
+	},
+}));
 
 describe("plugin config", () => {
 	it("applies documented defaults", () => {
@@ -117,5 +123,20 @@ describe("plugin config", () => {
 		expect(
 			manifest.configSchema.properties.criticalInputTokensRatio?.description,
 		).toContain("Defaults to 0.85.");
+	});
+
+	it("keeps package, manifest, and entry descriptions aligned", async () => {
+		const packageJson = JSON.parse(
+			readFileSync(resolve(process.cwd(), "package.json"), "utf8"),
+		) as { description: string };
+		const manifest = JSON.parse(
+			readFileSync(resolve(process.cwd(), "openclaw.plugin.json"), "utf8"),
+		) as { description: string };
+		const pluginModule = (await import("../index.js")) as {
+			default: { description: string };
+		};
+
+		expect(packageJson.description).toBe(manifest.description);
+		expect(pluginModule.default.description).toBe(manifest.description);
 	});
 });

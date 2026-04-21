@@ -1,5 +1,9 @@
 import {
+	type ContextWindowSource,
 	DEFAULT_SESSION_STATE_KEY,
+	type DriftStatus,
+	type ObservedUsageAvailability,
+	type SessionSignalState,
 	type SessionWarningState,
 	WARNING_STATE_PLUGIN_ID,
 	WARNING_STATE_SCHEMA_VERSION,
@@ -113,6 +117,23 @@ function normalizeSignalState(value: unknown) {
 		lastInputChars: readOptionalCounter(record.lastInputChars),
 		lastMessageCount: readOptionalCounter(record.lastMessageCount),
 		lastInputTokens: readOptionalCounter(record.lastInputTokens),
+		lastEstimatedInputTokens: readOptionalCounter(
+			record.lastEstimatedInputTokens,
+		),
+		lastCachedInputTokens: readOptionalCounter(record.lastCachedInputTokens),
+		lastCacheWriteTokens: readOptionalCounter(record.lastCacheWriteTokens),
+		lastOutputTokens: readOptionalCounter(record.lastOutputTokens),
+		lastTotalTokens: readOptionalCounter(record.lastTotalTokens),
+		estimateObservedDriftTokens: readOptionalCounter(
+			record.estimateObservedDriftTokens,
+		),
+		estimateObservedDriftRatio: readOptionalNumber(
+			record.estimateObservedDriftRatio,
+		),
+		driftStatus: readDriftStatus(record.driftStatus),
+		observedUsageAvailability: readObservedUsageAvailability(
+			record.observedUsageAvailability,
+		),
 		lastSeverity: readSeverity(record.lastSeverity),
 		lastReasonCode:
 			typeof record.lastReasonCode === "string"
@@ -120,6 +141,42 @@ function normalizeSignalState(value: unknown) {
 				: undefined,
 		lastRunId:
 			typeof record.lastRunId === "string" ? record.lastRunId : undefined,
+		lastProvider:
+			typeof record.lastProvider === "string" ? record.lastProvider : undefined,
+		lastModel:
+			typeof record.lastModel === "string" ? record.lastModel : undefined,
+		lastAuthProfile:
+			typeof record.lastAuthProfile === "string"
+				? record.lastAuthProfile
+				: undefined,
+		effectiveContextWindowTokens: readOptionalCounter(
+			record.effectiveContextWindowTokens,
+		),
+		effectiveContextWindowSource: readContextWindowSource(
+			record.effectiveContextWindowSource,
+		),
+		effectiveContextWindowResolvedAt:
+			typeof record.effectiveContextWindowResolvedAt === "string"
+				? record.effectiveContextWindowResolvedAt
+				: undefined,
+		providerChainStatus: readProviderChainStatus(record.providerChainStatus),
+		resetIntegrityStatus: readResetIntegrityStatus(record.resetIntegrityStatus),
+		lastSessionId:
+			typeof record.lastSessionId === "string"
+				? record.lastSessionId
+				: undefined,
+		lastSessionIdChangedAt:
+			typeof record.lastSessionIdChangedAt === "string"
+				? record.lastSessionIdChangedAt
+				: undefined,
+		lastIdentityChangedAt:
+			typeof record.lastIdentityChangedAt === "string"
+				? record.lastIdentityChangedAt
+				: undefined,
+		lastIdentityChangeKind: readIdentityChangeKind(
+			record.lastIdentityChangeKind,
+		),
+		lastResetReason: readResetReason(record.lastResetReason),
 		timeoutRiskStreak: readOptionalCounter(record.timeoutRiskStreak),
 		lanePressureStreak: readOptionalCounter(record.lanePressureStreak),
 		noReplyStreak: readOptionalCounter(record.noReplyStreak),
@@ -148,8 +205,74 @@ function readOptionalCounter(value: unknown) {
 		: undefined;
 }
 
+function readOptionalNumber(value: unknown) {
+	return typeof value === "number" && Number.isFinite(value) && value >= 0
+		? value
+		: undefined;
+}
+
 function readSeverity(value: unknown): WarningSeverity | undefined {
 	return value === "warning" || value === "elevated" || value === "critical"
+		? value
+		: undefined;
+}
+
+function readDriftStatus(value: unknown): DriftStatus | undefined {
+	return value === "observed" || value === "missing" || value === "heuristic"
+		? value
+		: undefined;
+}
+
+function readObservedUsageAvailability(
+	value: unknown,
+): ObservedUsageAvailability | undefined {
+	return value === "present" || value === "missing" ? value : undefined;
+}
+
+function readContextWindowSource(
+	value: unknown,
+): ContextWindowSource | undefined {
+	return value === "provider_catalog" ||
+		value === "auth_profile" ||
+		value === "plugin_fallback" ||
+		value === "safe_default"
+		? value
+		: undefined;
+}
+
+function readProviderChainStatus(
+	value: unknown,
+): SessionSignalState["providerChainStatus"] {
+	return value === "fresh" || value === "unknown" ? value : undefined;
+}
+
+function readResetIntegrityStatus(
+	value: unknown,
+): SessionSignalState["resetIntegrityStatus"] {
+	return value === "ok" || value === "suspicious" || value === "unknown"
+		? value
+		: undefined;
+}
+
+function readIdentityChangeKind(
+	value: unknown,
+): SessionSignalState["lastIdentityChangeKind"] {
+	return value === "provider" ||
+		value === "model" ||
+		value === "auth_profile" ||
+		value === "session"
+		? value
+		: undefined;
+}
+
+function readResetReason(
+	value: unknown,
+): SessionSignalState["lastResetReason"] {
+	return value === "session_changed" ||
+		value === "provider_changed" ||
+		value === "model_changed" ||
+		value === "auth_profile_changed" ||
+		value === "unknown"
 		? value
 		: undefined;
 }
