@@ -2,6 +2,7 @@
 
 Tracked public release records:
 
+- `v0.1.1.md`
 - `v0.1.0.md`
 
 Release prep rules:
