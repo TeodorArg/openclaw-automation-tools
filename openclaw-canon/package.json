@@ -1,6 +1,6 @@
 {
 	"name": "@openclaw/openclaw-canon",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"description": "Keep docs, memory, and repo truth aligned in long-running OpenClaw work. Diagnose canon drift first, then preview and apply bounded fixes for supported memory and sync issues.",
 	"license": "MIT",
 	"author": "TeodorArg",

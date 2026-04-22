@@ -2,6 +2,8 @@
 
 Tracked public release records:
 
+- [v0.2.0](./v0.2.0.md)
+- [v0.2.0 ClawHub worksheet](./v0.2.0.clawhub.md)
 - [v0.1.1](./v0.1.1.md)
 - [v0.1.1 ClawHub worksheet](./v0.1.1.clawhub.md)
 - [v0.1.0](./v0.1.0.md)
