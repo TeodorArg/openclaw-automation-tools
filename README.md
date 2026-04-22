@@ -2,7 +2,7 @@
 
 OpenClaw plugins for real work, not toy demos.
 
-This repository is a curated OpenClaw development stack: five focused plugins that help turn AI-assisted work into something more structured, more reliable, and much easier to ship.
+This repository is a curated OpenClaw development stack: five focused plugin-plus-skill packages that help turn AI-assisted work into something more structured, more reliable, and much easier to ship.
 
 Together, they help you keep a real execution plan, start faster from live references, protect long sessions from going soft, keep repo truth aligned, and close the loop from working branch to merged result.
 
@@ -10,7 +10,7 @@ If you want OpenClaw to do more than chat, this repo is where the practical tool
 
 ![OpenClaw Stack Overview](./docs/assets/openclaw-stack-overview.svg)
 
-This repo currently ships five publishable plugin packages:
+This repo currently ships five publishable plugin-plus-skill packages:
 - `openclaw-host-git-workflow/`
 - `openclaw-workflow-planner/`
 - `openclaw-canon/`
@@ -49,8 +49,8 @@ It is a strong setup for people who want OpenClaw to become a serious co-driver 
 
 | Plugin | What it does | Best for |
 | --- | --- | --- |
-| [`@openclaw/openclaw-host-git-workflow`](./openclaw-host-git-workflow/README.md) | Turns current-branch work into a guarded path through doctor, preflight, PR, checks, merge, and `main` sync. | Real repositories where wrong-branch or wrong-repo shipping mistakes are expensive. |
-| [`@openclaw/openclaw-workflow-planner`](./openclaw-workflow-planner/README.md) | Turns rough requests into accepted plans, tracked tasks, and implementation-ready handoff in one readable `WORKFLOW_PLAN.md`. | Multi-step work that must survive longer than one chat session. |
+| [`@openclaw/openclaw-host-git-workflow`](./openclaw-host-git-workflow/README.md) | Turns repo work into a guarded host-backed flow through setup doctor, repo-aware planning, commit prep, bounded branch entry, PR, checks, merge, and local `main` sync. | Real repositories where wrong-branch or wrong-repo shipping mistakes are expensive. |
+| [`@openclaw/openclaw-workflow-planner`](./openclaw-workflow-planner/README.md) | Keeps one file-backed `WORKFLOW_PLAN.md` and turns rough requests into gated ideas, plans, tracked tasks, and implementation-ready briefs. | Multi-step work that must survive longer than one chat session. |
 | [`@openclaw/openclaw-canon`](./openclaw-canon/README.md) | Keeps docs, memory, and repo truth aligned with diagnosis-first reports and bounded fixes. | Long-running workspaces where source-of-truth drift causes confusion and rework. |
 | [`@openclaw/openclaw-session-bloat-warning`](./openclaw-session-bloat-warning/README.md) | Warns early about compaction pressure, timeout risk, lane pressure, and no-reply streaks before long AI work slows down. | Coding, debugging, research, or orchestration sessions with a lot of context. |
 | [`@openclaw/openclaw-url-tailwind-scaffold`](./openclaw-url-tailwind-scaffold/README.md) | Turns a reference page URL into a bounded Tailwind CSS v4 scaffold summary or structured page contract. | Frontend work that starts from a visual reference instead of a blank page. |

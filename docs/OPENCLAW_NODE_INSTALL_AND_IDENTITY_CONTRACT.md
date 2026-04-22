@@ -1,6 +1,6 @@
 # OpenClaw Node Install And Identity Contract
 
-Date: 2026-04-18  
+Date: 2026-04-22  
 Status: repo-local consolidation of the product-level node contract
 
 ## Short Answer
@@ -8,10 +8,10 @@ Status: repo-local consolidation of the product-level node contract
 `openclaw node` is a product-level host service, not a publishable package from this repo.
 
 For this repo:
-- `openclaw-host-git-workflow/` is the active host-backed plugin package
-- `openclaw-workflow-planner/` is a separate planning-first plugin package and does not own node runtime implementation
-- `openclaw-canon/` is a separate operational-canon plugin package and does not own node runtime implementation
-- `openclaw-session-bloat-warning/` is a separate compaction-warning plugin package and does not own node runtime implementation
+- `openclaw-host-git-workflow/` is the active host-backed plugin-plus-skill package
+- `openclaw-workflow-planner/` is a separate planning-first plugin-plus-skill package and does not own node runtime implementation
+- `openclaw-canon/` is a separate operational-canon plugin-plus-skill package and does not own node runtime implementation
+- `openclaw-session-bloat-warning/` is a separate compaction-warning plugin-plus-skill package and does not own node runtime implementation
 - `openclaw-url-tailwind-scaffold/` is a separate URL-analysis plugin-plus-skill package and does not own node runtime implementation
 - canon guidance previously shipped as standalone skills now lives as bundled skills inside `openclaw-canon/` and does not own node runtime implementation
 
