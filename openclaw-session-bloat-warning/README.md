@@ -153,7 +153,7 @@ openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
           "defaultLanguage": "en",
           "enablePreCompactionWarning": true,
           "enablePostCompactionNote": true,
-          "contextWindowTokens": 200000,
+    "contextWindowTokens": 258000,
           "warningInputTokensRatio": 0.6,
           "elevatedInputTokensRatio": 0.725,
           "criticalInputTokensRatio": 0.85
