@@ -22,7 +22,7 @@ Planner package entrypoints:
 - typed tool `workflow_planner_action`
 
 Canon package entrypoints:
-- bundled skills `canon-memory-hygiene` and `canon-source-of-truth-fix`
+- bundled skills `canon-memory-hygiene`, `canon-source-of-truth-fix`, and `canon-ops-orchestrator`
 - typed tools `canon_status`, `canon_doctor`, and `canon_fix`
 - no standalone skill-only packages remain in the repo; this guidance now ships only through `openclaw-canon/`
 
@@ -284,7 +284,7 @@ Current canon package coverage to publish:
 - bounded `canon_doctor` scopes `source`, `memory`, and `sync`
 - preview-first `canon_fix` for `memory` plus bounded `sync`
 - short-lived confirm-token previews in plugin-owned state
-- bundled `canon-memory-hygiene` and `canon-source-of-truth-fix` instruction layers
+- bundled `canon-memory-hygiene`, `canon-source-of-truth-fix`, and `canon-ops-orchestrator` instruction layers
 
 Current session-bloat warning package coverage to publish:
 - official compaction lifecycle coverage through `before_compaction` and `after_compaction`

@@ -24,6 +24,12 @@ identified before any fix claim is made.
 - The tool may identify candidate canonical targets and proposal data.
 - It must not claim a durable fix until the owning canonical source is named.
 - Initial shipped behavior is diagnosis-first and proposal-only for source drift.
+- Installed plugin copies, active skill copies, and workspace canon notes are
+  not automatic source-of-truth replacements for repo-owned canon files such as
+  `docs/PLUGIN_PACKAGE_CANON.md`.
+- If expected canon files are missing, `canon_doctor scope=source` reports
+  typed manual-only findings with recommended path or restore actions; it does
+  not auto-restore files.
 
 ## Source lookup order
 

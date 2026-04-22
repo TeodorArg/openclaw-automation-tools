@@ -79,9 +79,25 @@ openclaw plugins install clawhub:@openclaw/openclaw-canon
 
 - `canon-memory-hygiene`
 - `canon-source-of-truth-fix`
+- `canon-ops-orchestrator`
 
 These skills remain instruction layers. The executable runtime surface is the
 typed tool family above.
+
+`canon-ops-orchestrator` is routing guidance only. It recommends when a caller
+should keep work at `canon_status` summary level versus when to run a fuller
+canon pass in a dedicated ops lane, agent, or runtime session, but it does not
+claim that this package ships a detached background canon worker.
+
+Recommended operating split:
+- use `canon_status` as lightweight local triage
+- use `canon_doctor` for deliberate canon investigation
+- use `canon_fix mode=preview` before any apply
+- use `canon_fix mode=apply` only inside the same reviewed ops flow
+- use a dedicated canon ops lane, agent, or runtime session as an orchestration boundary when repo-owned canon files or `memory.jsonl` may be touched
+
+In current OpenClaw-style runtime config, that isolation maps more naturally to
+a dedicated agent entry than to a declarative named session object.
 
 ## Tool Contract
 
@@ -95,7 +111,7 @@ typed tool family above.
 
 `canon_doctor` input:
 - required: `scope = "source" | "memory" | "sync"`
-- optional: `execution = "inline" | "auto"`
+- optional: `execution = "inline"`
 
 `canon_doctor` output:
 - required: `status`, `scope`, `generatedAt`, `findings`
@@ -116,6 +132,24 @@ The initial runtime focuses on repo-local operational canon for this workspace:
 - live package-list sync across canon docs, publish preflight, repo README, and CI
 - memory snapshot integrity for `memory.jsonl`
 
+These files are expected in the target canon repo root that owns the plugin
+package list and canon memory snapshot. They are not sourced from:
+- installed plugin copies under `.openclaw/plugins/**` or `.openclaw/extensions/**`
+- active skill copies under `.openclaw/skills/**`
+- workspace notes such as `SOURCE_OF_TRUTH_FIX_CANON.md` or `workspace/memory/*.md`
+
+When plugin config paths are omitted, the runtime resolves fallback files from
+the best detected canon repo root using OpenClaw workspace/source env hints
+and repo markers, instead of assuming `process.cwd()`. This avoids depending
+on incidental container workdirs such as `/app`.
+
+If the expected canon files are absent, `canon_doctor` and preview-mode
+`canon_fix` return typed findings instead of crashing on `ENOENT`.
+
+This means the package is bootstrap-safe, but it does not invent a generic
+workspace canon source for arbitrary repos that do not ship these repo-owned
+canon files.
+
 `canon_doctor source` is diagnosis-first. It emits findings and proposal data
 for source-of-truth issues but does not auto-apply source fixes.
 
@@ -123,7 +157,7 @@ for source-of-truth issues but does not auto-apply source fixes.
 - `scope = "memory"` deletes malformed JSON, malformed-shape, and byte-identical duplicate memory records
 - `scope = "sync"` rewrites only the bounded package-list sections in `.github/workflows/ci.yml`, `docs/CLAWHUB_PUBLISH_PREFLIGHT.md`, and the repo `README.md` fact line
 - every `apply` requires a preview-issued `confirmToken`
-- `canon_fix source` remains proposal-only
+- source drift stays diagnosis-first through `canon_doctor`; no `canon_fix source` scope is shipped
 
 ## Plugin-Owned State
 

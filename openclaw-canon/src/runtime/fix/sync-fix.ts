@@ -5,6 +5,7 @@ import type {
 	CanonFinding,
 	CanonProposal,
 } from "../report/canon-contract.js";
+import { tryReadUtf8 } from "../report/file-state.js";
 import type { CanonPreviewRecord } from "../state/canon-state.js";
 import {
 	resolveCiWorkflowPath,
@@ -215,6 +216,7 @@ function buildRewriteChange(
 	block: BlockMatch,
 	detail: string,
 	content: string,
+	expectedText: string,
 ): CanonChange {
 	return {
 		kind: "rewrite_block",
@@ -222,6 +224,7 @@ function buildRewriteChange(
 		ref: `${filePath}:${block.startLine}-${block.endLine}`,
 		detail,
 		content,
+		expectedText,
 	};
 }
 
@@ -264,6 +267,7 @@ function planTargetRewrite(args: {
 				args.block,
 				args.proposalSummary,
 				args.desiredText,
+				args.currentText,
 			),
 		],
 		proposals: [
@@ -283,18 +287,26 @@ export async function buildSyncFixPlan(
 	targetIds?: string[],
 ): Promise<SyncFixPlan> {
 	const packageCanonPath = resolvePackageCanonPath(pluginConfig);
-	const livePackages = parsePackageList(
-		await readFile(packageCanonPath, "utf8"),
-	);
+	const packageCanonMarkdown = await tryReadUtf8(packageCanonPath);
+
+	if (typeof packageCanonMarkdown !== "string") {
+		return {
+			changes: [],
+			proposals: [],
+		};
+	}
+
+	const livePackages = parsePackageList(packageCanonMarkdown);
 
 	const publishPreflightPath = resolvePublishPreflightPath(pluginConfig);
-	const publishPreflightLines = splitLines(
-		await readFile(publishPreflightPath, "utf8"),
-	);
+	const publishPreflightRaw = await tryReadUtf8(publishPreflightPath);
+	const publishPreflightLines = splitLines(publishPreflightRaw ?? "");
 	const ciWorkflowPath = resolveCiWorkflowPath(pluginConfig);
-	const ciWorkflowLines = splitLines(await readFile(ciWorkflowPath, "utf8"));
+	const ciWorkflowRaw = await tryReadUtf8(ciWorkflowPath);
+	const ciWorkflowLines = splitLines(ciWorkflowRaw ?? "");
 	const repoReadmePath = resolveRepoReadmePath(pluginConfig);
-	const repoReadmeLines = splitLines(await readFile(repoReadmePath, "utf8"));
+	const repoReadmeRaw = await tryReadUtf8(repoReadmePath);
+	const repoReadmeLines = splitLines(repoReadmeRaw ?? "");
 
 	const changes: CanonChange[] = [];
 	const proposals: CanonProposal[] = [];
@@ -305,7 +317,7 @@ export async function buildSyncFixPlan(
 		const plan = planTargetRewrite({
 			targetId: preflightTargetId,
 			filePath: publishPreflightPath,
-			block: preflightBlock,
+			block: typeof publishPreflightRaw === "string" ? preflightBlock : null,
 			currentText: preflightBlock
 				? publishPreflightLines
 						.slice(preflightBlock.startLine - 1, preflightBlock.endLine)
@@ -327,7 +339,7 @@ export async function buildSyncFixPlan(
 		const plan = planTargetRewrite({
 			targetId: ciTargetId,
 			filePath: ciWorkflowPath,
-			block: ciBlock,
+			block: typeof ciWorkflowRaw === "string" ? ciBlock : null,
 			currentText: ciBlock
 				? ciWorkflowLines
 						.slice(ciBlock.startLine - 1, ciBlock.endLine)
@@ -352,7 +364,7 @@ export async function buildSyncFixPlan(
 		const plan = planTargetRewrite({
 			targetId: readmeTargetId,
 			filePath: repoReadmePath,
-			block: readmeBlock,
+			block: typeof repoReadmeRaw === "string" ? readmeBlock : null,
 			currentText: readmeBlock
 				? repoReadmeLines
 						.slice(readmeBlock.startLine - 1, readmeBlock.endLine)
@@ -378,6 +390,36 @@ export async function buildSyncDoctorFindings(
 	pluginConfig?: CanonPluginConfig,
 ): Promise<CanonFinding[]> {
 	const packageCanonPath = resolvePackageCanonPath(pluginConfig);
+	const packageCanonMarkdown = await tryReadUtf8(packageCanonPath);
+
+	if (typeof packageCanonMarkdown !== "string") {
+		return [
+			{
+				id: "sync-package-canon-missing",
+				kind: "post_pass_gap",
+				severity: "critical",
+				evidence: [
+					{
+						kind: "file",
+						ref: packageCanonPath,
+						detail:
+							"docs/PLUGIN_PACKAGE_CANON.md is missing, so sync scope cannot compute the live package list.",
+					},
+				],
+				sourceOfTruth: {
+					kind: "doc",
+					ref: packageCanonPath,
+					note: "docs/PLUGIN_PACKAGE_CANON.md is the authority side for the live publishable plugin package list.",
+				},
+				recommendedAction:
+					"Point packageCanonPath at the canonical docs/PLUGIN_PACKAGE_CANON.md file or run canon sync in the tools repo.",
+				canAutoFix: false,
+				requiresConfirmation: false,
+				fixDisposition: "manual_only",
+			},
+		];
+	}
+
 	const plan = await buildSyncFixPlan(pluginConfig);
 
 	return plan.proposals.map((proposal) => {
@@ -443,7 +485,12 @@ export async function applySyncFixPlan(
 ): Promise<void> {
 	const patchesByFile = new Map<
 		string,
-		Array<{ startLine: number; endLine: number; content: string }>
+		Array<{
+			startLine: number;
+			endLine: number;
+			content: string;
+			expectedText?: string;
+		}>
 	>();
 
 	for (const change of record.changes ?? []) {
@@ -462,6 +509,7 @@ export async function applySyncFixPlan(
 			startLine: parsed.startLine,
 			endLine: parsed.endLine,
 			content: change.content,
+			expectedText: change.expectedText,
 		});
 		patchesByFile.set(parsed.filePath, patches);
 	}
@@ -479,6 +527,18 @@ export async function applySyncFixPlan(
 				patch.endLine > lines.length
 			) {
 				throw new Error(`Invalid sync fix block range for ${filePath}.`);
+			}
+
+			if (typeof patch.expectedText === "string") {
+				const currentText = lines
+					.slice(patch.startLine - 1, patch.endLine)
+					.join("\n");
+
+				if (currentText !== patch.expectedText) {
+					throw new Error(
+						`Sync preview no longer matches ${filePath}; the target block changed after preview. Run preview again.`,
+					);
+				}
 			}
 
 			lines.splice(

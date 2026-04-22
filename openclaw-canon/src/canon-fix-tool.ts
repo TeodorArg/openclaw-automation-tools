@@ -1,4 +1,5 @@
 import { Type } from "@sinclair/typebox";
+import { auditMemoryFile } from "./runtime/doctor/memory-doctor.js";
 import { auditCanonSync } from "./runtime/doctor/sync-doctor.js";
 import {
 	applyMemoryFixPlan,
@@ -62,17 +63,22 @@ export function createCanonFixTool(options: CanonFixToolOptions = {}) {
 			if (params.scope === "memory") {
 				if (params.mode === "preview") {
 					const generatedAt = new Date().toISOString();
+					const audit = await auditMemoryFile(options.pluginConfig);
 					const plan = await buildMemoryFixPlan(
 						options.pluginConfig,
 						params.targetIds,
 					);
-					const status = plan.proposals.length > 0 ? "warning" : "clean";
+					const status =
+						plan.proposals.length > 0 || audit.findings.length > 0
+							? "warning"
+							: "clean";
 					const result: CanonFixResult = normalizeResultInvariants({
 						status,
 						scope: "memory",
 						mode: "preview",
 						generatedAt,
 						changes: plan.changes,
+						findings: audit.findings,
 						proposals: plan.proposals.length > 0 ? plan.proposals : undefined,
 					});
 					const { state } = await loadCanonState(options.pluginConfig);

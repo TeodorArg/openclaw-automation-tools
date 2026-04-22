@@ -18,6 +18,14 @@ safe-only cleanup.
 - `canon_doctor` with `scope = "memory"` for diagnosis
 - `canon_fix` with `scope = "memory"` and `mode = "preview"` before any apply
 
+If the target repo does not ship a `memory.jsonl` canon snapshot yet, treat
+that as a prerequisite finding. Do not treat plugin install copies, workspace
+notes, or `MEMORY.md` as a silent substitute for `memory.jsonl`.
+
+If `memory.jsonl` is missing, `canon_doctor` reports a warning/manual-only
+finding and `canon_fix` preview returns no changes. This skill does not create
+the snapshot file.
+
 ## Core memory rules
 
 - `MEMORY.md` is a compact durable index, not a running log.
@@ -47,3 +55,6 @@ After acting, return:
 2. preview or applied changes
 3. files touched
 4. verification path
+
+If a prerequisite is missing, say that explicitly and keep the result in
+diagnosis/preview terms rather than claiming a repair happened.

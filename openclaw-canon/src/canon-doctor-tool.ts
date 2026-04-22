@@ -22,16 +22,14 @@ const CanonDoctorSchema = Type.Object(
 			Type.Literal("memory"),
 			Type.Literal("sync"),
 		]),
-		execution: Type.Optional(
-			Type.Union([Type.Literal("inline"), Type.Literal("auto")]),
-		),
+		execution: Type.Optional(Type.Literal("inline")),
 	},
 	{ additionalProperties: false },
 );
 
 type CanonDoctorParams = {
 	scope: "source" | "memory" | "sync";
-	execution?: "inline" | "auto";
+	execution?: "inline";
 };
 
 type CanonDoctorToolOptions = {
