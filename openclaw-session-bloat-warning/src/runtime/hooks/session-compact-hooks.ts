@@ -264,10 +264,10 @@ function readProviderCatalogContextWindow(
 	model: string | undefined,
 ) {
 	if (provider === "openai-codex" && model === "gpt-5.4") {
-		return 272000;
+		return 258000;
 	}
 	if (provider === "openai-codex" && model === "gpt-5.4-mini") {
-		return 272000;
+		return 258000;
 	}
 	if (provider === "openai-codex" && model === "gpt-5.2") {
 		return 272000;

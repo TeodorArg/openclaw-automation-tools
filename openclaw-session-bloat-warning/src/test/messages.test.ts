@@ -33,6 +33,16 @@ describe("session bloat warning messages", () => {
 		).toContain("close to overload");
 	});
 
+	it("uses softer warning-level copy for borderline cases", () => {
+		expect(
+			buildEarlyWarning({
+				language: "en",
+				severity: "warning",
+				reasonCode: "input_tokens",
+			}),
+		).toContain("entering an early warning zone");
+	});
+
 	it("renders timeout-risk reason with human-readable seconds", () => {
 		expect(
 			buildEarlyWarning({
@@ -93,9 +103,35 @@ describe("session bloat warning messages", () => {
 		expect(text).toContain("observed provider input: 130000 (observed)");
 		expect(text).toContain("cached input: 40000 (observed)");
 		expect(text).toContain("total observed usage: 172000 (observed)");
+		expect(text).toContain("metrics consistency: stable");
 		expect(text).toContain("drift: 40000, 31% (observed)");
 		expect(text).toContain(
 			"reset / chain status: chain=unknown, reset=suspicious",
 		);
+	});
+
+	it("marks conflicting cache and total metrics as diagnostic only", () => {
+		const text = buildEarlyWarning({
+			language: "en",
+			severity: "elevated",
+			reasonCode: "history_chars",
+			estimatedInputTokens: 37496,
+			observedInputTokens: 34074,
+			cachedInputTokens: 321152,
+			outputTokens: 86,
+			totalTokens: 34160,
+			estimateObservedDriftTokens: 9158,
+			estimateObservedDriftRatio: 9158 / 34074,
+			driftStatus: "observed",
+			providerChainStatus: "unknown",
+			resetIntegrityStatus: "unknown",
+		});
+
+		expect(text).toContain("cached input: 321152 (diagnostic only)");
+		expect(text).toContain("total observed usage: 34160 (diagnostic only)");
+		expect(text).toContain(
+			"metrics consistency: disputed; cache/total treated as diagnostic only",
+		);
+		expect(text).not.toContain("drift:");
 	});
 });

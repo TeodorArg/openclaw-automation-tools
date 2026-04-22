@@ -30,12 +30,14 @@ describe("plugin config", () => {
 		expect(config.criticalInputTokensThreshold).toBe(170000);
 		expect(config.earlyWarningCharThreshold).toBe(90000);
 		expect(config.earlyWarningMessageCountThreshold).toBe(60);
+		expect(config.charHeuristicMinTokenRatio).toBe(0.75);
+		expect(config.messageHeuristicMinTokenRatio).toBe(0.5);
 		expect(config.timeoutRiskStreakThreshold).toBe(2);
 		expect(config.lanePressureStreakThreshold).toBe(1);
 		expect(config.noReplyStreakThreshold).toBe(2);
 		expect(config.timeoutRiskMsThreshold).toBe(45000);
 		expect(config.lanePressureMsThreshold).toBe(10000);
-		expect(config.contextWindowTokens).toBe(200000);
+		expect(config.contextWindowTokens).toBe(258000);
 		expect(config.warningInputTokensRatio).toBe(0.6);
 		expect(config.elevatedInputTokensRatio).toBe(0.725);
 		expect(config.criticalInputTokensRatio).toBe(0.85);
@@ -57,6 +59,8 @@ describe("plugin config", () => {
 			criticalInputTokensThreshold: 160000,
 			earlyWarningCharThreshold: 70000,
 			earlyWarningMessageCountThreshold: 45,
+			charHeuristicMinTokenRatio: 0.8,
+			messageHeuristicMinTokenRatio: 0.55,
 			timeoutRiskStreakThreshold: 3,
 			lanePressureStreakThreshold: 2,
 			noReplyStreakThreshold: 4,
@@ -82,6 +86,8 @@ describe("plugin config", () => {
 		expect(config.criticalInputTokensThreshold).toBe(160000);
 		expect(config.earlyWarningCharThreshold).toBe(70000);
 		expect(config.earlyWarningMessageCountThreshold).toBe(45);
+		expect(config.charHeuristicMinTokenRatio).toBe(0.8);
+		expect(config.messageHeuristicMinTokenRatio).toBe(0.55);
 		expect(config.timeoutRiskStreakThreshold).toBe(3);
 		expect(config.lanePressureStreakThreshold).toBe(2);
 		expect(config.noReplyStreakThreshold).toBe(4);

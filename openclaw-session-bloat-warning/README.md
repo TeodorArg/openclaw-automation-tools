@@ -153,7 +153,7 @@ openclaw plugins install clawhub:@openclaw/openclaw-session-bloat-warning
           "defaultLanguage": "en",
           "enablePreCompactionWarning": true,
           "enablePostCompactionNote": true,
-          "contextWindowTokens": 200000,
+    "contextWindowTokens": 258000,
           "warningInputTokensRatio": 0.6,
           "elevatedInputTokensRatio": 0.725,
           "criticalInputTokensRatio": 0.85
@@ -186,6 +186,8 @@ Supported config keys:
 - `warningInputTokensRatio`: warning token ratio relative to `contextWindowTokens`
 - `elevatedInputTokensRatio`: elevated token ratio relative to `contextWindowTokens`
 - `criticalInputTokensRatio`: critical token ratio relative to `contextWindowTokens`
+- `charHeuristicMinTokenRatio`: minimum fraction of the warning token threshold that observed provider input must reach before char-based history heuristics can emit visible warnings
+- `messageHeuristicMinTokenRatio`: minimum fraction of the warning token threshold that observed provider input must reach before message-count heuristics can emit visible warnings
 - `timeoutRiskStreakThreshold`: repeated timeout streak threshold
 - `lanePressureStreakThreshold`: lane-pressure streak threshold
 - `noReplyStreakThreshold`: repeated no-reply streak threshold
@@ -202,6 +204,7 @@ Supported config keys:
   through `before_agent_reply`
 - `timeout_risk`, `lane_pressure`, and `no_reply_streak` heuristics can be derived from observed output/error text and reused on the next visible warning delivery
 - elevated heaviness classification uses the configured `warningCharThreshold` and `warningMessageCountThreshold` directly, while the earlier `earlyWarning*` thresholds gate warning-level delivery
+- when observed provider input is available and still clearly below token-pressure territory, char-count and message-count heuristics are gated so they do not emit visible warnings too early on their own
 - token-pressure classification now uses the lower of the absolute token thresholds and the ratio-derived thresholds from `contextWindowTokens`, so warning behavior can scale to smaller or larger model windows
 - when runtime-observed usage exists, the plugin persists both local estimate and observed provider usage, then computes drift fields so warning copy can stay honest about what is observed, missing, heuristic, or suspicious
 - warning delivery now includes a compact `context-sync` block that can surface local estimate, observed provider input, cached input, observed output, total observed usage, drift, and reset or chain status with explicit labels

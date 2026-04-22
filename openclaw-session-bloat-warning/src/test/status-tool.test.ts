@@ -80,7 +80,7 @@ describe("session_bloat_status tool", () => {
 		});
 		expect(payload.contextSync.drift.status).toBe("observed");
 		expect(payload.contextSync.effectiveContextWindow).toEqual({
-			tokens: 272000,
+			tokens: 258000,
 			source: "provider_catalog",
 		});
 		expect(payload.contextSync.resetChainStatus.providerChainStatus).toBe(

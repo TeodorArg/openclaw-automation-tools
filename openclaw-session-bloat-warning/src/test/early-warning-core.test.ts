@@ -8,7 +8,7 @@ import {
 } from "../runtime/core/early-warning-core.js";
 
 describe("early warning token thresholds", () => {
-	it("uses ratio-derived critical threshold for 200k context by default", () => {
+	it("uses ratio-derived critical threshold for 258k fallback context by default", () => {
 		const config = resolvePluginConfig(undefined);
 		const decision = createEarlyWarningDecision(
 			{
@@ -49,6 +49,29 @@ describe("early warning token thresholds", () => {
 
 		expect(elevated?.severity).toBe("elevated");
 		expect(critical?.severity).toBe("critical");
+	});
+
+	it("prefers effective runtime context window tokens over config fallback", () => {
+		const config = resolvePluginConfig({
+			contextWindowTokens: 200000,
+			warningInputTokensThreshold: 300000,
+			elevatedInputTokensThreshold: 300000,
+			criticalInputTokensThreshold: 300000,
+			warningInputTokensRatio: 0.6,
+			elevatedInputTokensRatio: 0.725,
+			criticalInputTokensRatio: 0.85,
+		});
+		const decision = createEarlyWarningDecision(
+			{
+				inputChars: 0,
+				messageCount: 0,
+				inputTokens: 149000,
+				effectiveContextWindowTokens: 258000,
+			},
+			config,
+		);
+
+		expect(decision).toBeUndefined();
 	});
 
 	it("classifies the no_reply_streak heuristic when the streak persists", () => {
@@ -107,7 +130,7 @@ describe("early warning token thresholds", () => {
 		expect(drift.status).toBe("observed");
 	});
 
-	it("classifies provider usage unknown when observed usage is missing", () => {
+	it("does not emit a visible warning only because provider usage is missing", () => {
 		const config = resolvePluginConfig(undefined);
 		const decision = createEarlyWarningDecision(
 			{
@@ -119,11 +142,10 @@ describe("early warning token thresholds", () => {
 			config,
 		);
 
-		expect(decision?.severity).toBe("warning");
-		expect(decision?.reasonCode).toBe("provider_usage_unknown");
+		expect(decision).toBeUndefined();
 	});
 
-	it("classifies material estimate-observed drift when it crosses threshold", () => {
+	it("does not emit a visible warning only because estimate-observed drift is large", () => {
 		const config = resolvePluginConfig(undefined);
 		const decision = createEarlyWarningDecision(
 			{
@@ -137,7 +159,23 @@ describe("early warning token thresholds", () => {
 			config,
 		);
 
-		expect(decision?.severity).toBe("elevated");
-		expect(decision?.reasonCode).toBe("estimate_observed_drift");
+		expect(decision).toBeUndefined();
+	});
+
+	it("keeps history heuristics support-only when any observed usage is present", () => {
+		const config = resolvePluginConfig(undefined);
+		const decision = createEarlyWarningDecision(
+			{
+				inputChars: 130000,
+				messageCount: 90,
+				estimatedInputTokens: 32500,
+				observedUsageAvailability: "present",
+				lastCachedInputTokens: 321152,
+				lastTotalTokens: 34160,
+			},
+			config,
+		);
+
+		expect(decision).toBeUndefined();
 	});
 });

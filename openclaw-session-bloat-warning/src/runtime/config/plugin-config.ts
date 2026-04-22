@@ -18,6 +18,8 @@ export type SessionBloatWarningConfig = {
 	criticalInputTokensThreshold: number;
 	earlyWarningMessageCountThreshold: number;
 	earlyWarningCharThreshold: number;
+	charHeuristicMinTokenRatio: number;
+	messageHeuristicMinTokenRatio: number;
 	timeoutRiskStreakThreshold: number;
 	lanePressureStreakThreshold: number;
 	noReplyStreakThreshold: number;
@@ -64,6 +66,14 @@ export function resolvePluginConfig(
 			input?.earlyWarningMessageCountThreshold,
 			60,
 		),
+		charHeuristicMinTokenRatio: readUnitInterval(
+			input?.charHeuristicMinTokenRatio,
+			0.75,
+		),
+		messageHeuristicMinTokenRatio: readUnitInterval(
+			input?.messageHeuristicMinTokenRatio,
+			0.5,
+		),
 		warningInputTokensThreshold: readPositiveInteger(
 			input?.warningInputTokensThreshold,
 			120000,
@@ -98,7 +108,7 @@ export function resolvePluginConfig(
 		),
 		contextWindowTokens: readPositiveInteger(
 			input?.contextWindowTokens,
-			200000,
+			258000,
 		),
 		warningInputTokensRatio: readUnitInterval(
 			input?.warningInputTokensRatio,

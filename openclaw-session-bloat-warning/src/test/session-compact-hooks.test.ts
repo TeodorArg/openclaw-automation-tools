@@ -209,7 +209,7 @@ describe("session compact hooks", () => {
 		expect(signals?.lastAuthProfile).toBe(
 			"openai-codex:teodorph2025@gmail.com",
 		);
-		expect(signals?.effectiveContextWindowTokens).toBe(272000);
+		expect(signals?.effectiveContextWindowTokens).toBe(258000);
 		expect(signals?.effectiveContextWindowSource).toBe("provider_catalog");
 	});
 
@@ -331,7 +331,7 @@ describe("session compact hooks", () => {
 			},
 		});
 
-		expect(message).toContain("fresh session");
+		expect(message).toContain("entering an early warning zone");
 	});
 
 	it("uses configured elevated thresholds without hidden multipliers", async () => {
@@ -539,6 +539,84 @@ describe("session compact hooks", () => {
 		expect(result?.reply?.text).toContain("local estimate:");
 	});
 
+	it("does not emit a char-based warning when observed provider input is still well below token pressure", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-false-positive-guard",
+				usage: {
+					input: 36379,
+					cacheRead: 39680,
+					output: 360,
+					total: 76419,
+				},
+			},
+			{ sessionKey: "agent:main:main", runId: "run-false-positive-guard" },
+		);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-false-positive-guard",
+				systemPrompt: "a".repeat(80000),
+				prompt: "b".repeat(80000),
+				historyMessages: Array.from({ length: 58 }, (_, index) => ({
+					role: "user",
+					content: `m-${index}`,
+				})),
+			},
+			{ sessionKey: "agent:main:main", runId: "run-false-positive-guard" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-false-positive-guard" },
+		);
+
+		expect(result).toBeUndefined();
+	});
+
+	it("keeps conflicting cached and total usage in diagnostics-only mode instead of triggering a visible history warning", async () => {
+		const fixture = await createFixture();
+		const compactionHooks = createCompactionWarningHooks(fixture.config);
+		const deliveryHooks = createEarlyWarningDeliveryHooks(fixture.config);
+
+		await compactionHooks.llmOutput(
+			{
+				runId: "run-inconsistent-usage",
+				usage: {
+					input: 34074,
+					cacheRead: 321152,
+					output: 86,
+					total: 34160,
+				},
+			},
+			{ sessionKey: "agent:main:main", runId: "run-inconsistent-usage" },
+		);
+
+		await compactionHooks.llmInput(
+			{
+				runId: "run-inconsistent-usage",
+				systemPrompt: "a".repeat(70000),
+				prompt: "b".repeat(70000),
+				historyMessages: Array.from({ length: 72 }, (_, index) => ({
+					role: "user",
+					content: `m-${index}`,
+				})),
+			},
+			{ sessionKey: "agent:main:main", runId: "run-inconsistent-usage" },
+		);
+
+		const result = await deliveryHooks.beforeAgentReply(
+			{ cleanedBody: "assistant reply" },
+			{ sessionKey: "agent:main:main", runId: "run-inconsistent-usage" },
+		);
+
+		expect(result).toBeUndefined();
+	});
+
 	it("prefers stored token signals over char heuristics when building delivery copy", async () => {
 		const fixture = await createFixture();
 		const compactionHooks = createCompactionWarningHooks(fixture.config);
@@ -577,7 +655,9 @@ describe("session compact hooks", () => {
 		);
 
 		expect(result?.handled).toBe(true);
-		expect(result?.reply?.text).toContain("input is already very large");
+		expect(result?.reply?.text).toContain(
+			"observed provider input is already in the warning zone",
+		);
 	});
 
 	it("captures repeated gateway timeout risk from observed output text", async () => {
@@ -776,7 +856,7 @@ describe("session compact hooks", () => {
 		);
 		expect(result?.appendSystemContext).toContain("drift:");
 		expect(result?.appendSystemContext).toContain(
-			"effective context window: 272000 (provider_catalog)",
+			"effective context window: 258000 (provider_catalog)",
 		);
 		expect(result?.appendSystemContext).toContain(
 			"reset / chain status: chain=unknown, reset=unknown",
@@ -867,6 +947,8 @@ async function createFixture() {
 		warningInputTokensThreshold: 120000,
 		elevatedInputTokensThreshold: 145000,
 		criticalInputTokensThreshold: 170000,
+		charHeuristicMinTokenRatio: 0.75,
+		messageHeuristicMinTokenRatio: 0.5,
 		contextWindowTokens: 200000,
 		warningInputTokensRatio: 0.6,
 		elevatedInputTokensRatio: 0.725,
