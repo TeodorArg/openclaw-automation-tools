@@ -36,8 +36,18 @@ Not this plugin:
 1. Install the plugin from a local checkout:
 
 ```bash
-openclaw plugins install -l ./openclaw-session-bloat-warning
+nvm use || nvm install
+cd openclaw-session-bloat-warning
+pnpm install
+pnpm build
+cd ..
+openclaw plugins install --force -l ./openclaw-session-bloat-warning
 ```
+
+If the target runtime already has the same package version linked or copied, do
+not assume a relink alone will refresh `dist/**`. Rebuild first, then prefer a
+forced reinstall or a fresh tarball install so the runtime cannot keep serving a
+stale built artifact under the same version string.
 
 2. Enable it:
 
@@ -132,7 +142,7 @@ cd openclaw-session-bloat-warning
 pnpm install
 pnpm build
 cd ..
-openclaw plugins install -l ./openclaw-session-bloat-warning
+openclaw plugins install --force -l ./openclaw-session-bloat-warning
 ```
 
 Published-registry install when this version was explicitly published to ClawHub:

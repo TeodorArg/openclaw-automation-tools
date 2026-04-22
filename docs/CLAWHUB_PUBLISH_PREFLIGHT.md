@@ -232,8 +232,10 @@ Use `docs/RELEASES.md` as the repo-level index and storage contract for these re
 
 For local linked installs into a Docker gateway or other separate runtime environment:
 - do not rely on host-copied `node_modules` as the install-safe runtime tree
+- do not assume a copied or linked plugin directory has a fresh built `dist/**` just because the package version matches; rebuild the package before the final install when runtime code changed after the last copied artifact or release
 - if the plugin directory is copied into `/home/node/tools` or a similar runtime-local path, rebuild `node_modules` inside that target environment before the final linked install
 - prefer `pnpm install --prod --frozen-lockfile --ignore-scripts` in the target environment so runtime dependencies are owned by the runtime user and dev-only host artifacts do not trigger ownership or safety-scan drift
+- when reinstalling the same package version into a live runtime, prefer `openclaw plugins install --force ...` or a fresh tarball install so the runtime cannot retain an older built artifact under the same version string
 - if a linked plugin install fails on suspicious ownership inside `node_modules`, treat that as packaging/install drift and repair the target-local dependency tree before publish or runtime validation is considered complete
 - if several linked plugin reinstalls must be run against a live Docker gateway, do not batch them inside one long-lived `docker exec` shell because the first successful install can trigger a gateway reload and terminate the shell before later installs run
 - run one `docker exec` per plugin and wait for the gateway to come back between installs; keep that helper in the Docker/OpenClaw runtime repo rather than hardcoding it into the plugin-packages repo
