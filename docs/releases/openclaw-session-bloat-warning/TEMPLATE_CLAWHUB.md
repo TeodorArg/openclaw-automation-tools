@@ -19,12 +19,21 @@
 
 - 
 
+## Changelog Guidance
+
+- Keep the ClawHub changelog shorter than the GitHub Release notes.
+- Use 2-4 concise shipped-change bullets or lines.
+- Do not fall back to generic package-purpose copy.
+
 ## UI Fields
 
 - Name: `@openclaw/openclaw-session-bloat-warning`
 - Display name: `Session Health Warning: Stay Sharp in Long AI Work`
 - Version: `X.Y.Z`
 - Changelog:
+- bullet 1
+- bullet 2
+- bullet 3
 - Source repo: `TeodorArg/openclaw-automation-tools`
 - Source commit:
 - Source ref:

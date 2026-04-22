@@ -263,18 +263,32 @@ function buildReleaseNote({
 
 - ${summary}
 
+## What Changed
+
+- Added:
+- Fixed:
+- Changed:
+
+## Operator Impact
+
+- None.
+
 ## Verification
 
 ${verificationLines.join("\n")}
 
-## Operator Copy
+## GitHub Release Copy
 
-Short release note text for ${operatorCopyTarget}:
+Final GitHub Release body should be published from this tracked file after the placeholders above are filled with version-specific details.
+
+Short operator copy for ${operatorCopyTarget}:
 
 \`\`\`text
 ${pkgSlug} v${targetVersion}
 
 - ${summary}
+- bullet 1
+- bullet 2
 \`\`\`
 
 ## Publish Result
@@ -319,6 +333,12 @@ function buildClawHubWorksheet({
 
 - ${summary}
 
+## Changelog Guidance
+
+- Keep the ClawHub changelog shorter than the GitHub Release notes.
+- Use 2-4 concise shipped-change bullets or lines.
+- Do not fall back to generic package-purpose copy.
+
 ## UI Fields
 
 - Package type: \`Code plugin\`
@@ -326,10 +346,9 @@ function buildClawHubWorksheet({
 - Display name: \`${displayName}\`
 - Version: \`${targetVersion}\`
 - Changelog:
-
-\`\`\`text
-${summary}
-\`\`\`
+- bullet 1
+- bullet 2
+- bullet 3
 
 - Source repo: \`${sourceRepo}\`
 - Source commit: ${sourceCommit}

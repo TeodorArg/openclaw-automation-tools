@@ -20,6 +20,16 @@
 
 - 
 
+## What Changed
+
+- Added:
+- Fixed:
+- Changed:
+
+## Operator Impact
+
+- None.
+
 ## Verification
 
 - `pnpm lint`
@@ -31,11 +41,15 @@
 
 ## Operator Copy
 
-Short release note text for GitHub Release or ClawHub:
+Final GitHub Release body should be copied from this tracked file after the placeholders above are filled with version-specific details.
+
+Short operator copy:
 
 ```text
 openclaw-session-bloat-warning vX.Y.Z
 
+- bullet 1
+- bullet 2
 - 
 ```
 
