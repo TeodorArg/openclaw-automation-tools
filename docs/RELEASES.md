@@ -17,8 +17,8 @@ Release storage contract:
 Release boundary:
 
 - a merged PR is not a package release by itself
-- for this repo, the default public release closes when the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, the fresh release archive exists in the package directory, and the corresponding `vX.Y.Z.md` record is stored
-- do not treat the release task as closed until both tracked release artifacts are backfilled with the real GitHub Release URL and any required tag-backed source fields such as `Source commit` and `Source ref`, and the fresh release archive path is recorded
+- for this repo, the default public release centers on the package-qualified tag plus GitHub Release, and the release slice is not closed until the package version is aligned, the merge is on `main`, the package-qualified tag is pushed, the GitHub Release is published from that tag, verification is green, the fresh release archive exists in the package directory, and both tracked release artifacts are backfilled
+- do not treat the release task as closed until the tracked `vX.Y.Z.md` and `vX.Y.Z.clawhub.md` files both carry the real GitHub Release URL, required tag-backed source fields such as `Source commit` and `Source ref`, and the fresh release archive path
 - ClawHub publish or manual archive upload is optional by default and remains a separate operator step unless explicitly requested for that release
 - GitHub Releases are public release records for this repo even though ClawHub itself does not require them for package publication
 
@@ -36,6 +36,8 @@ Required fields for each `docs/releases/<package-slug>/vX.Y.Z.md`:
 - changelog quality review status
 - verification checklist
 - archive path
+- source commit
+- source ref
 - publish result
 - companion worksheet path
 

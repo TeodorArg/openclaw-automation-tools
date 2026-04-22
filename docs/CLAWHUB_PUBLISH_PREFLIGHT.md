@@ -1,6 +1,6 @@
 # ClawHub Publish Preflight
 
-Date: 2026-04-18  
+Date: 2026-04-22  
 Status: current baseline after migration cleanup
 
 ## Active Publish Surfaces
@@ -51,7 +51,6 @@ Non-publishable repo docs:
 - `docs/PLUGIN_PACKAGE_CANON.md`
 - `docs/PLUGIN_STYLE_CANON.md`
 - `docs/OPENCLAW_NODE_INSTALL_AND_IDENTITY_CONTRACT.md`
-- `docs/OPENCLAW_WORKFLOW_PLANNER_DIRECT_MAIN_RECOVERY_2026-04-21.md`
 
 ## Plugin Checks
 
@@ -112,9 +111,9 @@ pnpm test
 pnpm pack:smoke
 ```
 
-Then verify:
+Then confirm the following as explicit manual pre-publish checks when relevant:
 - `package.json` and `openclaw.plugin.json` versions match
-- manifest id/name match package metadata, and runtime entrypoints stay in `package.json` `openclaw.extensions`
+- manifest id matches package slug, plugin display name/package naming stay intentional, and runtime entrypoints stay in `package.json` `openclaw.extensions`
 - package `files` match the intended shipped artifact
 - packed tarball contains the built `dist/**` artifacts required by the package entry surface
 - no secrets or host-local paths leak into shipped files
@@ -132,8 +131,9 @@ For this repo, treat a package release as the bounded sequence:
 - GitHub Release publication from that pushed tag
 - a tracked release record under `docs/releases/<package-slug>/`
 
-Default local agent behavior in this repo still closes the public release on GitHub tag plus GitHub Release.
-Real ClawHub publish and manual archive upload remain optional operator steps unless the user explicitly asks for them, but every plugin release must still generate both versioned release artifacts and a fresh package archive for ClawHub handoff: `vX.Y.Z.md`, `vX.Y.Z.clawhub.md`, and the package-qualified `.tgz`.
+Default local agent behavior in this repo still centers the public release boundary on the package-qualified GitHub tag plus GitHub Release.
+The release slice is not fully closed until verification is green, both versioned tracked release artifacts are backfilled, and the fresh package archive exists in the package directory for ClawHub handoff: `vX.Y.Z.md`, `vX.Y.Z.clawhub.md`, and the package-qualified `.tgz`.
+Real ClawHub publish and manual archive upload remain optional operator steps unless the user explicitly asks for them.
 
 Official OpenClaw publish guidance accepts a local folder, `owner/repo`, `owner/repo@ref`, or a GitHub URL as the package source, so GitHub Release objects are not required by ClawHub itself.
 They are still required by this repo's public release policy because GitHub Releases are tag-backed, public, and auditable for a multi-package public repo.
@@ -182,9 +182,9 @@ Examples:
 
 Do not use ambiguous repo-wide tags such as `v0.1.1` because they collide across packages.
 
-## Manual Release Notes
+## Tracked Release Notes And Worksheets
 
-For manual ClawHub archive uploads or other operator-driven publish flows, store a small Markdown note per released version at:
+For every plugin release, store a small tracked Markdown note at:
 
 - `docs/releases/<package-slug>/vX.Y.Z.md`
 
@@ -192,7 +192,7 @@ And store a companion fill-in worksheet at:
 
 - `docs/releases/<package-slug>/vX.Y.Z.clawhub.md`
 
-That note should be the copy-paste source for the release UI or operator log and should include at minimum:
+That tracked note is the canonical GitHub Release note source in this repo and the durable release record for the package version. It should include at minimum:
 - package slug
 - released version
 - release date
@@ -203,7 +203,10 @@ That note should be the copy-paste source for the release UI or operator log and
 - short user-facing summary
 - verification evidence summary
 - archive path
-- source commit, branch, or PR reference when known
+- source commit
+- source ref
+- source path when the tracked note carries it
+- branch or PR reference when known
 - publish target and operator notes
 - evidence that marketing description and changelog copy were reviewed for this release and are specific to the shipped change set
 
