@@ -12,6 +12,7 @@
 .vscode/
 .history/
 .codex/
+# local-only repo planning, audit bundles, and memory snapshots
 memory.jsonl
 AGENTS.md
 .local-planning/

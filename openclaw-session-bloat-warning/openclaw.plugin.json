@@ -59,6 +59,18 @@
 				"minimum": 1,
 				"description": "Approximate history message-count threshold for earlier visible warning before near-compaction pressure. Defaults to 60."
 			},
+			"charHeuristicMinTokenRatio": {
+				"type": "number",
+				"exclusiveMinimum": 0,
+				"maximum": 1,
+				"description": "Minimum fraction of the warning token threshold that observed provider input must reach before char-based history heuristics can emit visible warnings. Defaults to 0.75."
+			},
+			"messageHeuristicMinTokenRatio": {
+				"type": "number",
+				"exclusiveMinimum": 0,
+				"maximum": 1,
+				"description": "Minimum fraction of the warning token threshold that observed provider input must reach before message-count heuristics can emit visible warnings. Defaults to 0.5."
+			},
 			"warningInputTokensThreshold": {
 				"type": "integer",
 				"minimum": 1,
@@ -102,7 +114,7 @@
 			"contextWindowTokens": {
 				"type": "integer",
 				"minimum": 1,
-				"description": "Approximate model context window used to derive ratio-based token warning thresholds. Defaults to 200000."
+				"description": "Approximate model context window used as the fallback source for ratio-based token warning thresholds when no effective runtime window is known. Defaults to 258000."
 			},
 			"warningInputTokensRatio": {
 				"type": "number",

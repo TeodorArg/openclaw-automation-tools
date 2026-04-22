@@ -9,6 +9,7 @@ import type {
 } from "../config/plugin-config.js";
 import type {
 	DriftStatus,
+	ObservedUsageAvailability,
 	SessionSignalState,
 	SessionWarningState,
 } from "../state/state-types.js";
@@ -31,6 +32,8 @@ export type EarlyWarningInputSignals = {
 	estimateObservedDriftTokens?: number;
 	estimateObservedDriftRatio?: number;
 	driftStatus?: DriftStatus;
+	observedUsageAvailability?: ObservedUsageAvailability;
+	effectiveContextWindowTokens?: number;
 	providerChainStatus?: SessionSignalState["providerChainStatus"];
 	resetIntegrityStatus?: SessionSignalState["resetIntegrityStatus"];
 	timeoutRiskStreak?: number;
@@ -205,6 +208,8 @@ export function measureInputSignals(
 		estimateObservedDriftTokens: driftEligible ? drift.driftTokens : undefined,
 		estimateObservedDriftRatio: driftEligible ? drift.driftRatio : undefined,
 		driftStatus: driftEligible ? drift.status : undefined,
+		observedUsageAvailability: existingSignals?.observedUsageAvailability,
+		effectiveContextWindowTokens: existingSignals?.effectiveContextWindowTokens,
 		providerChainStatus: existingSignals?.providerChainStatus,
 		resetIntegrityStatus: existingSignals?.resetIntegrityStatus,
 		timeoutRiskStreak: existingSignals?.timeoutRiskStreak,
@@ -316,20 +321,29 @@ function classifyInputSeverity(
 		return riskClassification;
 	}
 
+	const criticalThreshold = Math.min(
+		config.criticalInputTokensThreshold,
+		Math.round(
+			readThresholdContextWindowTokens(signals, config) *
+				config.criticalInputTokensRatio,
+		),
+	);
+	const elevatedThreshold = Math.min(
+		config.elevatedInputTokensThreshold,
+		Math.round(
+			readThresholdContextWindowTokens(signals, config) *
+				config.elevatedInputTokensRatio,
+		),
+	);
+	const warningThreshold = Math.min(
+		config.warningInputTokensThreshold,
+		Math.round(
+			readThresholdContextWindowTokens(signals, config) *
+				config.warningInputTokensRatio,
+		),
+	);
 	const inputTokens = signals.inputTokens;
 	if (typeof inputTokens === "number") {
-		const criticalThreshold = Math.min(
-			config.criticalInputTokensThreshold,
-			Math.round(config.contextWindowTokens * config.criticalInputTokensRatio),
-		);
-		const elevatedThreshold = Math.min(
-			config.elevatedInputTokensThreshold,
-			Math.round(config.contextWindowTokens * config.elevatedInputTokensRatio),
-		);
-		const warningThreshold = Math.min(
-			config.warningInputTokensThreshold,
-			Math.round(config.contextWindowTokens * config.warningInputTokensRatio),
-		);
 		if (inputTokens >= criticalThreshold) {
 			return { severity: "critical", reasonCode: "input_tokens" };
 		}
@@ -341,20 +355,58 @@ function classifyInputSeverity(
 		}
 	}
 
-	if (signals.inputChars >= config.warningCharThreshold) {
+	const hasObservedUsage = signals.observedUsageAvailability === "present";
+	const charHeuristicAllowed =
+		!hasObservedUsage &&
+		(typeof inputTokens !== "number" ||
+			inputTokens >=
+				Math.round(warningThreshold * config.charHeuristicMinTokenRatio));
+	const messageHeuristicAllowed =
+		!hasObservedUsage &&
+		(typeof inputTokens !== "number" ||
+			inputTokens >=
+				Math.round(warningThreshold * config.messageHeuristicMinTokenRatio));
+
+	if (
+		charHeuristicAllowed &&
+		signals.inputChars >= config.warningCharThreshold
+	) {
 		return { severity: "elevated", reasonCode: "history_chars" };
 	}
-	if (signals.inputChars >= config.earlyWarningCharThreshold) {
+	if (
+		charHeuristicAllowed &&
+		signals.inputChars >= config.earlyWarningCharThreshold
+	) {
 		return { severity: "warning", reasonCode: "history_chars" };
 	}
-	if (signals.messageCount >= config.warningMessageCountThreshold) {
+	if (
+		messageHeuristicAllowed &&
+		signals.messageCount >= config.warningMessageCountThreshold
+	) {
 		return { severity: "elevated", reasonCode: "history_messages" };
 	}
-	if (signals.messageCount >= config.earlyWarningMessageCountThreshold) {
+	if (
+		messageHeuristicAllowed &&
+		signals.messageCount >= config.earlyWarningMessageCountThreshold
+	) {
 		return { severity: "warning", reasonCode: "history_messages" };
 	}
 
 	return undefined;
+}
+
+function readThresholdContextWindowTokens(
+	signals: EarlyWarningInputSignals,
+	config: SessionBloatWarningConfig,
+) {
+	if (
+		typeof signals.effectiveContextWindowTokens === "number" &&
+		Number.isFinite(signals.effectiveContextWindowTokens) &&
+		signals.effectiveContextWindowTokens > 0
+	) {
+		return Math.round(signals.effectiveContextWindowTokens);
+	}
+	return config.contextWindowTokens;
 }
 
 export function readObservedUsage(event: LlmOutputHookEvent) {
@@ -486,25 +538,6 @@ function classifyRiskSeverity(
 		)
 	) {
 		return { severity: "elevated", reasonCode: "lane_pressure" };
-	}
-	if (
-		signals.driftStatus === "observed" &&
-		typeof signals.estimateObservedDriftRatio === "number" &&
-		typeof signals.estimateObservedDriftTokens === "number" &&
-		signals.estimateObservedDriftTokens >= 20000 &&
-		signals.estimateObservedDriftRatio >= 0.2 &&
-		typeof signals.inputTokens !== "number"
-	) {
-		return { severity: "elevated", reasonCode: "estimate_observed_drift" };
-	}
-	if (
-		(signals.driftStatus === "missing" ||
-			signals.driftStatus === "heuristic") &&
-		typeof signals.inputTokens !== "number" &&
-		signals.inputChars < config.earlyWarningCharThreshold &&
-		signals.messageCount < config.earlyWarningMessageCountThreshold
-	) {
-		return { severity: "warning", reasonCode: "provider_usage_unknown" };
 	}
 
 	return undefined;

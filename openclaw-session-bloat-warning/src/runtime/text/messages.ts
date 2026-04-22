@@ -32,7 +32,7 @@ const ENGLISH_MESSAGES = {
 		"Compaction finished. If the next step is another large phase, continue it in a fresh session instead of expanding this thread further.",
 	early: {
 		warning:
-			"This session is getting heavy before the next large pass. Capture a quick handoff and consider continuing the next heavy step in a fresh session.",
+			"This session is entering an early warning zone for the next large pass. Save a quick handoff before the next heavy step if more context is about to accumulate.",
 		elevated:
 			"This session is already heavy enough that another large pass is risky. Save a handoff now, then continue the next heavy step in a fresh session.",
 		critical:
@@ -47,7 +47,7 @@ const RUSSIAN_MESSAGES = {
 		"Compaction завершён. Если дальше идёт ещё одна большая фаза, безопаснее продолжить её в новой сессии, а не раздувать этот thread дальше.",
 	early: {
 		warning:
-			"Сессия уже тяжелеет ещё до следующего большого прохода. Быстро зафиксируй handoff и подумай о продолжении следующего тяжёлого шага в новой сессии.",
+			"Сессия входит в раннюю warning-zone перед следующим большим проходом. Быстро зафиксируй handoff перед следующим тяжёлым шагом, если контекст ещё будет расти.",
 		elevated:
 			"Сессия уже достаточно тяжёлая, и ещё один большой проход рискован. Сохрани handoff сейчас и продолжай следующий тяжёлый шаг в новой сессии.",
 		critical:
@@ -81,7 +81,7 @@ function readReasonText(args: EarlyWarningArgs) {
 	if (args.language === "ru") {
 		switch (args.reasonCode) {
 			case "input_tokens":
-				return "вход уже слишком большой";
+				return "observed provider input уже вошёл в warning-zone";
 			case "history_chars":
 				return "история уже слишком раздута";
 			case "history_messages":
@@ -105,7 +105,7 @@ function readReasonText(args: EarlyWarningArgs) {
 
 	switch (args.reasonCode) {
 		case "input_tokens":
-			return "input is already very large";
+			return "observed provider input is already in the warning zone";
 		case "history_chars":
 			return "history is already very large";
 		case "history_messages":
@@ -157,6 +157,7 @@ function appendContextSyncSurface(message: string, args: EarlyWarningArgs) {
 
 function buildContextSyncSurface(args: EarlyWarningArgs) {
 	const lines: string[] = [];
+	const usageConsistency = readUsageConsistency(args);
 	const push = (label: string, value: string | undefined) => {
 		if (value) {
 			lines.push(`${label}: ${value}`);
@@ -174,7 +175,11 @@ function buildContextSyncSurface(args: EarlyWarningArgs) {
 	);
 	push(
 		readLabel("cached", args.language),
-		formatMetric(args.cachedInputTokens, "observed", args.language),
+		formatMetric(
+			args.cachedInputTokens,
+			usageConsistency === "inconsistent" ? "diagnostic" : "observed",
+			args.language,
+		),
 	);
 	push(
 		readLabel("output", args.language),
@@ -182,9 +187,21 @@ function buildContextSyncSurface(args: EarlyWarningArgs) {
 	);
 	push(
 		readLabel("total", args.language),
-		formatMetric(args.totalTokens, "observed", args.language),
+		formatMetric(
+			args.totalTokens,
+			usageConsistency === "inconsistent" ? "diagnostic" : "observed",
+			args.language,
+		),
 	);
-	push(readLabel("drift", args.language), formatDriftMetric(args));
+	if (usageConsistency !== "inconsistent") {
+		push(readLabel("drift", args.language), formatDriftMetric(args));
+	}
+	if (usageConsistency !== "unknown") {
+		push(
+			readLabel("consistency", args.language),
+			formatConsistencyMetric(usageConsistency, args.language),
+		);
+	}
 	push(readLabel("chain", args.language), formatChainMetric(args));
 
 	if (lines.length === 0) {
@@ -197,16 +214,32 @@ function buildContextSyncSurface(args: EarlyWarningArgs) {
 
 function formatMetric(
 	value: number | undefined,
-	status: "observed" | "missing" | "heuristic",
+	status: "observed" | "missing" | "heuristic" | "diagnostic",
 	language: SessionWarningLanguage,
 ) {
 	if (typeof value !== "number" || !Number.isFinite(value)) {
 		return readSignalLabel(
-			status === "observed" ? "missing" : status,
+			status === "observed" || status === "diagnostic" ? "missing" : status,
 			language,
 		);
 	}
 	return `${Math.round(value)} (${readSignalLabel(status, language)})`;
+}
+
+function formatConsistencyMetric(
+	status: "consistent" | "inconsistent" | "unknown",
+	language: SessionWarningLanguage,
+) {
+	switch (status) {
+		case "consistent":
+			return language === "ru" ? "stable" : "stable";
+		case "inconsistent":
+			return language === "ru"
+				? "disputed; cache/total treated as diagnostic only"
+				: "disputed; cache/total treated as diagnostic only";
+		default:
+			return language === "ru" ? "unknown" : "unknown";
+	}
 }
 
 function formatDriftMetric(args: EarlyWarningArgs) {
@@ -244,6 +277,7 @@ function readLabel(
 		| "output"
 		| "total"
 		| "drift"
+		| "consistency"
 		| "chain",
 	language: SessionWarningLanguage,
 ) {
@@ -264,6 +298,8 @@ function readLabel(
 				: "total observed usage";
 		case "drift":
 			return language === "ru" ? "drift" : "drift";
+		case "consistency":
+			return language === "ru" ? "metrics consistency" : "metrics consistency";
 		default:
 			return language === "ru"
 				? "reset / chain status"
@@ -272,17 +308,71 @@ function readLabel(
 }
 
 function readSignalLabel(
-	status: EarlyWarningArgs["driftStatus"],
+	status: EarlyWarningArgs["driftStatus"] | "diagnostic",
 	language: SessionWarningLanguage,
 ) {
 	switch (status) {
 		case "observed":
 			return "observed";
+		case "diagnostic":
+			return language === "ru" ? "diagnostic only" : "diagnostic only";
 		case "missing":
 			return language === "ru" ? "missing" : "missing";
 		default:
 			return "heuristic";
 	}
+}
+
+function readUsageConsistency(args: EarlyWarningArgs) {
+	const observedInput = args.observedInputTokens;
+	const cachedInput = args.cachedInputTokens;
+	const output = args.outputTokens;
+	const total = args.totalTokens;
+
+	if (
+		typeof observedInput !== "number" ||
+		!Number.isFinite(observedInput) ||
+		typeof total !== "number" ||
+		!Number.isFinite(total)
+	) {
+		return "unknown" as const;
+	}
+
+	const roundedObserved = Math.max(0, Math.round(observedInput));
+	const roundedTotal = Math.max(0, Math.round(total));
+	const roundedCached =
+		typeof cachedInput === "number" && Number.isFinite(cachedInput)
+			? Math.max(0, Math.round(cachedInput))
+			: undefined;
+	const roundedOutput =
+		typeof output === "number" && Number.isFinite(output)
+			? Math.max(0, Math.round(output))
+			: undefined;
+
+	if (roundedTotal + 1024 < roundedObserved) {
+		return "inconsistent" as const;
+	}
+	if (
+		typeof roundedCached === "number" &&
+		roundedTotal + 1024 < roundedCached
+	) {
+		return "inconsistent" as const;
+	}
+	if (
+		typeof roundedOutput === "number" &&
+		roundedTotal + 1024 < roundedObserved + roundedOutput
+	) {
+		return "inconsistent" as const;
+	}
+	if (
+		typeof roundedCached === "number" &&
+		roundedCached >= roundedObserved * 2 &&
+		roundedTotal <= Math.round(roundedObserved * 1.25)
+	) {
+		return "inconsistent" as const;
+	}
+
+	return "consistent" as const;
 }
 
 function formatMs(value: number | undefined, language: SessionWarningLanguage) {
