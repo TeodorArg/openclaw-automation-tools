@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -11,6 +11,7 @@ const LIVE_PACKAGE_SLUGS = [
 	"openclaw-workflow-planner",
 	"openclaw-canon",
 	"openclaw-session-bloat-warning",
+	"openclaw-url-tailwind-scaffold",
 ] as const;
 
 async function createFixtureRepo() {
@@ -205,6 +206,26 @@ describe("openclaw-canon tools", () => {
 		).toBe(true);
 	});
 
+	it("does not require .npmignore when package files allowlist is canonical", async () => {
+		const fixture = await createFixtureRepo();
+		await rm(join(fixture.root, "openclaw-canon", ".npmignore"));
+		const tool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const result = await tool.execute("call-2c", {
+			scope: "source",
+			execution: "inline",
+		});
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "template-missing-openclaw-canon-.npmignore",
+			),
+		).toBe(false);
+	});
+
 	it("detects CI verification-minimum drift through canon_doctor source", async () => {
 		const fixture = await createFixtureRepo();
 		await writeFile(
@@ -305,16 +326,20 @@ describe("openclaw-canon tools", () => {
 		);
 
 		expect(readmeAfterApply).toContain(
-			"`openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, and `openclaw-session-bloat-warning/`",
+			"`openclaw-host-git-workflow/`, `openclaw-workflow-planner/`, `openclaw-canon/`, `openclaw-session-bloat-warning/`, and `openclaw-url-tailwind-scaffold/`",
 		);
 		expect(preflightAfterApply).toContain("- `openclaw-host-git-workflow/`");
 		expect(preflightAfterApply).toContain("- `openclaw-workflow-planner/`");
 		expect(preflightAfterApply).toContain(
 			"- `openclaw-session-bloat-warning/`",
 		);
+		expect(preflightAfterApply).toContain(
+			"- `openclaw-url-tailwind-scaffold/`",
+		);
 		expect(ciAfterApply).toContain("openclaw-host-git-workflow");
 		expect(ciAfterApply).toContain("openclaw-workflow-planner");
 		expect(ciAfterApply).toContain("openclaw-session-bloat-warning");
+		expect(ciAfterApply).toContain("openclaw-url-tailwind-scaffold");
 	});
 
 	it("previews and applies safe memory fixes with confirmToken", async () => {
