@@ -1,5 +1,5 @@
-import { readFile } from "node:fs/promises";
 import type { CanonFinding } from "../report/canon-contract.js";
+import { tryReadUtf8 } from "../report/file-state.js";
 import { resolveMemoryFilePath } from "../state/plugin-paths.js";
 import { scanMemoryFileContent } from "./memory-record-scan.js";
 
@@ -15,8 +15,35 @@ export async function auditMemoryFile(
 	pluginConfig?: CanonPluginConfig,
 ): Promise<MemoryDoctorFinding> {
 	const memoryFilePath = resolveMemoryFilePath(pluginConfig);
-	const raw = await readFile(memoryFilePath, "utf8");
+	const raw = await tryReadUtf8(memoryFilePath);
 	const findings: CanonFinding[] = [];
+
+	if (typeof raw !== "string") {
+		findings.push({
+			id: "memory-file-missing",
+			kind: "memory_drift",
+			severity: "warning",
+			evidence: [
+				{
+					kind: "memory",
+					ref: memoryFilePath,
+					detail: "Configured memory snapshot file does not exist.",
+				},
+			],
+			sourceOfTruth: {
+				kind: "memory_policy",
+				ref: memoryFilePath,
+				note: "canon memory scope requires a memory.jsonl snapshot file.",
+			},
+			recommendedAction:
+				"Point memoryFilePath at a valid memory.jsonl snapshot or run canon memory checks in a repo that ships one.",
+			canAutoFix: false,
+			requiresConfirmation: false,
+			fixDisposition: "manual_only",
+		});
+
+		return { findings };
+	}
 
 	for (const entry of scanMemoryFileContent(raw)) {
 		if (entry.parseError) {

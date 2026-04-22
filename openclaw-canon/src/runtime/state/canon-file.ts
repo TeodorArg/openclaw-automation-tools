@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { type CanonState, createEmptyCanonState } from "./canon-state.js";
+import { resolveFallbackPath } from "./runtime-roots.js";
 
 type CanonPluginConfig = {
 	stateFilePath?: unknown;
@@ -14,7 +15,9 @@ export function resolveCanonStateFilePath(
 			? pluginConfig.stateFilePath.trim()
 			: "";
 
-	return resolve(configuredPath || ".openclaw-canon-state.json");
+	return configuredPath
+		? resolve(configuredPath)
+		: resolveFallbackPath(".openclaw-canon-state.json");
 }
 
 export async function loadCanonState(

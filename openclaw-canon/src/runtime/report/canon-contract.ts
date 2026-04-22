@@ -105,6 +105,7 @@ export type CanonChange =
 			targetId: string;
 			ref?: string;
 			detail: string;
+			expectedText?: string;
 	  }
 	| {
 			kind: "rewrite_block";
@@ -112,6 +113,7 @@ export type CanonChange =
 			ref?: string;
 			detail: string;
 			content: string;
+			expectedText?: string;
 	  };
 
 export type CanonFixResult = {

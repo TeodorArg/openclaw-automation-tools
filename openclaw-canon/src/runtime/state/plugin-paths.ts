@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { resolveFallbackPath } from "./runtime-roots.js";
 
 type CanonPluginConfig = {
 	memoryFilePath?: unknown;
@@ -12,11 +13,14 @@ function resolveOptionalPath(
 	configuredValue: unknown,
 	fallback: string,
 ): string {
-	return resolve(
-		typeof configuredValue === "string" && configuredValue.trim().length > 0
-			? configuredValue.trim()
-			: fallback,
-	);
+	if (
+		typeof configuredValue === "string" &&
+		configuredValue.trim().length > 0
+	) {
+		return resolve(configuredValue.trim());
+	}
+
+	return resolveFallbackPath(fallback);
 }
 
 export function resolveMemoryFilePath(

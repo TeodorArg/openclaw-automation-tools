@@ -6,6 +6,7 @@ import type {
 	CanonFixResult,
 	CanonProposal,
 } from "../report/canon-contract.js";
+import { tryReadUtf8 } from "../report/file-state.js";
 import type { CanonPreviewRecord, CanonState } from "../state/canon-state.js";
 import { resolveMemoryFilePath } from "../state/plugin-paths.js";
 
@@ -48,9 +49,16 @@ export async function buildMemoryFixPlan(
 	targetIds?: string[],
 ): Promise<MemoryFixPlan> {
 	const memoryFilePath = resolveMemoryFilePath(pluginConfig);
-	const raw = await readFile(memoryFilePath, "utf8");
+	const raw = await tryReadUtf8(memoryFilePath);
 	const changes: CanonChange[] = [];
 	const proposals: CanonProposal[] = [];
+
+	if (typeof raw !== "string") {
+		return {
+			changes,
+			proposals,
+		};
+	}
 
 	for (const entry of scanMemoryFileContent(raw)) {
 		if (entry.parseError) {
@@ -61,6 +69,7 @@ export async function buildMemoryFixPlan(
 					targetId,
 					ref: `${memoryFilePath}:${entry.lineNumber}`,
 					detail: "Delete malformed JSON line from memory.jsonl.",
+					expectedText: entry.line,
 				});
 				proposals.push(
 					buildProposal(
@@ -84,6 +93,7 @@ export async function buildMemoryFixPlan(
 					ref: `${memoryFilePath}:${entry.lineNumber}`,
 					detail:
 						"Delete valid JSON memory record that does not match the required shape.",
+					expectedText: entry.line,
 				});
 				proposals.push(
 					buildProposal(
@@ -106,6 +116,7 @@ export async function buildMemoryFixPlan(
 					targetId,
 					ref: `${memoryFilePath}:${entry.lineNumber}`,
 					detail: "Remove byte-identical duplicate memory record.",
+					expectedText: entry.line,
 				});
 				proposals.push(
 					buildProposal(
@@ -179,7 +190,7 @@ export async function applyMemoryFixPlan(
 	const memoryFilePath = resolveMemoryFilePath(pluginConfig);
 	const raw = await readFile(memoryFilePath, "utf8");
 	const originalLines = raw.split("\n");
-	const lineNumbersToDelete = new Set<number>();
+	const deletions: Array<{ lineNumber: number; expectedText?: string }> = [];
 
 	for (const change of record.changes ?? []) {
 		if (change.kind !== "delete_line" || !change.ref) {
@@ -188,12 +199,33 @@ export async function applyMemoryFixPlan(
 
 		const match = change.ref.match(/:(\d+)$/);
 		if (match) {
-			lineNumbersToDelete.add(Number.parseInt(match[1], 10));
+			deletions.push({
+				lineNumber: Number.parseInt(match[1], 10),
+				expectedText: change.expectedText,
+			});
+		}
+	}
+
+	for (const deletion of deletions) {
+		if (deletion.lineNumber < 1 || deletion.lineNumber > originalLines.length) {
+			throw new Error(
+				`Memory preview no longer matches ${memoryFilePath}; line ${deletion.lineNumber} is out of range. Run preview again.`,
+			);
+		}
+
+		if (
+			typeof deletion.expectedText === "string" &&
+			originalLines[deletion.lineNumber - 1] !== deletion.expectedText
+		) {
+			throw new Error(
+				`Memory preview no longer matches ${memoryFilePath}; line ${deletion.lineNumber} changed after preview. Run preview again.`,
+			);
 		}
 	}
 
 	const nextLines = originalLines.filter(
-		(_, index) => !lineNumbersToDelete.has(index + 1),
+		(_, index) =>
+			!deletions.some((deletion) => deletion.lineNumber === index + 1),
 	);
 	await writeFile(memoryFilePath, nextLines.join("\n"), "utf8");
 }

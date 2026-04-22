@@ -10,27 +10,27 @@
 		"properties": {
 			"stateFilePath": {
 				"type": "string",
-				"description": "Optional path to the canon state JSON file. Defaults to ./.openclaw-canon-state.json in the current working directory."
+				"description": "Optional path to the canon state JSON file. Defaults to .openclaw-canon-state.json under the detected canon repo root."
 			},
 			"memoryFilePath": {
 				"type": "string",
-				"description": "Optional path to the memory snapshot JSONL file. Defaults to ./memory.jsonl in the current working directory."
+				"description": "Optional path to the memory snapshot JSONL file. Defaults to memory.jsonl under the detected canon repo root."
 			},
 			"packageCanonPath": {
 				"type": "string",
-				"description": "Optional path to docs/PLUGIN_PACKAGE_CANON.md."
+				"description": "Optional path to docs/PLUGIN_PACKAGE_CANON.md under the detected canon repo root."
 			},
 			"publishPreflightPath": {
 				"type": "string",
-				"description": "Optional path to docs/CLAWHUB_PUBLISH_PREFLIGHT.md."
+				"description": "Optional path to docs/CLAWHUB_PUBLISH_PREFLIGHT.md under the detected canon repo root."
 			},
 			"repoReadmePath": {
 				"type": "string",
-				"description": "Optional path to the repo README.md used for sync checks."
+				"description": "Optional path to the repo README.md used for sync checks under the detected canon repo root."
 			},
 			"ciWorkflowPath": {
 				"type": "string",
-				"description": "Optional path to the CI workflow that enumerates plugin packages."
+				"description": "Optional path to the CI workflow that enumerates plugin packages under the detected canon repo root."
 			}
 		}
 	}

@@ -6,6 +6,7 @@ import type {
 	CanonFinding,
 	CanonProposal,
 } from "../report/canon-contract.js";
+import { tryReadUtf8 } from "../report/file-state.js";
 import {
 	resolveCiWorkflowPath,
 	resolvePackageCanonPath,
@@ -55,6 +56,14 @@ const REQUIRED_CI_COMMANDS = [
 	"pnpm pack:smoke",
 ] as const;
 
+const REQUIRED_PACKAGE_FILES_ALLOWLIST = [
+	"dist",
+	"openclaw.plugin.json",
+	"skills",
+	"README.md",
+	"LICENSE",
+] as const;
+
 async function pathExists(targetPath: string): Promise<boolean> {
 	try {
 		await access(targetPath, constants.F_OK);
@@ -91,21 +100,104 @@ function buildDocEvidence(ref: string, detail: string): CanonEvidence {
 	};
 }
 
+function buildMissingFileFinding(args: {
+	id: string;
+	filePath: string;
+	detail: string;
+	note: string;
+	recommendedAction: string;
+}): CanonFinding {
+	return {
+		id: args.id,
+		kind: "source_drift",
+		severity: "critical",
+		evidence: [buildDocEvidence(args.filePath, args.detail)],
+		sourceOfTruth: {
+			kind: "file",
+			ref: args.filePath,
+			note: args.note,
+		},
+		recommendedAction: args.recommendedAction,
+		canAutoFix: false,
+		requiresConfirmation: false,
+		fixDisposition: "manual_only",
+	};
+}
+
 export async function auditPackageCanon(
 	pluginConfig?: CanonPluginConfig,
 ): Promise<PackageCanonAudit> {
 	const packageCanonPath = resolvePackageCanonPath(pluginConfig);
-	const packageCanonMarkdown = await readFile(packageCanonPath, "utf8");
 	const publishPreflightPath = resolvePublishPreflightPath(pluginConfig);
-	const publishPreflightMarkdown = await readFile(publishPreflightPath, "utf8");
 	const repoReadmePath = resolveRepoReadmePath(pluginConfig);
-	const repoReadmeMarkdown = await readFile(repoReadmePath, "utf8");
 	const ciWorkflowPath = resolveCiWorkflowPath(pluginConfig);
-	const ciWorkflowYaml = await readFile(ciWorkflowPath, "utf8");
-
-	const livePackages = parsePackageList(packageCanonMarkdown);
+	const packageCanonMarkdown = await tryReadUtf8(packageCanonPath);
+	const publishPreflightMarkdown = await tryReadUtf8(publishPreflightPath);
+	const repoReadmeMarkdown = await tryReadUtf8(repoReadmePath);
+	const ciWorkflowYaml = await tryReadUtf8(ciWorkflowPath);
 	const findings: CanonFinding[] = [];
 	const proposals: CanonProposal[] = [];
+
+	if (typeof packageCanonMarkdown !== "string") {
+		findings.push(
+			buildMissingFileFinding({
+				id: "source-package-canon-missing",
+				filePath: packageCanonPath,
+				detail:
+					"docs/PLUGIN_PACKAGE_CANON.md is missing, so source canon cannot be audited.",
+				note: "docs/PLUGIN_PACKAGE_CANON.md is the authority side for live plugin package canon.",
+				recommendedAction:
+					"Point packageCanonPath at the canonical docs/PLUGIN_PACKAGE_CANON.md file or run canon source checks in the tools repo.",
+			}),
+		);
+	}
+
+	if (typeof publishPreflightMarkdown !== "string") {
+		findings.push(
+			buildMissingFileFinding({
+				id: "source-publish-preflight-missing",
+				filePath: publishPreflightPath,
+				detail:
+					"docs/CLAWHUB_PUBLISH_PREFLIGHT.md is missing, so source cross-checks are incomplete.",
+				note: "Publish preflight stays in sync with the live package canon.",
+				recommendedAction:
+					"Point publishPreflightPath at the canonical preflight doc or restore that file in the target repo.",
+			}),
+		);
+	}
+
+	if (typeof repoReadmeMarkdown !== "string") {
+		findings.push(
+			buildMissingFileFinding({
+				id: "source-repo-readme-missing",
+				filePath: repoReadmePath,
+				detail: "README.md is missing, so repo fact checks are incomplete.",
+				note: "The repo README is part of the bounded sync surface.",
+				recommendedAction:
+					"Point repoReadmePath at the canonical repo README.md or restore that file in the target repo.",
+			}),
+		);
+	}
+
+	if (typeof ciWorkflowYaml !== "string") {
+		findings.push(
+			buildMissingFileFinding({
+				id: "source-ci-workflow-missing",
+				filePath: ciWorkflowPath,
+				detail:
+					".github/workflows/ci.yml is missing, so CI canon checks are incomplete.",
+				note: "The CI workflow is part of the bounded sync surface.",
+				recommendedAction:
+					"Point ciWorkflowPath at the canonical CI workflow or restore that file in the target repo.",
+			}),
+		);
+	}
+
+	if (typeof packageCanonMarkdown !== "string") {
+		return { findings, proposals };
+	}
+
+	const livePackages = parsePackageList(packageCanonMarkdown);
 
 	for (const packageSlug of livePackages) {
 		const packageRoot = resolve(dirname(packageCanonPath), "..", packageSlug);
@@ -183,11 +275,15 @@ export async function auditPackageCanon(
 			) as {
 				version?: string;
 				name?: string;
+				files?: unknown;
+				openclaw?: {
+					extensions?: unknown;
+				};
 			};
 			const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as {
 				id?: string;
 				version?: string;
-				entry?: string;
+				skills?: unknown;
 			};
 
 			if (manifest.id !== packageSlug) {
@@ -241,10 +337,121 @@ export async function auditPackageCanon(
 					fixDisposition: "manual_only",
 				});
 			}
+
+			if (packageJson.name !== `@openclaw/${packageSlug}`) {
+				findings.push({
+					id: `source-package-name-mismatch-${packageSlug}`,
+					kind: "source_drift",
+					severity: "warning",
+					evidence: [
+						buildDocEvidence(
+							packageJsonPath,
+							`package.json name is ${packageJson.name ?? "missing"}, expected @openclaw/${packageSlug}.`,
+						),
+					],
+					sourceOfTruth: {
+						kind: "file",
+						ref: packageJsonPath,
+					},
+					recommendedAction: `Align package.json name with @openclaw/${packageSlug}.`,
+					canAutoFix: false,
+					requiresConfirmation: false,
+					fixDisposition: "manual_only",
+				});
+			}
+
+			const packageFiles = Array.isArray(packageJson.files)
+				? packageJson.files
+				: [];
+			const missingPackedArtifacts = REQUIRED_PACKAGE_FILES_ALLOWLIST.filter(
+				(entry) => !packageFiles.includes(entry),
+			);
+
+			if (missingPackedArtifacts.length > 0) {
+				findings.push({
+					id: `source-files-allowlist-${packageSlug}`,
+					kind: "source_drift",
+					severity: "critical",
+					evidence: [
+						buildDocEvidence(
+							packageCanonPath,
+							"docs/PLUGIN_PACKAGE_CANON.md requires package files allowlists to preserve dist and shipped runtime artifacts.",
+						),
+						buildDocEvidence(
+							packageJsonPath,
+							`${packageSlug} package.json files is missing ${missingPackedArtifacts.join(", ")}.`,
+						),
+					],
+					sourceOfTruth: {
+						kind: "doc",
+						ref: packageCanonPath,
+						note: "Publishable packages must keep the shipped runtime surface in package files.",
+					},
+					recommendedAction: `Restore the shipped artifact allowlist in ${packageSlug}/package.json files.`,
+					canAutoFix: false,
+					requiresConfirmation: false,
+					fixDisposition: "manual_only",
+				});
+			}
+
+			if (
+				!Array.isArray(packageJson.openclaw?.extensions) ||
+				!packageJson.openclaw.extensions.includes("./dist/index.js")
+			) {
+				findings.push({
+					id: `source-runtime-entry-${packageSlug}`,
+					kind: "source_drift",
+					severity: "critical",
+					evidence: [
+						buildDocEvidence(
+							packageJsonPath,
+							`${packageSlug} package.json openclaw.extensions must include ./dist/index.js.`,
+						),
+					],
+					sourceOfTruth: {
+						kind: "file",
+						ref: packageJsonPath,
+						note: "Runtime extension entry must match the shipped dist entrypoint.",
+					},
+					recommendedAction: `Restore ./dist/index.js in ${packageSlug}/package.json openclaw.extensions.`,
+					canAutoFix: false,
+					requiresConfirmation: false,
+					fixDisposition: "manual_only",
+				});
+			}
+
+			if (
+				!Array.isArray(manifest.skills) ||
+				!manifest.skills.includes("./skills")
+			) {
+				findings.push({
+					id: `source-manifest-skills-${packageSlug}`,
+					kind: "source_drift",
+					severity: "warning",
+					evidence: [
+						buildDocEvidence(
+							manifestPath,
+							`${packageSlug} openclaw.plugin.json should declare ./skills for bundled skill discovery.`,
+						),
+					],
+					sourceOfTruth: {
+						kind: "file",
+						ref: manifestPath,
+						note: "Plugin manifest skills should point at the bundled skills directory.",
+					},
+					recommendedAction: `Restore ./skills in ${packageSlug}/openclaw.plugin.json skills.`,
+					canAutoFix: false,
+					requiresConfirmation: false,
+					fixDisposition: "manual_only",
+				});
+			}
 		}
 	}
 
-	if (!hasRequiredCiCommandSet(ciWorkflowYaml)) {
+	if (
+		typeof ciWorkflowYaml === "string" &&
+		!hasRequiredCiCommandSet(ciWorkflowYaml)
+	) {
 		findings.push({
 			id: "source-ci-verification-minimum",
 			kind: "source_drift",
@@ -292,6 +499,10 @@ export async function auditPackageCanon(
 
 	for (const packageSlug of livePackages) {
 		for (const document of linkedDocuments) {
+			if (typeof document.content !== "string") {
+				continue;
+			}
+
 			if (!document.content.includes(packageSlug)) {
 				findings.push({
 					id: `source-live-package-missing-${document.id}-${packageSlug}`,

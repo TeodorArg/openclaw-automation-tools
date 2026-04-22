@@ -49,12 +49,37 @@ async function createFixtureRepo() {
 		await writeFile(join(packageDir, "tsconfig.build.json"), "{}\n", "utf8");
 		await writeFile(
 			join(packageDir, "package.json"),
-			'{"version":"0.1.0"}\n',
+			`${JSON.stringify(
+				{
+					name: `@openclaw/${packageName}`,
+					version: "0.1.0",
+					files: [
+						"dist",
+						"openclaw.plugin.json",
+						"skills",
+						"README.md",
+						"LICENSE",
+					],
+					openclaw: {
+						extensions: ["./dist/index.js"],
+					},
+				},
+				null,
+				2,
+			)}\n`,
 			"utf8",
 		);
 		await writeFile(
 			join(packageDir, "openclaw.plugin.json"),
-			`{"id":"${packageName}","version":"0.1.0"}\n`,
+			`${JSON.stringify(
+				{
+					id: packageName,
+					version: "0.1.0",
+					skills: ["./skills"],
+				},
+				null,
+				2,
+			)}\n`,
 			"utf8",
 		);
 		await writeFile(join(packageDir, "src", "runtime", ".gitkeep"), "", "utf8");
@@ -137,6 +162,23 @@ async function createFixtureRepo() {
 			publishPreflightPath: join(docsDir, "CLAWHUB_PUBLISH_PREFLIGHT.md"),
 			repoReadmePath: join(root, "README.md"),
 			ciWorkflowPath: join(githubDir, "ci.yml"),
+		},
+	};
+}
+
+async function createSparseRepo() {
+	const root = await mkdtemp(join(tmpdir(), "openclaw-canon-sparse-"));
+	await writeFile(join(root, "README.md"), "# sparse\n", "utf8");
+
+	return {
+		root,
+		pluginConfig: {
+			stateFilePath: join(root, ".openclaw-canon-state.json"),
+			memoryFilePath: join(root, "memory.jsonl"),
+			packageCanonPath: join(root, "docs", "PLUGIN_PACKAGE_CANON.md"),
+			publishPreflightPath: join(root, "docs", "CLAWHUB_PUBLISH_PREFLIGHT.md"),
+			repoReadmePath: join(root, "README.md"),
+			ciWorkflowPath: join(root, ".github", "workflows", "ci.yml"),
 		},
 	};
 }
@@ -262,6 +304,47 @@ describe("openclaw-canon tools", () => {
 		).toBe(true);
 	});
 
+	it("detects shipped runtime entry drift through canon_doctor source", async () => {
+		const fixture = await createFixtureRepo();
+		await writeFile(
+			join(fixture.root, "openclaw-canon", "package.json"),
+			`${JSON.stringify(
+				{
+					name: "@openclaw/openclaw-canon",
+					version: "0.1.0",
+					files: ["openclaw.plugin.json", "skills", "README.md", "LICENSE"],
+					openclaw: {
+						extensions: [],
+					},
+				},
+				null,
+				2,
+			)}\n`,
+			"utf8",
+		);
+		const tool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const result = await tool.execute("call-2d", {
+			scope: "source",
+			execution: "inline",
+		});
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "source-files-allowlist-openclaw-canon",
+			),
+		).toBe(true);
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "source-runtime-entry-openclaw-canon",
+			),
+		).toBe(true);
+	});
+
 	it("detects sync drift when README stops enumerating a live package", async () => {
 		const fixture = await createFixtureRepo();
 		await writeFile(join(fixture.root, "README.md"), "# repo\n", "utf8");
@@ -281,6 +364,155 @@ describe("openclaw-canon tools", () => {
 					finding.id === "sync-readme-live-package-fact",
 			),
 		).toBe(true);
+	});
+
+	it("returns typed findings instead of throwing when canon files are missing", async () => {
+		const fixture = await createSparseRepo();
+		const doctorTool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const fixTool = createCanonFixTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+
+		const sourceResult = await doctorTool.execute("call-missing-1", {
+			scope: "source",
+			execution: "inline",
+		});
+		const sourcePayload = JSON.parse(sourceResult.content[0].text);
+		expect(
+			sourcePayload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "source-package-canon-missing",
+			),
+		).toBe(true);
+
+		const memoryResult = await doctorTool.execute("call-missing-2", {
+			scope: "memory",
+			execution: "inline",
+		});
+		const memoryPayload = JSON.parse(memoryResult.content[0].text);
+		expect(
+			memoryPayload.findings.some(
+				(finding: { id: string }) => finding.id === "memory-file-missing",
+			),
+		).toBe(true);
+
+		const syncResult = await doctorTool.execute("call-missing-3", {
+			scope: "sync",
+			execution: "inline",
+		});
+		const syncPayload = JSON.parse(syncResult.content[0].text);
+		expect(
+			syncPayload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "sync-package-canon-missing",
+			),
+		).toBe(true);
+
+		const memoryPreview = await fixTool.execute("call-missing-4", {
+			scope: "memory",
+			mode: "preview",
+		});
+		const memoryPreviewPayload = JSON.parse(memoryPreview.content[0].text);
+		expect(memoryPreviewPayload.status).toBe("warning");
+		expect(memoryPreviewPayload.changes).toHaveLength(0);
+
+		const syncPreview = await fixTool.execute("call-missing-5", {
+			scope: "sync",
+			mode: "preview",
+		});
+		const syncPreviewPayload = JSON.parse(syncPreview.content[0].text);
+		expect(syncPreviewPayload.status).toBe("critical");
+		expect(syncPreviewPayload.changes).toHaveLength(0);
+	});
+
+	it("keeps package-shape audits active when linked canon docs are missing", async () => {
+		const fixture = await createFixtureRepo();
+		await rm(fixture.pluginConfig.publishPreflightPath);
+		await writeFile(
+			join(fixture.root, "openclaw-canon", "openclaw.plugin.json"),
+			'{"id":"wrong-id","version":"0.1.0","skills":["./skills"]}\n',
+			"utf8",
+		);
+		const tool = createCanonDoctorTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const result = await tool.execute("call-missing-6", {
+			scope: "source",
+			execution: "inline",
+		});
+		const payload = JSON.parse(result.content[0].text);
+
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "source-publish-preflight-missing",
+			),
+		).toBe(true);
+		expect(
+			payload.findings.some(
+				(finding: { id: string }) =>
+					finding.id === "source-id-mismatch-openclaw-canon",
+			),
+		).toBe(true);
+	});
+
+	it("prefers the configured OpenClaw source root over cwd for fallback paths", async () => {
+		const fixture = await createFixtureRepo();
+		const originalCwd = process.cwd();
+		const originalProjectDir = process.env.OPENCLAW_PROJECT_DIR;
+		const originalPluginSourceRoot = process.env.OPENCLAW_PLUGIN_SOURCE_ROOT;
+		const unrelatedDir = await mkdtemp(join(tmpdir(), "openclaw-canon-cwd-"));
+
+		process.chdir(unrelatedDir);
+		process.env.OPENCLAW_PROJECT_DIR = join(
+			unrelatedDir,
+			"project-without-canon",
+		);
+		process.env.OPENCLAW_PLUGIN_SOURCE_ROOT = fixture.root;
+
+		try {
+			const tool = createCanonDoctorTool();
+			const result = await tool.execute("call-env-1", {
+				scope: "source",
+				execution: "inline",
+			});
+			const payload = JSON.parse(result.content[0].text);
+
+			expect(
+				payload.findings.some(
+					(finding: { id: string }) =>
+						finding.id === "source-package-canon-missing",
+				),
+			).toBe(false);
+
+			const statusTool = createCanonStatusTool();
+			await statusTool.execute("call-env-2", {
+				mode: "summary",
+				refresh: "light",
+			});
+
+			const stateFile = await readFile(
+				join(fixture.root, ".openclaw-canon-state.json"),
+				"utf8",
+			);
+			expect(JSON.parse(stateFile).version).toBe(1);
+		} finally {
+			process.chdir(originalCwd);
+
+			if (typeof originalProjectDir === "string") {
+				process.env.OPENCLAW_PROJECT_DIR = originalProjectDir;
+			} else {
+				delete process.env.OPENCLAW_PROJECT_DIR;
+			}
+
+			if (typeof originalPluginSourceRoot === "string") {
+				process.env.OPENCLAW_PLUGIN_SOURCE_ROOT = originalPluginSourceRoot;
+			} else {
+				delete process.env.OPENCLAW_PLUGIN_SOURCE_ROOT;
+			}
+		}
 	});
 
 	it("previews and applies sync fixes with confirmToken", async () => {
@@ -342,6 +574,41 @@ describe("openclaw-canon tools", () => {
 		expect(ciAfterApply).toContain("openclaw-url-tailwind-scaffold");
 	});
 
+	it("rejects sync apply when the target block changed after preview", async () => {
+		const fixture = await createFixtureRepo();
+		const fixTool = createCanonFixTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const preview = await fixTool.execute("call-4d", {
+			scope: "sync",
+			mode: "preview",
+			targetIds: ["sync-readme-live-package-fact"],
+		});
+		const previewPayload = JSON.parse(preview.content[0].text);
+
+		await writeFile(
+			fixture.pluginConfig.repoReadmePath,
+			[
+				"# repo",
+				"",
+				"## Repo Facts",
+				"",
+				"- The repo currently ships 999 publishable plugin packages: `openclaw-canon/`.",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+
+		await expect(
+			fixTool.execute("call-4e", {
+				scope: "sync",
+				mode: "apply",
+				confirmToken: previewPayload.confirmToken,
+				targetIds: ["sync-readme-live-package-fact"],
+			}),
+		).rejects.toThrow("Sync preview no longer matches");
+	});
+
 	it("previews and applies safe memory fixes with confirmToken", async () => {
 		const fixture = await createFixtureRepo();
 		await writeFile(
@@ -384,6 +651,45 @@ describe("openclaw-canon tools", () => {
 			.filter((line) => line.trim().length > 0);
 
 		expect(nonEmptyLines).toHaveLength(1);
+	});
+
+	it("rejects memory apply when the target line changed after preview", async () => {
+		const fixture = await createFixtureRepo();
+		await writeFile(
+			fixture.pluginConfig.memoryFilePath,
+			[
+				'{"entityName":"A","entityType":"project","observation":"one","updatedAt":"2026-04-18","source":"manual-sync"}',
+				"not json",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+		const fixTool = createCanonFixTool({
+			pluginConfig: fixture.pluginConfig,
+		});
+		const preview = await fixTool.execute("call-4f", {
+			scope: "memory",
+			mode: "preview",
+		});
+		const previewPayload = JSON.parse(preview.content[0].text);
+
+		await writeFile(
+			fixture.pluginConfig.memoryFilePath,
+			[
+				'{"entityName":"A","entityType":"project","observation":"one","updatedAt":"2026-04-18","source":"manual-sync"}',
+				"changed after preview",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+
+		await expect(
+			fixTool.execute("call-4g", {
+				scope: "memory",
+				mode: "apply",
+				confirmToken: previewPayload.confirmToken,
+			}),
+		).rejects.toThrow("Memory preview no longer matches");
 	});
 
 	it("keeps memory doctor findings aligned with preview targetIds across blank lines", async () => {
