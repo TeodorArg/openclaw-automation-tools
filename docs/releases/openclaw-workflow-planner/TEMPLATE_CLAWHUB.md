@@ -19,6 +19,12 @@
 
 - 
 
+## Changelog Guidance
+
+- Keep the ClawHub changelog shorter than the GitHub Release notes.
+- Use 2-4 concise shipped-change bullets or lines.
+- Do not fall back to generic package-purpose copy.
+
 ## UI Fields
 
 - Package type: `Code plugin`
@@ -26,6 +32,9 @@
 - Display name: `OpenClaw Workflow Planner`
 - Version: `X.Y.Z`
 - Changelog:
+- bullet 1
+- bullet 2
+- bullet 3
 - Source repo: `TeodorArg/openclaw-automation-tools`
 - Source commit:
 - Source ref: `openclaw-workflow-planner/vX.Y.Z`
