@@ -32,7 +32,6 @@ const REQUIRED_PACKAGE_PATHS = [
 	"skills",
 	"README.md",
 	"LICENSE",
-	".npmignore",
 	"openclaw.plugin.json",
 	"package.json",
 	"tsconfig.json",
@@ -152,7 +151,7 @@ export async function auditPackageCanon(
 					evidence: [
 						buildDocEvidence(
 							packageCanonPath,
-							"docs/PLUGIN_PACKAGE_CANON.md requires package-local .npmignore to allow the shipped dist output and other packed artifacts.",
+							"docs/PLUGIN_PACKAGE_CANON.md allows package-local .npmignore as supplemental packaging control when present.",
 						),
 						buildDocEvidence(
 							npmignorePath,
@@ -162,7 +161,7 @@ export async function auditPackageCanon(
 					sourceOfTruth: {
 						kind: "doc",
 						ref: packageCanonPath,
-						note: "Package-local .npmignore policy for live publishable plugins.",
+						note: "Package-local .npmignore allowlist policy when that file is used.",
 					},
 					recommendedAction: `Restore the required shipped-artifact allowlist in ${packageSlug}/.npmignore.`,
 					canAutoFix: false,
